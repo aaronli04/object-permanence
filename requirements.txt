@@ -1,0 +1,6 @@
+ultralytics          # YOLOv8/v11
+opencv-python       # CSRT tracker baseline
+opencv-contrib-python
+numpy
+pandas
+matplotlib
