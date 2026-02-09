@@ -2,26 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import List
 
 import cv2
 from ultralytics import YOLO
 
-
-@dataclass
-class Detection:
-    class_id: int
-    class_name: str
-    bbox: List[float]
-    confidence: float
+from .types import Detection
 
 
 class YoloRunner:
+    """Runs YOLOv8 inference on frames and normalizes outputs."""
     def __init__(self, model_name: str) -> None:
+        """Load a YOLOv8 model by name or local path."""
         self.model = YOLO(model_name)
 
     def run(self, frame: "cv2.Mat") -> List[Detection]:
+        """Run inference on a frame and return detections."""
         results = self.model(frame, verbose=False)
         if not results:
             return []

@@ -2,29 +2,25 @@
 
 from __future__ import annotations
 
-import os
-from typing import List
+from typing import List, Optional
 
-from .output_writer import FrameDetections, OutputWriter
+from .io import OutputWriter, build_output_path
 from .sampler import FrameSampler
+from .types import FrameDetections
 from .yolo_runner import YoloRunner
 
 
-def build_output_path(video_path: str) -> str:
-    video_name = os.path.splitext(os.path.basename(video_path))[0]
-    return os.path.join(
-        "experiments",
-        "results",
-        "detections",
-        f"{video_name}_detections.json",
-    )
-
-
-def run_pipeline(video_path: str, sample_rate: int, model_name: str) -> str:
+def run_pipeline(
+    video_path: str,
+    sample_rate: int,
+    model_name: str,
+    writer: Optional[OutputWriter] = None,
+) -> str:
+    """Run sampling, inference, and writing for a single video."""
     sampler = FrameSampler(video_path, sample_rate)
     yolo = YoloRunner(model_name)
     output_path = build_output_path(video_path)
-    writer = OutputWriter(output_path)
+    writer = writer or OutputWriter(output_path)
 
     frames: List[FrameDetections] = []
     for frame_num, frame in sampler:
