@@ -4,7 +4,12 @@ This repo includes a YOLOv8 video detection pipeline that samples frames, runs i
 
 ## Quickstart
 
-1. Install dependencies (at minimum `opencv-python` and `ultralytics`).
+1. Install dependencies:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
 2. Run a single-video detection from the repo root:
 
 ```bash
