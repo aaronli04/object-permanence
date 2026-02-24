@@ -1,13 +1,10 @@
 # Object Permanence
 
-This repo includes:
+YOLOv8-based video detection and Phase 1 activation enrichment for object permanence reasoning.
 
-- a YOLOv8 video detection pipeline that samples frames, runs inference, and saves JSON results
-- a Phase 1 post-processing activation enrichment pipeline that re-runs YOLOv8 with forward hooks and attaches backbone activation vectors to each detection
+The repository is structured around a simple principle: keep raw detector output stable, then layer richer reasoning features on top of it as a separate post-processing step. This keeps the system easy to debug, easy to rerun, and suitable for later phases that need reproducible intermediate artifacts.
 
-## Quickstart
-
-1. Create and activate a virtual environment (recommended default):
+## Setup
 
 ```bash
 python3 -m venv .venv
@@ -16,32 +13,50 @@ python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 ```
 
-2. Run a single-video detection from the repo root:
+## Run
+
+### 1. Generate detections
+
+Single video:
 
 ```bash
-python3 src/detection/run_yolo.py --video data/raw_videos/3sec_Left_to_Right.mp4 --sample-rate 5 --model yolov8n.pt
+python3 src/detection/run_yolo.py \
+  --video data/raw_videos/3sec_Left_to_Right.mp4 \
+  --sample-rate 5 \
+  --model yolov8n.pt
 ```
 
-3. Or run batch detection over a directory:
+Batch videos:
 
 ```bash
-python3 src/detection/run_yolo_batch.py --video-dir data/raw_videos --pattern "*.mp4" --sample-rate 5 --model yolov8n.pt
+python3 src/detection/run_yolo_batch.py \
+  --video-dir data/raw_videos \
+  --pattern "*.mp4" \
+  --sample-rate 5 \
+  --model yolov8n.pt
 ```
 
-4. Discover hook layers for your YOLO variant (used by enrichment):
+### 2. Discover hook layers
 
 ```bash
 python3 -m src.detection.enrichment.discover_layers --model yolov8n.yaml
 ```
 
-5. Run enrichment for one video first (recommended sanity check):
+Typical YOLOv8n/YOLOv8m hook choices:
+
+- deep layer: `8` (stride `32`)
+- mid layer: `6` (stride `16`)
+
+### 3. Enrich detections with activation vectors
+
+Single video:
 
 ```bash
 python3 -m src.detection.enrichment.run \
-  --input-json "experiments/results/detections/3sec_Left_to_Right_detections.json" \
-  --video "data/raw_videos/3sec_Left_to_Right.mp4" \
+  --input-json experiments/results/detections/3sec_Left_to_Right_detections.json \
+  --video data/raw_videos/3sec_Left_to_Right.mp4 \
   --model yolov8n.pt \
-  --output-dir "experiments/results/enriched/3sec_Left_to_Right" \
+  --output-dir experiments/results/enriched/3sec_Left_to_Right \
   --deep-layer 8 \
   --mid-layer 6 \
   --deep-stride 32 \
@@ -50,7 +65,7 @@ python3 -m src.detection.enrichment.run \
   --pca-dim 256
 ```
 
-6. Batch-enrich all generated detection JSONs:
+Batch all generated detection traces:
 
 ```bash
 for json in experiments/results/detections/*_detections.json; do
@@ -58,10 +73,7 @@ for json in experiments/results/detections/*_detections.json; do
   video="data/raw_videos/${base}.mp4"
   outdir="experiments/results/enriched/${base}"
 
-  if [ ! -f "$video" ]; then
-    echo "Skipping (missing video): $video"
-    continue
-  fi
+  [ -f "$video" ] || continue
 
   python3 -m src.detection.enrichment.run \
     --input-json "$json" \
@@ -77,7 +89,17 @@ for json in experiments/results/detections/*_detections.json; do
 done
 ```
 
-7. Validate outputs:
+### 4. Validate enriched outputs
+
+Single file:
+
+```bash
+python3 -m src.detection.enrichment.validate \
+  experiments/results/enriched/3sec_Left_to_Right/enriched_detections.json \
+  --expected-dim 256
+```
+
+Batch validation:
 
 ```bash
 for f in experiments/results/enriched/*/enriched_detections.json; do
@@ -85,153 +107,91 @@ for f in experiments/results/enriched/*/enriched_detections.json; do
 done
 ```
 
-Notes:
+## How It Works
 
-- If your environment is offline, use a locally available weights file (for example `yolov8n.pt` or `/path/to/yolov8n.pt`)
-- Avoid shell placeholders like `<video_name>` when pasting commands directly into bash, because `<...>` is interpreted as input redirection
+The system is organized into two stages:
 
-## Output
+### Detection
 
-Detections are saved to:
+The detection pipeline samples video frames at a fixed interval and runs YOLOv8 inference. The result is a JSON trace containing frame numbers and detections (`class_id`, `class_name`, `bbox`, `confidence`).
 
-```
-experiments/results/detections/[video_name]_detections.json
-```
+This trace is the stable intermediate artifact used by later reasoning stages.
 
-Each entry includes the frame number and an array of detections with class id, class name, bounding box coordinates (xyxy), and confidence.
+In practice, this means the detection stage is responsible only for answering: "What did YOLO detect in this frame?" It is intentionally narrow in scope. It does not attempt identity tracking, temporal smoothing, or object permanence inference. Those concerns are deferred to downstream stages.
 
-## Phase 1 Activation Enrichment
+### Enrichment
 
-This pipeline takes:
+The enrichment pipeline re-runs YOLOv8 on the original frames and attaches an activation embedding to each existing detection.
 
-- an existing detections JSON trace (sampled every 5 frames)
-- the source video
-- a YOLOv8 model (re-run for feature extraction)
+This stage exists because the final detection output is often too compressed for reasoning tasks. A class label and bounding box are sufficient for detection, but they do not preserve much of the model's internal representation of appearance. The enrichment stage recovers that information from the backbone and turns it into a compact vector that can be compared across frames.
 
-It writes:
+It uses two backbone feature maps captured with forward hooks:
 
-- `enriched_detections.json`
-- `pca_projection.pkl`
-- `projection_manifest.json`
+- a deep `C2f` layer (semantic features, stride 32)
+- a mid `C2f` layer (higher spatial resolution, stride 16)
 
-Batching support:
+For each detection:
 
-- yes, the YOLO rerun path processes frames in batches (default `--batch-size 8`)
-- adjust with `--batch-size` depending on GPU/CPU memory
+1. The image-space bounding box is mapped into feature-map coordinates using the layer stride.
+2. A region is cropped from each hooked feature map.
+3. `AdaptiveAvgPool2d((3, 3))` is applied to each crop.
+4. The pooled tensors are flattened and concatenated into a raw activation vector.
+5. PCA is fit across all vectors in the input trace.
+6. Each vector is projected to 256 dimensions and L2-normalized.
+7. The projected vector is stored in the detection as `activation`.
 
-## How It Works (Two Components)
+The enrichment step preserves the original detections and only augments them.
 
-The Phase 1 reasoning layer has two conceptual components:
+This separation is a design choice, not just an implementation detail. It allows the project to maintain a versioned detection schema while evolving the reasoning layer independently. If enrichment logic changes (different hook layers, pooling, projection, or matching policy), the original detection trace remains untouched.
 
-### 1. Enriching (feature extraction + embedding)
+### Linking
 
-This component adds an `activation` payload to each existing detection by:
+Because YOLO is re-run during enrichment, detections are linked back to the original JSON entries by:
 
-- re-running YOLOv8 on the original frame images
-- capturing two backbone feature maps using forward hooks (mid + deep `C2f`)
-- cropping the detection ROI in feature-map space (using stride-based coordinate scaling)
-- applying `AdaptiveAvgPool2d((3, 3))`
-- flattening + concatenating pooled features
-- fitting PCA across all detections in the input trace
-- projecting to a 256-d vector and L2-normalizing it
+- `class_id` match
+- bounding-box IoU threshold (`>= 0.5`)
 
-Output of this component:
+This keeps the original detection trace as the source of truth while attaching features from the rerun inference.
 
-- `enriched_detections.json` (per-detection activation vectors)
-- `pca_projection.pkl` (fitted PCA object)
-- `projection_manifest.json` (provenance metadata)
+The linking step is the bridge between the two stages. It ensures the activation vector is written onto the correct detection record even when rerun YOLO output order differs from the original JSON. Using class and IoU matching provides a deterministic and inspectable rule for this association.
 
-### 2. Linking (input detections <-> rerun YOLO detections)
+## Repository Structure
 
-This component ensures activations are attached to the correct original JSON entries.
+The codebase is split between baseline detection and post-processing enrichment.
 
-It does not add or remove detections. Instead, for each frame it:
+The `src/detection/` package contains the detection pipeline used to sample video frames, run YOLOv8, and write JSON traces. These modules define the minimal artifact that later stages consume.
 
-- reruns YOLOv8 and reads the rerun detections
-- matches each input JSON detection to a rerun YOLO detection by:
-- `class_id` equality
-- bbox IoU threshold (`>= 0.5`)
-- keeps original input detections as the source-of-truth records
-- uses the matched (or fallback original bbox if unmatched) entry to compute the activation crop
+The `src/detection/enrichment/` package contains the Phase 1 reasoning-layer implementation. It includes:
 
-Why this matters:
+- layer discovery utilities for hook placement
+- hook-based feature capture during YOLO reruns
+- ROI pooling and activation vector construction
+- PCA fitting and projection
+- output validation for enriched traces
 
-- preserves the original sampled trace as a stable contract
-- enables deterministic downstream indexing (detections are sorted by confidence before writing)
-- provides a clear boundary between raw detection generation and post-processing reasoning
+Compatibility wrappers remain in `src/detection/` for legacy module paths, but the `src/detection/enrichment/` package is the primary interface for the activation pipeline.
 
-### Layer Discovery (C2f modules)
+## Outputs
 
-Use the discovery utility to inspect candidate backbone `C2f` layers before hooking:
+The output layout mirrors the two-stage architecture.
 
-```bash
-python3 -m src.detection.enrichment.discover_layers --model yolov8n.yaml
-```
+Detection output:
 
-`discover_layers` is lightweight and does not require `scikit-learn` to be importable.
+- `experiments/results/detections/<video_name>_detections.json`
 
-For `yolov8n` and `yolov8m`, the typical backbone choices are:
+Enrichment output (per video):
 
-- deep (stride 32): module `8`
-- mid (stride 16): module `6`
+- `experiments/results/enriched/<video_name>/enriched_detections.json`
+- `experiments/results/enriched/<video_name>/pca_projection.pkl`
+- `experiments/results/enriched/<video_name>/projection_manifest.json`
 
-### Run Enrichment
+`enriched_detections.json` is the main downstream artifact. It preserves the original per-frame detection records and adds activation metadata for each detection.
 
-Behavior:
+`pca_projection.pkl` is the fitted dimensionality-reduction model for that enrichment run. It captures how raw activation vectors were projected into the 256-dimensional embedding space.
 
-- re-runs YOLO and captures two backbone feature maps with forward hooks
-- matches rerun detections back to input JSON by `class_id` + bbox IoU (`>= 0.5`)
-- crops feature-map ROIs by stride (`16` and `32`)
-- applies `AdaptiveAvgPool2d((3, 3))`, concatenates vectors, fits PCA in a first pass
-- projects to `256` dimensions, L2-normalizes, and writes enriched JSON in a second pass
-- sorts detections by confidence descending within each frame
+`projection_manifest.json` records provenance for reproducibility, including selected hook layers, stride configuration, pooling strategy, projection dimension, fit timestamp, and input file hash.
 
-### Validate Enriched Output
-
-The validator asserts:
-
-- every detection has an `activation` field
-- `activation.dim == 256`
-- no NaN/Inf values in activation vectors
-- prints a summary including `small_crop_flag` counts
-
-## Recommended Process (End-to-End)
-
-1. Run detection batch over `data/raw_videos/`
-2. Run `discover_layers` for your YOLO variant (`yolov8n.yaml`, `yolov8m.yaml`, etc.)
-3. Run enrichment (single video first to verify settings)
-4. Run the enrichment shell loop for all detection JSONs
-5. Validate one output, then run the validation loop for all outputs
-
-## Structure
-
-- `src/detection/types.py`: Shared dataclasses for detections
-- `src/detection/io.py`: Output path utilities and JSON writer
-- `src/detection/sampler.py`: Frame sampling from video
-- `src/detection/yolo_runner.py`: YOLOv8 inference wrapper
-- `src/detection/pipeline.py`: Pipeline orchestration
-- `src/detection/cli.py`: Shared CLI argument parsing and dispatch
-- `src/detection/run_yolo.py`: Single-video CLI entry point
-- `src/detection/run_yolo_batch.py`: Batch CLI entry point
-- `src/detection/enrichment/pipeline.py`: Phase 1 activation enrichment pipeline (hooks, ROI pooling, PCA, manifests)
-- `src/detection/enrichment/discover_layers.py`: YOLOv8 `C2f` layer discovery utility
-- `src/detection/enrichment/run.py`: Activation enrichment CLI entry point
-- `src/detection/enrichment/validate.py`: Enriched JSON validation script
-- `src/detection/enrichment/introspection.py`: Shared YOLO model introspection helpers
-- `src/detection/activation_enrichment.py`: Compatibility wrapper (legacy import path)
-- `src/detection/discover_yolo_layers.py`: Compatibility wrapper (legacy CLI module path)
-- `src/detection/run_activation_enrichment.py`: Compatibility wrapper (legacy CLI module path)
-- `src/detection/validate_enriched_detections.py`: Compatibility wrapper (legacy CLI module path)
-
-## Config
-
-- `--video`: input video path (single mode)
-- `--video-dir`: input directory (batch mode)
-- `--pattern`: glob for batch videos (default `*.mp4`)
-- `--sample-rate`: sample every N frames (default 5)
-- `--model`: YOLOv8 model name or path (default `yolov8n.pt`)
-
-## Enriched Detection Schema (Phase 1)
+## Enriched Detection Schema
 
 Each detection in `enriched_detections.json` includes an `activation` payload:
 
@@ -251,3 +211,7 @@ Each detection in `enriched_detections.json` includes an `activation` payload:
   }
 }
 ```
+
+The `activation.vector` field is the compact embedding used by downstream reasoning. It is produced from backbone feature crops, projected with PCA, and L2-normalized so it can be compared with similarity-based methods in later phases.
+
+The remaining activation fields describe how that vector was produced. Together, they make the enriched JSON a self-describing intermediate artifact rather than just a raw tensor dump.
