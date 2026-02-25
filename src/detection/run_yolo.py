@@ -15,6 +15,11 @@ else:
 
 def main() -> None:
     """Parse args and run single-video detection."""
+    print(
+        "DEPRECATION: `src/detection/run_yolo.py` is detection-only. "
+        "Use `python3 src/run_pipeline.py --video <path> --model yolov8n.pt --sample-rate 5` for Phase 1 outputs.",
+        file=sys.stderr,
+    )
     parser = build_parser(mode="single")
     args = parser.parse_args()
     output_path = run_single(args)

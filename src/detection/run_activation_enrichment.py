@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Compatibility wrapper for activation enrichment CLI.
+"""Deprecated compatibility wrapper for the retired two-pass enrichment CLI."""
 
-Prefer `python -m src.detection.enrichment.run`.
-"""
+from __future__ import annotations
 
-from .enrichment.run import main
+import os
+import sys
+
+if __package__ in (None, ""):
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    from detection.enrichment.run import main  # type: ignore
+else:
+    from .enrichment.run import main
 
 
 if __name__ == "__main__":

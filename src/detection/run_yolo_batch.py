@@ -15,6 +15,12 @@ else:
 
 def main() -> None:
     """Parse args and run batch detection."""
+    print(
+        "DEPRECATION: `src/detection/run_yolo_batch.py` is detection-only. "
+        "Use `python3 src/run_pipeline.py --video-dir <dir> --pattern \"*.mp4\" --model yolov8n.pt --sample-rate 5` "
+        "for Phase 1 outputs.",
+        file=sys.stderr,
+    )
     parser = build_parser(mode="batch")
     args = parser.parse_args()
     outputs = run_batch(args)
