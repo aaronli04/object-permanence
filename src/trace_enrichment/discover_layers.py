@@ -1,23 +1,24 @@
-"""Utility to inspect YOLOv8 modules and list C2f layer candidates."""
+#!/usr/bin/env python3
+"""List YOLOv8 C2f layer candidates for hook selection."""
 
 from __future__ import annotations
 
 import argparse
 
-from ultralytics import YOLO
-from .introspection import get_module_map, list_c2f_module_names
+from .model import ensure_model_runtime_dependencies, get_module_map, list_c2f_module_names, load_yolo
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="List YOLOv8 C2f modules for hook discovery.")
     parser.add_argument(
         "--model",
-        default="yolov8m.pt",
+        default="yolov8n.pt",
         help="Ultralytics YOLOv8 model name or local weights path.",
     )
     args = parser.parse_args()
 
-    yolo = YOLO(args.model)
+    ensure_model_runtime_dependencies()
+    yolo = load_yolo(args.model)
     core = yolo.model
 
     print(f"Model: {args.model}")

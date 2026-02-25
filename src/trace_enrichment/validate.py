@@ -6,10 +6,10 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from typing import Any, Dict, List
+from typing import Any
 
 
-def load_json(path: str) -> List[Dict[str, Any]]:
+def load_json(path: str) -> list[dict[str, Any]]:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, list):
@@ -17,17 +17,11 @@ def load_json(path: str) -> List[Dict[str, Any]]:
     return data
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Validate enriched detections JSON.")
-    parser.add_argument("enriched_json", help="Path to enriched_detections.json")
-    parser.add_argument("--expected-dim", type=int, default=256, help="Expected activation dimension")
-    args = parser.parse_args()
-
-    frames = load_json(args.enriched_json)
+def validate_enriched_frames(frames: list[dict[str, Any]], expected_dim: int) -> dict[str, float | int]:
     frame_count = len(frames)
     det_count = 0
     small_crop_count = 0
-    norms: List[float] = []
+    norms: list[float] = []
 
     for frame in frames:
         if "frame_num" not in frame or "detections" not in frame:
@@ -41,14 +35,15 @@ def main() -> None:
             if "activation" not in det:
                 raise AssertionError(f"Missing activation field on detection in frame {frame['frame_num']}")
             act = det["activation"]
-            if int(act.get("dim", -1)) != args.expected_dim:
+            if int(act.get("dim", -1)) != expected_dim:
                 raise AssertionError(
-                    f"Expected activation dim {args.expected_dim}, got {act.get('dim')} in frame {frame['frame_num']}"
+                    f"Expected activation dim {expected_dim}, got {act.get('dim')} in frame {frame['frame_num']}"
                 )
             vec = act.get("vector")
-            if not isinstance(vec, list) or len(vec) != args.expected_dim:
+            if not isinstance(vec, list) or len(vec) != expected_dim:
+                got_len = len(vec) if isinstance(vec, list) else "non-list"
                 raise AssertionError(
-                    f"Activation vector length mismatch in frame {frame['frame_num']}: {len(vec) if isinstance(vec, list) else 'non-list'}"
+                    f"Activation vector length mismatch in frame {frame['frame_num']}: {got_len}"
                 )
             if any((not isinstance(v, (int, float))) or (not math.isfinite(float(v))) for v in vec):
                 raise AssertionError(f"Activation vector contains NaN/Inf in frame {frame['frame_num']}")
@@ -58,11 +53,27 @@ def main() -> None:
                 small_crop_count += 1
 
     mean_norm = (sum(norms) / len(norms)) if norms else 0.0
-    print(f"frames={frame_count}")
-    print(f"detections={det_count}")
-    print(f"expected_dim={args.expected_dim}")
-    print(f"small_crop_flag_count={small_crop_count}")
-    print(f"mean_l2_norm={mean_norm:.6f}")
+    return {
+        "frames": frame_count,
+        "detections": det_count,
+        "expected_dim": expected_dim,
+        "small_crop_flag_count": small_crop_count,
+        "mean_l2_norm": mean_norm,
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Validate enriched detections JSON.")
+    parser.add_argument("enriched_json", help="Path to enriched_detections.json")
+    parser.add_argument("--expected-dim", type=int, default=256, help="Expected activation dimension")
+    args = parser.parse_args()
+
+    stats = validate_enriched_frames(load_json(args.enriched_json), args.expected_dim)
+    print(f"frames={stats['frames']}")
+    print(f"detections={stats['detections']}")
+    print(f"expected_dim={stats['expected_dim']}")
+    print(f"small_crop_flag_count={stats['small_crop_flag_count']}")
+    print(f"mean_l2_norm={stats['mean_l2_norm']:.6f}")
     print("Validation passed")
 
 

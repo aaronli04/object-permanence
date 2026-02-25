@@ -1,8 +1,13 @@
 # Object Permanence
 
-YOLOv8-based video detection and Phase 1 activation enrichment for object permanence reasoning.
+Single-pass YOLOv8 detection + activation trace enrichment for object permanence experiments.
 
-Phase 1 ends at an enriched detection trace: sampled-frame detections plus activation vectors from YOLOv8 backbone hooks. It intentionally does not include temporal linking, tracking, re-identification, or occlusion reasoning (those belong to a future Phase 2).
+This repository's current scope is only enriched trace generation:
+- sampled-frame detections
+- backbone activation embeddings
+- PCA projection artifacts and provenance
+
+It does not implement temporal linking, tracking, re-identification, occlusion handling, or any later reasoning stage.
 
 ## Setup
 
@@ -13,9 +18,7 @@ python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 ```
 
-## Run
-
-### 1. Run Phase 1 (single pass)
+## Run Trace Enrichment
 
 Single video:
 
@@ -36,109 +39,58 @@ python3 src/run_pipeline.py \
   --model yolov8n.pt
 ```
 
-Each video writes:
+Batch mode processes videos sequentially, logs progress per video, continues on failures, and exits nonzero if any video fails.
 
-- `experiments/results/enriched/<video_name>/enriched_detections.json`
-- `experiments/results/enriched/<video_name>/pca_projection.pkl`
-- `experiments/results/enriched/<video_name>/projection_manifest.json`
-
-Batch mode runs videos sequentially, logs per-video progress, continues on failure, and exits nonzero if any video fails.
-
-### 2. Discover hook layers (optional, for overrides)
+### Optional: Discover Hook Layers
 
 ```bash
-python3 -m src.detection.enrichment.discover_layers --model yolov8n.yaml
+python3 -m src.trace_enrichment.discover_layers --model yolov8n.pt
 ```
 
-Typical YOLOv8n/YOLOv8m hook choices:
-
+Typical YOLOv8n/YOLOv8m defaults used by the pipeline:
 - deep layer: `8` (stride `32`)
 - mid layer: `6` (stride `16`)
 
-### 3. Validate enriched outputs
-
-Single file:
+### Validate Enriched Output
 
 ```bash
-python3 -m src.detection.enrichment.validate \
+python3 -m src.trace_enrichment.validate \
   experiments/results/enriched/3sec_Left_to_Right/enriched_detections.json \
   --expected-dim 256
 ```
 
-Batch validation:
-
-```bash
-for f in experiments/results/enriched/*/enriched_detections.json; do
-  python3 -m src.detection.enrichment.validate "$f" --expected-dim 256 || break
-done
-```
-
-## How It Works
-
-Phase 1 uses a single YOLOv8 inference pass per sampled frame batch to produce both detection decisions and activation vectors. There is no rerun and no internal IoU-based artifact reconciliation step.
-
-### Detection
-
-The pipeline samples video frames at a fixed interval and runs YOLOv8 inference. For each sampled frame it records detections (`class_id`, `class_name`, `bbox`, `confidence`) in the enriched output payload.
-
-In practice, this means the detection stage is responsible only for answering: "What did YOLO detect in this frame?" It is intentionally narrow in scope. It does not attempt identity tracking, temporal smoothing, or object permanence inference. Those concerns are deferred to downstream stages.
-
-### Enrichment
-
-During the same YOLO forward pass, the pipeline captures backbone feature maps with forward hooks and computes an activation embedding for each detection from the exact same detection bbox.
-
-This stage exists because the final detection output is often too compressed for reasoning tasks. A class label and bounding box are sufficient for detection, but they do not preserve much of the model's internal representation of appearance. The enrichment stage recovers that information from the backbone and turns it into a compact vector that can be compared across frames.
-
-It uses two backbone feature maps captured with forward hooks:
-
-- a deep `C2f` layer (semantic features, stride 32)
-- a mid `C2f` layer (higher spatial resolution, stride 16)
-
-For each detection:
-
-1. The image-space bounding box is mapped into feature-map coordinates using the layer stride.
-2. A region is cropped from each hooked feature map.
-3. `AdaptiveAvgPool2d((3, 3))` is applied to each crop.
-4. The pooled tensors are flattened and concatenated into a raw activation vector.
-5. PCA is fit across all detections collected for the video trace.
-6. Each vector is projected to 256 dimensions and L2-normalized.
-7. The projected vector is stored in the detection as `activation`.
-
-The enriched trace is the Phase 1 output artifact used by later stages.
-
-## Repository Structure
-
-The codebase keeps detection utilities and enrichment logic in the `src/detection/` area, with a unified top-level Phase 1 entrypoint.
-
-The `src/detection/` package contains detection utilities (frame sampling, YOLO wrappers, legacy detection-only CLIs) used by the unified Phase 1 pipeline.
-
-The `src/detection/enrichment/` package contains the Phase 1 reasoning-layer implementation. It includes:
-
-- layer discovery utilities for hook placement
-- hook-based feature capture during YOLO inference
-- ROI pooling and activation vector construction
-- PCA fitting and projection
-- output validation for enriched traces
-
-Use `src/run_pipeline.py` as the primary Phase 1 interface. Compatibility wrappers remain in `src/detection/` for legacy module paths and currently emit deprecation notices.
-
 ## Outputs
 
-Phase 1 writes enriched outputs per video:
+For input video `<video_name>.mp4`, the pipeline writes:
 
 - `experiments/results/enriched/<video_name>/enriched_detections.json`
 - `experiments/results/enriched/<video_name>/pca_projection.pkl`
 - `experiments/results/enriched/<video_name>/projection_manifest.json`
 
-`enriched_detections.json` is the main downstream artifact. It contains per-frame detections and activation metadata for each detection.
+`enriched_detections.json` is the main downstream artifact and preserves per-frame detections with activation metadata.
 
-`pca_projection.pkl` is the fitted dimensionality-reduction model for that video run. It captures how raw activation vectors were projected into the 256-dimensional embedding space.
+`pca_projection.pkl` is the fitted PCA model for that video's activation vectors.
 
-`projection_manifest.json` records provenance for reproducibility, including selected hook layers, stride configuration, pooling strategy, projection dimension, fit timestamp, and input video hash.
+`projection_manifest.json` records provenance and projection settings (model, hook layers/strides, pooling strategy, PCA dims, sample rate, counts, and input video hash).
 
-## Enriched Detection Schema
+## How It Works
 
-Each detection in `enriched_detections.json` includes an `activation` payload:
+The pipeline is single-pass with respect to YOLO inference on sampled frames:
+
+1. Sample every Nth frame from the input video.
+2. Run YOLOv8 on batches of sampled frames.
+3. Capture backbone feature maps via forward hooks during the same forward pass.
+4. For each detection, crop feature ROIs from the hooked maps using the same detection bbox.
+5. Adaptive-average-pool each ROI to `3x3`, flatten, and concatenate (deep + mid) into a raw activation vector.
+6. Fit PCA across all detections in the trace.
+7. Project to 256 dimensions (or fewer fitted components padded to 256), then L2-normalize.
+8. Write the enriched trace and PCA provenance artifacts.
+
+No IoU reconciliation or internal artifact "linking" is used. Detection decisions and activation vectors come from the same forward pass.
+
+## Enriched Detection Schema (Activation Payload)
+
+Each detection in `enriched_detections.json` includes:
 
 ```json
 {
@@ -156,7 +108,3 @@ Each detection in `enriched_detections.json` includes an `activation` payload:
   }
 }
 ```
-
-The `activation.vector` field is the compact embedding used by downstream reasoning. It is produced from backbone feature crops, projected with PCA, and L2-normalized so it can be compared with similarity-based methods in later phases.
-
-The remaining activation fields describe how that vector was produced. Together, they make the enriched JSON a self-describing intermediate artifact rather than just a raw tensor dump.
