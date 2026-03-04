@@ -12,11 +12,20 @@ Expected input JSON format:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
+import os
 from pathlib import Path
+import sys
 from typing import Iterable, Sequence
 
 import numpy as np
+
+PROJECT_SRC = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+if PROJECT_SRC not in sys.path:
+    sys.path.insert(0, PROJECT_SRC)
+
+from common.numeric import l2_normalize_rows
 
 
 def _parse_frame_list(raw: str) -> list[int]:
@@ -24,12 +33,6 @@ def _parse_frame_list(raw: str) -> list[int]:
     if not values:
         raise ValueError("Frame list cannot be empty.")
     return [int(item) for item in values]
-
-
-def _l2_normalize_rows(matrix: np.ndarray) -> np.ndarray:
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    safe_norms = np.where(norms > 0.0, norms, 1.0)
-    return matrix / safe_norms
 
 
 def _mean_upper_triangle(sim_matrix: np.ndarray, indices: Sequence[int]) -> float:
@@ -114,7 +117,7 @@ def sweep_topk(
         if k <= 0 or k > dim:
             continue
         sliced = vectors[:, :k]
-        sliced = _l2_normalize_rows(sliced)
+        sliced = l2_normalize_rows(sliced)
         sim = sliced @ sliced.T
 
         ks.append(k)
@@ -161,7 +164,13 @@ def plot_curves(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Sweep top-k PCA dims and compare cosine similarity aggregates.")
     parser.add_argument("--input-json", required=True, help="Path to JSON list of {'frame','vec'} objects.")
-    parser.add_argument("--output-plot", default="experiments/topk_similarity_sweep.png", help="Path to output plot PNG.")
+    parser.add_argument(
+        "--output-plot",
+        default="experiments/results/topk_similarity_sweep.png",
+        help="Path to output plot PNG.",
+    )
+    parser.add_argument("--skip-plot", action="store_true", help="Skip plot generation (still computes metrics).")
+    parser.add_argument("--output-csv", help="Optional path to output CSV with k,within_early,within_late,cross.")
     parser.add_argument("--min-k", type=int, default=2, help="Minimum k (inclusive).")
     parser.add_argument("--max-k", type=int, default=40, help="Maximum k (inclusive).")
     parser.add_argument("--step-k", type=int, default=2, help="Step size for k sweep.")
@@ -185,13 +194,23 @@ def main() -> int:
         late_frames=late_frames,
     )
 
-    plot_curves(
-        ks=ks,
-        within_early=within_early,
-        within_late=within_late,
-        cross_scores=cross_scores,
-        output_path=Path(args.output_plot),
-    )
+    if not args.skip_plot:
+        plot_curves(
+            ks=ks,
+            within_early=within_early,
+            within_late=within_late,
+            cross_scores=cross_scores,
+            output_path=Path(args.output_plot),
+        )
+
+    if args.output_csv:
+        output_csv = Path(args.output_csv)
+        output_csv.parent.mkdir(parents=True, exist_ok=True)
+        with output_csv.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["k", "within_early", "within_late", "cross"])
+            for k, w_e, w_l, c in zip(ks, within_early, within_late, cross_scores):
+                writer.writerow([int(k), float(w_e), float(w_l), float(c)])
 
     best_idx = int(np.nanargmax(np.asarray(cross_scores, dtype=np.float64)))
     best_k = ks[best_idx]
@@ -202,7 +221,10 @@ def main() -> int:
         print(f"{k},{w_e:.6f},{w_l:.6f},{c:.6f}")
     print(f"best_k_for_cross={best_k}")
     print(f"best_cross_similarity={best_cross:.6f}")
-    print(f"plot_saved={Path(args.output_plot)}")
+    if not args.skip_plot:
+        print(f"plot_saved={Path(args.output_plot)}")
+    if args.output_csv:
+        print(f"csv_saved={Path(args.output_csv)}")
     return 0
 
 

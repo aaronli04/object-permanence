@@ -34,6 +34,7 @@ class TemporalLinkingConfig:
     assignment_method: Literal["hungarian", "greedy"] = "hungarian"
     match_within_class: bool = True
     filter_short_tracks_in_summary: bool = True
+    activation_topk: int | None = None
 
     # Post-hoc relinking controls (always evaluated in sweep 2).
     relink_threshold: float = 0.55
@@ -79,3 +80,5 @@ class TemporalLinkingConfig:
 
         if (self.w_last + self.w_ema + self.w_hist) <= 0.0:
             raise ValueError("w_last + w_ema + w_hist must be > 0.0")
+        if self.activation_topk is not None and self.activation_topk <= 0:
+            raise ValueError("activation_topk must be > 0 when provided")

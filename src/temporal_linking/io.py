@@ -3,31 +3,23 @@
 from __future__ import annotations
 
 import copy
-import json
 import os
 from typing import Any
 
 import numpy as np
 
+try:
+    from common.io import load_json, write_json
+    from common.numeric import topk_l2_renorm_pad
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.io import load_json, write_json  # type: ignore
+    from src.common.numeric import topk_l2_renorm_pad  # type: ignore
+
 from .types import Detection, FrameDetections, TemporalLinkArtifacts
 
 EXPECTED_ACTIVATION_DIM = 256
 
-
-def load_json(path: str) -> Any:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def write_json(path: str, payload: Any) -> None:
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2)
-
-
-def load_enriched_frames(path: str) -> list[FrameDetections]:
+def load_enriched_frames(path: str, *, activation_topk: int | None = None) -> list[FrameDetections]:
     raw = load_json(path)
     if not isinstance(raw, list):
         raise ValueError("Expected enriched detections JSON top-level list")
@@ -69,6 +61,12 @@ def load_enriched_frames(path: str) -> list[FrameDetections]:
                 raise ValueError(
                     f"Detection at frame {frame_num} index {det_index} activation.dim must be "
                     f"{EXPECTED_ACTIVATION_DIM}, got {activation_dim}"
+                )
+            if activation_topk is not None:
+                activation_vec = topk_l2_renorm_pad(
+                    activation_vec,
+                    topk=int(activation_topk),
+                    target_dim=EXPECTED_ACTIVATION_DIM,
                 )
 
             bbox = det.get("bbox")

@@ -35,13 +35,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--head-layer",
         default=DEFAULT_HEAD_LAYER,
-        help="Named module for detection-head hook (default: penultimate Conv in model.model[-1].cv3[2]).",
+        help="Named module hook target (default: 15 for model.model[15]).",
     )
     parser.add_argument(
         "--head-stride",
         type=int,
         default=DEFAULT_HEAD_STRIDE,
-        help="Feature stride for the hooked detection-head layer.",
+        help="Hook layer stride metadata stored in manifest (default: 8 for model.model[15]).",
     )
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE, help="YOLO inference batch size.")
     parser.add_argument("--pca-dim", type=int, default=OUTPUT_VECTOR_DIM, help="Target PCA dimension.")

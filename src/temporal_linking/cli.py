@@ -7,6 +7,11 @@ import os
 import sys
 from typing import Sequence
 
+try:
+    from common.paths import scenario_name_from_enriched_json
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.paths import scenario_name_from_enriched_json  # type: ignore
+
 from .config import TemporalLinkingConfig
 
 
@@ -17,7 +22,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-dir",
         default=None,
         help="Output directory for linked_detections.json, tracks.json, linking_manifest.json, relink_manifest.json. "
-        "Default: directory containing enriched JSON.",
+        "Default: experiments/results/linking/<scenario_name_from_enriched_json_parent>.",
     )
 
     parser.add_argument(
@@ -59,6 +64,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=True,
         help="Only count tracks with hits >= min_track_length as valid in summary stats.",
     )
+    parser.add_argument(
+        "--activation-topk",
+        type=int,
+        default=None,
+        help="If set, keep first K activation dims, L2-renormalize, and zero-pad back to 256 before linking.",
+    )
 
     parser.add_argument(
         "--relink-threshold",
@@ -99,6 +110,11 @@ def _load_runner():
     return run_temporal_linking
 
 
+def _default_linking_output_dir(enriched_json_path: str) -> str:
+    scenario = scenario_name_from_enriched_json(enriched_json_path)
+    return os.path.join("experiments", "results", "linking", scenario)
+
+
 def _build_config(args: argparse.Namespace) -> TemporalLinkingConfig:
     return TemporalLinkingConfig(
         similarity_threshold=args.similarity_threshold,
@@ -116,6 +132,7 @@ def _build_config(args: argparse.Namespace) -> TemporalLinkingConfig:
         assignment_method=args.assignment_method,
         match_within_class=bool(args.match_within_class),
         filter_short_tracks_in_summary=bool(args.filter_short_tracks_in_summary),
+        activation_topk=args.activation_topk,
         relink_threshold=args.relink_threshold,
         relink_max_gap_frames=args.relink_max_gap_frames,
         relink_min_track_hits=args.relink_min_track_hits,
@@ -128,7 +145,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    output_dir = args.output_dir if args.output_dir else (os.path.dirname(args.enriched_json) or ".")
+    output_dir = args.output_dir if args.output_dir else _default_linking_output_dir(args.enriched_json)
 
     run_temporal_linking = _load_runner()
     config = _build_config(args)

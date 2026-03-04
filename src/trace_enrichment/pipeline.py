@@ -6,6 +6,11 @@ import datetime as dt
 import os
 from typing import Any, Iterable, Optional
 
+try:
+    from common.numeric import l2_normalize
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.numeric import l2_normalize  # type: ignore
+
 from .constants import (
     ACTIVATION_LAYER_ALIASES,
     DEFAULT_BATCH_SIZE,
@@ -60,16 +65,9 @@ def _iter_detections(frames: list[CollectedFrame]) -> Iterable[CollectedDetectio
 def _layer_manifest_section(cfg: HookConfig) -> dict[str, Any]:
     return {
         "aliases": list(ACTIVATION_LAYER_ALIASES),
-        "actual": {"head_cv3_2": cfg.layer},
-        "strides": {"head_cv3_2": cfg.stride},
+        "actual": {"neck_c2f_15": cfg.layer},
+        "strides": {"neck_c2f_15": cfg.stride},
     }
-
-
-def _l2_normalize(vec: "np.ndarray") -> "np.ndarray":
-    norm = float(np.linalg.norm(vec))
-    if norm <= 0 or not np.isfinite(norm):
-        return np.zeros_like(vec)
-    return vec / norm
 
 
 def _pad_and_normalize_projection(vec: "np.ndarray", source_dim: int, target_dim: int) -> "np.ndarray":
@@ -77,7 +75,7 @@ def _pad_and_normalize_projection(vec: "np.ndarray", source_dim: int, target_dim
         padded = np.zeros((target_dim,), dtype=np.float32)
         padded[:source_dim] = vec
         vec = padded
-    return _l2_normalize(vec)
+    return l2_normalize(vec)
 
 
 def collect_single_pass_trace(
@@ -122,7 +120,8 @@ def collect_single_pass_trace(
                     fmap=head_batch[index],
                     bbox_xyxy=det.bbox,
                     pool=pool,
-                    stride=hook_config.stride,
+                    frame_h=int(_frame.shape[0]),
+                    frame_w=int(_frame.shape[1]),
                 )
                 det.raw_vector = raw_vec
                 det.small_crop_flag = bool(small_crop_flag)

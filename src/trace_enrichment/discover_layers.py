@@ -34,7 +34,7 @@ def main() -> None:
         print(f"  [{idx}] {name} | type={module.__class__.__name__}")
     print("")
     print("Recommended hook target:")
-    print("  22.cv3.2.1  (penultimate Conv block in model.model[-1].cv3[2])")
+    print("  15  (C2f block in the neck, accessed as model.model[15])")
 
 
 if __name__ == "__main__":

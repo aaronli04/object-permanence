@@ -101,7 +101,7 @@ def run_temporal_linking(
     output_dir: str,
     config: TemporalLinkingConfig,
 ) -> dict[str, str]:
-    frames = load_enriched_frames(enriched_json_path)
+    frames = load_enriched_frames(enriched_json_path, activation_topk=config.activation_topk)
     result = link_video_frames(frames, config, enriched_json_path=enriched_json_path)
 
     artifacts = build_output_paths(output_dir)

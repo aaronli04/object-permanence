@@ -4,13 +4,12 @@
 from __future__ import annotations
 
 import argparse
-import json
 from typing import Any
 
-
-def _load_json(path: str) -> Any:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+try:
+    from common.io import load_json
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.io import load_json  # type: ignore
 
 
 def validate_linked_detections(
@@ -113,15 +112,15 @@ def main() -> None:
     parser.add_argument("manifest_json", help="Path to linking_manifest.json")
     args = parser.parse_args()
 
-    manifest_payload = _load_json(args.manifest_json)
+    manifest_payload = load_json(args.manifest_json)
     cfg = manifest_payload.get("config", {}) if isinstance(manifest_payload, dict) else {}
     similarity_threshold = cfg.get("similarity_threshold")
 
     linked_stats = validate_linked_detections(
-        _load_json(args.linked_json),
+        load_json(args.linked_json),
         similarity_threshold=float(similarity_threshold) if similarity_threshold is not None else None,
     )
-    tracks_stats = validate_tracks_payload(_load_json(args.tracks_json))
+    tracks_stats = validate_tracks_payload(load_json(args.tracks_json))
 
     expected_stats = {
         "num_frames": linked_stats["num_frames"],

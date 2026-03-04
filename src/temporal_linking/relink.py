@@ -6,15 +6,13 @@ from typing import Any
 
 import numpy as np
 
+try:
+    from common.numeric import l2_normalize
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.numeric import l2_normalize  # type: ignore
+
 from .config import TemporalLinkingConfig
 from .types import RelinkEdge, Track, TrackFragment, TrackStatus
-
-
-def _l2_norm(vec: np.ndarray) -> np.ndarray:
-    norm = float(np.linalg.norm(vec))
-    if norm <= 0.0 or not np.isfinite(norm):
-        return np.zeros_like(vec, dtype=np.float32)
-    return (vec / norm).astype(np.float32, copy=False)
 
 
 def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
@@ -30,8 +28,8 @@ def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
         if not track.obs_positions:
             continue
 
-        frame_vecs = np.stack([_l2_norm(v) for v in track.obs_vecs], axis=0).astype(np.float32, copy=False)
-        centroid = _l2_norm(np.mean(frame_vecs, axis=0))
+        frame_vecs = np.stack([l2_normalize(v) for v in track.obs_vecs], axis=0).astype(np.float32, copy=False)
+        centroid = l2_normalize(np.mean(frame_vecs, axis=0))
         positions = list(track.obs_positions)
         fragments.append(
             TrackFragment(

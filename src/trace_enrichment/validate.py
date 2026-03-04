@@ -4,17 +4,13 @@
 from __future__ import annotations
 
 import argparse
-import json
 import math
 from typing import Any
 
-
-def load_json(path: str) -> list[dict[str, Any]]:
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    if not isinstance(data, list):
-        raise ValueError("Expected top-level list")
-    return data
+try:
+    from common.io import load_json
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.io import load_json  # type: ignore
 
 
 def validate_enriched_frames(frames: list[dict[str, Any]], expected_dim: int) -> dict[str, float | int]:
@@ -68,7 +64,10 @@ def main() -> None:
     parser.add_argument("--expected-dim", type=int, default=256, help="Expected activation dimension")
     args = parser.parse_args()
 
-    stats = validate_enriched_frames(load_json(args.enriched_json), args.expected_dim)
+    frames = load_json(args.enriched_json)
+    if not isinstance(frames, list):
+        raise ValueError("Expected top-level list")
+    stats = validate_enriched_frames(frames, args.expected_dim)
     print(f"frames={stats['frames']}")
     print(f"detections={stats['detections']}")
     print(f"expected_dim={stats['expected_dim']}")

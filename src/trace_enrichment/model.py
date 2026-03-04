@@ -116,15 +116,19 @@ def extract_detections_from_result(result: Any, *, sort_by_confidence: bool = Tr
 
 def _bbox_to_feature_roi(
     bbox_xyxy: Sequence[float],
-    stride: int,
+    frame_h: int,
+    frame_w: int,
     fmap_h: int,
     fmap_w: int,
 ) -> tuple[int, int, int, int, bool]:
+    if frame_h <= 0 or frame_w <= 0:
+        raise ValueError(f"Invalid frame shape for ROI mapping: h={frame_h}, w={frame_w}")
+
     x1, y1, x2, y2 = bbox_xyxy
-    fx1 = int(math.floor(x1 / stride))
-    fy1 = int(math.floor(y1 / stride))
-    fx2 = int(math.ceil(x2 / stride))
-    fy2 = int(math.ceil(y2 / stride))
+    fx1 = int(math.floor((x1 / frame_w) * fmap_w))
+    fy1 = int(math.floor((y1 / frame_h) * fmap_h))
+    fx2 = int(math.ceil((x2 / frame_w) * fmap_w))
+    fy2 = int(math.ceil((y2 / frame_h) * fmap_h))
 
     fx1 = max(0, min(fx1, fmap_w - 1))
     fy1 = max(0, min(fy1, fmap_h - 1))
@@ -147,13 +151,14 @@ def _bbox_to_feature_roi(
 def crop_and_pool_feature(
     fmap: "torch.Tensor",
     bbox_xyxy: Sequence[float],
-    stride: int,
+    frame_h: int,
+    frame_w: int,
     pool: "torch.nn.Module",
 ):
     if fmap.ndim != 3:
         raise ValueError(f"Expected feature map [C,H,W], got {tuple(fmap.shape)}")
     c, h, w = fmap.shape
-    x1, y1, x2, y2, small = _bbox_to_feature_roi(bbox_xyxy, stride, h, w)
+    x1, y1, x2, y2, small = _bbox_to_feature_roi(bbox_xyxy, frame_h, frame_w, h, w)
     crop = fmap[:, y1:y2, x1:x2].unsqueeze(0)
     pooled = pool(crop).reshape(c * POOL_SIZE[0] * POOL_SIZE[1])
     vec = pooled.detach().cpu().numpy().astype(np.float32, copy=False)
@@ -164,7 +169,8 @@ def build_raw_activation_vector(
     fmap: "torch.Tensor",
     bbox_xyxy: Sequence[float],
     pool: "torch.nn.Module",
-    stride: int,
+    frame_h: int,
+    frame_w: int,
 ):
-    vec, small = crop_and_pool_feature(fmap, bbox_xyxy, stride, pool)
+    vec, small = crop_and_pool_feature(fmap, bbox_xyxy, frame_h, frame_w, pool)
     return vec, small

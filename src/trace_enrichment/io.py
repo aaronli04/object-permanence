@@ -4,19 +4,17 @@ from __future__ import annotations
 
 import glob
 import hashlib
-import json
 import os
 from typing import Any
 
+try:
+    from common.io import write_json
+    from common.paths import video_stem
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.io import write_json  # type: ignore
+    from src.common.paths import video_stem  # type: ignore
+
 from .types import OutputArtifacts
-
-
-def write_json(path: str, payload: Any) -> None:
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2)
 
 
 def sha256_file(path: str) -> str:
@@ -25,10 +23,6 @@ def sha256_file(path: str) -> str:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
-
-
-def video_stem(video_path: str) -> str:
-    return os.path.splitext(os.path.basename(video_path))[0]
 
 
 def find_videos(video_dir: str, pattern: str) -> list[str]:

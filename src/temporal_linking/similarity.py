@@ -6,15 +6,13 @@ import math
 
 import numpy as np
 
+try:
+    from common.numeric import l2_normalize
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.numeric import l2_normalize  # type: ignore
+
 from .config import TemporalLinkingConfig
 from .types import Detection, PairScores, Track
-
-
-def l2_norm(vec: np.ndarray) -> np.ndarray:
-    norm = float(np.linalg.norm(vec))
-    if norm <= 0.0 or not np.isfinite(norm):
-        return np.zeros_like(vec, dtype=np.float32)
-    return (vec / norm).astype(np.float32, copy=False)
 
 
 def _bbox_center(bbox_xyxy: np.ndarray) -> np.ndarray:
@@ -66,7 +64,7 @@ def _history_mean(track: Track) -> np.ndarray:
 def build_reference_vector(track: Track, cfg: TemporalLinkingConfig) -> np.ndarray:
     hist_mean = _history_mean(track)
     mixed = (cfg.w_last * track.last_vec) + (cfg.w_ema * track.ema_vec) + (cfg.w_hist * hist_mean)
-    return l2_norm(mixed)
+    return l2_normalize(mixed)
 
 
 def _spatial_score(track: Track, det: Detection) -> float:

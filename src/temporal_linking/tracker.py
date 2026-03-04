@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from collections import deque
 
+try:
+    from common.numeric import l2_normalize
+except ImportError:  # pragma: no cover - import-path compatibility
+    from src.common.numeric import l2_normalize  # type: ignore
+
 from .config import TemporalLinkingConfig
-from .similarity import l2_norm
 from .types import Assignment, Detection, Track, TrackStatus, TrackerState
 
 
@@ -78,7 +82,9 @@ class TrackManager:
 
         track.last_bbox_xyxy = det.bbox_xyxy.copy()
         track.last_vec = det.activation_vec.copy()
-        track.ema_vec = l2_norm((self.cfg.ema_alpha * det.activation_vec) + ((1.0 - self.cfg.ema_alpha) * track.ema_vec))
+        track.ema_vec = l2_normalize(
+            (self.cfg.ema_alpha * det.activation_vec) + ((1.0 - self.cfg.ema_alpha) * track.ema_vec)
+        )
 
         if track.vec_history.maxlen != self.cfg.history_size:
             track.vec_history = deque(track.vec_history, maxlen=self.cfg.history_size)

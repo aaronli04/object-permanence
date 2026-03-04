@@ -35,6 +35,8 @@ dist/
 
 # Project outputs
 experiments/results/
+topk_similarity_sweep*.csv
+experiments/*_ball_vectors*.json
 
 # Large model weights
 *.pt
