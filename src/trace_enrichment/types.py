@@ -8,10 +8,8 @@ from typing import Any
 
 @dataclass(frozen=True)
 class HookConfig:
-    deep_layer: str
-    mid_layer: str
-    deep_stride: int
-    mid_stride: int
+    layer: str
+    stride: int
 
 
 @dataclass(frozen=True)

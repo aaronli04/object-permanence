@@ -8,10 +8,8 @@ from typing import Sequence
 
 from .constants import (
     DEFAULT_BATCH_SIZE,
-    DEFAULT_DEEP_LAYER,
-    DEFAULT_DEEP_STRIDE,
-    DEFAULT_MID_LAYER,
-    DEFAULT_MID_STRIDE,
+    DEFAULT_HEAD_LAYER,
+    DEFAULT_HEAD_STRIDE,
     DEFAULT_OUTPUT_ROOT,
     OUTPUT_VECTOR_DIM,
 )
@@ -34,10 +32,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model", required=True, help="Ultralytics YOLOv8 model weights or model identifier.")
     parser.add_argument("--sample-rate", type=int, default=5, help="Sample every N frames (default: 5).")
 
-    parser.add_argument("--deep-layer", default=DEFAULT_DEEP_LAYER, help="Named module for deep C2f hook.")
-    parser.add_argument("--mid-layer", default=DEFAULT_MID_LAYER, help="Named module for mid C2f hook.")
-    parser.add_argument("--deep-stride", type=int, default=DEFAULT_DEEP_STRIDE, help="Feature stride for deep hook layer.")
-    parser.add_argument("--mid-stride", type=int, default=DEFAULT_MID_STRIDE, help="Feature stride for mid hook layer.")
+    parser.add_argument(
+        "--head-layer",
+        default=DEFAULT_HEAD_LAYER,
+        help="Named module for detection-head hook (default: penultimate Conv in model.model[-1].cv3[2]).",
+    )
+    parser.add_argument(
+        "--head-stride",
+        type=int,
+        default=DEFAULT_HEAD_STRIDE,
+        help="Feature stride for the hooked detection-head layer.",
+    )
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE, help="YOLO inference batch size.")
     parser.add_argument("--pca-dim", type=int, default=OUTPUT_VECTOR_DIM, help="Target PCA dimension.")
     parser.add_argument("--output-root", default=DEFAULT_OUTPUT_ROOT, help="Root directory for enriched outputs.")
@@ -57,10 +62,8 @@ def _run_for_video(run_trace_enrichment, args: argparse.Namespace, video_path: s
         model_name=args.model,
         output_dir=output_dir,
         sample_rate=args.sample_rate,
-        deep_layer_name=args.deep_layer,
-        mid_layer_name=args.mid_layer,
-        stride_deep=args.deep_stride,
-        stride_mid=args.mid_stride,
+        layer_name=args.head_layer,
+        stride=args.head_stride,
         batch_size=args.batch_size,
         pca_dim=args.pca_dim,
     )

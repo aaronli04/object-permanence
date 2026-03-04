@@ -30,7 +30,7 @@ Input:
 Core responsibilities:
 - Sample every `N`th frame
 - Run YOLOv8 detections
-- Capture backbone activations from configured hook layers
+- Capture detection-head activations from a configured hook layer
 - Build per-detection activation vectors
 - Fit PCA and project vectors to 256 dims
 - L2-normalize projected vectors
@@ -100,7 +100,7 @@ Entrypoint:
   "activation": {
     "vector": [0.013, -0.224],
     "dim": 256,
-    "layers": ["backbone.C2f_deep", "backbone.C2f_mid"],
+    "layers": ["head.cv3[2]"],
     "pool": "adaptive_avg_3x3",
     "projection": "pca_256",
     "small_crop_flag": false

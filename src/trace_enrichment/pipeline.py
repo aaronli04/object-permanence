@@ -9,10 +9,8 @@ from typing import Any, Iterable, Optional
 from .constants import (
     ACTIVATION_LAYER_ALIASES,
     DEFAULT_BATCH_SIZE,
-    DEFAULT_DEEP_LAYER,
-    DEFAULT_DEEP_STRIDE,
-    DEFAULT_MID_LAYER,
-    DEFAULT_MID_STRIDE,
+    DEFAULT_HEAD_LAYER,
+    DEFAULT_HEAD_STRIDE,
     OUTPUT_VECTOR_DIM,
     POOL_SIZE,
     POOL_STRATEGY,
@@ -62,8 +60,8 @@ def _iter_detections(frames: list[CollectedFrame]) -> Iterable[CollectedDetectio
 def _layer_manifest_section(cfg: HookConfig) -> dict[str, Any]:
     return {
         "aliases": list(ACTIVATION_LAYER_ALIASES),
-        "actual": {"deep": cfg.deep_layer, "mid": cfg.mid_layer},
-        "strides": {"deep": cfg.deep_stride, "mid": cfg.mid_stride},
+        "actual": {"head_cv3_2": cfg.layer},
+        "strides": {"head_cv3_2": cfg.stride},
     }
 
 
@@ -110,24 +108,21 @@ def collect_single_pass_trace(
         results = yolo(batch_images, verbose=False)
         if len(results) != len(batch_items):
             raise RuntimeError("YOLO result count does not match inference batch size")
-        if hook_config.deep_layer not in hooks.outputs or hook_config.mid_layer not in hooks.outputs:
+        if hook_config.layer not in hooks.outputs:
             raise RuntimeError("Expected hook outputs were not captured during YOLO forward pass")
 
-        deep_batch = hooks.outputs[hook_config.deep_layer].detach().cpu()
-        mid_batch = hooks.outputs[hook_config.mid_layer].detach().cpu()
-        if deep_batch.shape[0] != len(batch_items) or mid_batch.shape[0] != len(batch_items):
+        head_batch = hooks.outputs[hook_config.layer].detach().cpu()
+        if head_batch.shape[0] != len(batch_items):
             raise RuntimeError("Hook output batch size does not match inference batch size")
 
         for index, (frame_num, _frame) in enumerate(batch_items):
             detections = extract_detections_from_result(results[index], sort_by_confidence=True)
             for det in detections:
                 raw_vec, small_crop_flag = build_raw_activation_vector(
-                    fmap_mid=mid_batch[index],
-                    fmap_deep=deep_batch[index],
+                    fmap=head_batch[index],
                     bbox_xyxy=det.bbox,
                     pool=pool,
-                    stride_mid=hook_config.mid_stride,
-                    stride_deep=hook_config.deep_stride,
+                    stride=hook_config.stride,
                 )
                 det.raw_vector = raw_vec
                 det.small_crop_flag = bool(small_crop_flag)
@@ -139,7 +134,7 @@ def collect_single_pass_trace(
             stats.total_detections += len(detections)
 
     pending: list[tuple[int, Any]] = []
-    with FeatureHookCollector(module_map=module_map, layer_names=[hook_config.deep_layer, hook_config.mid_layer]) as hooks:
+    with FeatureHookCollector(module_map=module_map, layer_names=[hook_config.layer]) as hooks:
         for frame_num, frame in FrameSampler(video_path, sample_rate):
             pending.append((int(frame_num), frame))
             if len(pending) >= batch_size:
@@ -247,10 +242,8 @@ def run_trace_enrichment(
     model_name: str,
     output_dir: str,
     sample_rate: int,
-    deep_layer_name: str = DEFAULT_DEEP_LAYER,
-    mid_layer_name: str = DEFAULT_MID_LAYER,
-    stride_deep: int = DEFAULT_DEEP_STRIDE,
-    stride_mid: int = DEFAULT_MID_STRIDE,
+    layer_name: str = DEFAULT_HEAD_LAYER,
+    stride: int = DEFAULT_HEAD_STRIDE,
     batch_size: int = DEFAULT_BATCH_SIZE,
     pca_dim: int = OUTPUT_VECTOR_DIM,
 ) -> dict[str, str]:
@@ -272,10 +265,8 @@ def run_trace_enrichment(
         output_dir=output_dir,
     )
     hook_config = HookConfig(
-        deep_layer=deep_layer_name,
-        mid_layer=mid_layer_name,
-        deep_stride=stride_deep,
-        mid_stride=stride_mid,
+        layer=layer_name,
+        stride=stride,
     )
     artifacts = build_output_artifacts(output_dir)
 

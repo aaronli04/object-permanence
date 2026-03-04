@@ -161,13 +161,10 @@ def crop_and_pool_feature(
 
 
 def build_raw_activation_vector(
-    fmap_mid: "torch.Tensor",
-    fmap_deep: "torch.Tensor",
+    fmap: "torch.Tensor",
     bbox_xyxy: Sequence[float],
     pool: "torch.nn.Module",
-    stride_mid: int,
-    stride_deep: int,
+    stride: int,
 ):
-    mid_vec, mid_small = crop_and_pool_feature(fmap_mid, bbox_xyxy, stride_mid, pool)
-    deep_vec, deep_small = crop_and_pool_feature(fmap_deep, bbox_xyxy, stride_deep, pool)
-    return np.concatenate([deep_vec, mid_vec], axis=0), (mid_small or deep_small)
+    vec, small = crop_and_pool_feature(fmap, bbox_xyxy, stride, pool)
+    return vec, small
