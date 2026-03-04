@@ -34,7 +34,7 @@ class TemporalLinkingConfig:
     assignment_method: Literal["hungarian", "greedy"] = "hungarian"
     match_within_class: bool = True
     filter_short_tracks_in_summary: bool = True
-    activation_topk: int | None = 128
+    activation_topk: int | None = 64
 
     # Post-hoc relinking controls (always evaluated in sweep 2).
     relink_threshold: float = 0.55

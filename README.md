@@ -128,17 +128,23 @@ Top-k experiment summary:
 | k | within_early | within_late | cross | Right_to_left (ball/total/valid tracks) | Notes |
 |---:|---:|---:|---:|---:|---|
 | 12 | 0.837967 | 0.788560 | 0.714120 | `1 / 5 / 3` | Best `cross` among `k >= 12` |
-| 128 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Uses substantially more activation dims |
-| 256 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Identical to `k=128` in sweep + linking outcomes |
+| 64 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Uses all raw dims available from `neck.C2f.15` |
+| 128 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Beyond raw layer dim cap; no added signal vs `k=64` |
+| 256 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Identical to `k=64`/`k=128` in sweep + linking outcomes |
 
-Cross-scenario linking behavior (`k=128` vs prior `k=12` outputs):
+Dimension-cap validation for `neck.C2f.15`:
+- `raw_activation_dim = 64` in all current scenario manifests.
+- `fitted_pca_components <= 64` (for example `40` in `Right_to_left`, `37` in `No_occlusion_ball_removed`).
+- Therefore, `k > 64` cannot add new information for this hook layer in the current pipeline.
+
+Cross-scenario linking behavior (`k=64` vs prior `k=12` outputs):
 - Ball-track count changed in `2/8` scenarios:
   - `Left_bounce_back`: `1 -> 2`
   - `No_occlusion_ball_removed`: `2 -> 1`
-- `k=256` matched `k=128` across all tested scenarios.
+- `k=64`, `k=128`, and `k=256` matched across all tested scenarios.
 
 Chosen default:
-- `--activation-topk 128`
+- `--activation-topk 64`
 
 ### Reproduce Calibration Commands
 
@@ -183,7 +189,7 @@ python3 experiments/analyze_topk_dims.py \
 
 Current baseline:
 - Enrichment: `head-layer=neck.C2f.15`, `head-stride=8`, pool `1x1`
-- Linking: `activation_topk=128`, `similarity_threshold=0.65`, `relink_threshold=0.55`, `relink_max_gap_frames=120`, `relink_fallback_threshold=0.40`
+- Linking: `activation_topk=64`, `similarity_threshold=0.65`, `relink_threshold=0.55`, `relink_max_gap_frames=120`, `relink_fallback_threshold=0.40`
 
 ### Caveats and Guardrails
 
@@ -240,7 +246,7 @@ Results across scenarios:
 ### Lifecycle and Assignment Controls
 
 - `--activation-topk`:
-  - Activation descriptor truncation dimension used for linking (default `128`).
+  - Activation descriptor truncation dimension used for linking (default `64` for `neck.C2f.15`).
 - `--max-lost-frames`: close track after this many missed sampled frames.
 - `--min-hits-to-activate`: tentative -> active promotion threshold.
 - `--min-track-length`: validity threshold in summary reporting.
@@ -289,7 +295,7 @@ python3 src/run_pipeline.py \
 ```bash
 python3 src/run_temporal_linking.py \
   --enriched-json experiments/results/activation_enrichment/3sec_Left_to_Right/enriched_detections.json \
-  --activation-topk 128 \
+  --activation-topk 64 \
   --similarity-threshold 0.65 \
   --relink-threshold 0.55 \
   --relink-max-gap-frames 120 \
@@ -302,7 +308,7 @@ python3 src/run_temporal_linking.py \
 for f in experiments/results/activation_enrichment/*/enriched_detections.json; do
   python3 src/run_temporal_linking.py \
     --enriched-json "$f" \
-    --activation-topk 128 \
+    --activation-topk 64 \
     --similarity-threshold 0.65 \
     --relink-threshold 0.55 \
     --relink-max-gap-frames 120 \
@@ -324,7 +330,7 @@ python3 src/run_pipeline.py \
 for f in experiments/results/activation_enrichment/*/enriched_detections.json; do
   python3 src/run_temporal_linking.py \
     --enriched-json "$f" \
-    --activation-topk 128 \
+    --activation-topk 64 \
     --similarity-threshold 0.65 \
     --relink-threshold 0.55 \
     --relink-max-gap-frames 120 \
@@ -337,7 +343,7 @@ done
 ```bash
 python3 src/run_temporal_linking.py \
   --enriched-json experiments/results/activation_enrichment/3sec_Left_to_Right/enriched_detections.json \
-  --activation-topk 128 \
+  --activation-topk 64 \
   --similarity-threshold 0.65 \
   --relink-threshold 1.0 \
   --relink-fallback-threshold 1.0

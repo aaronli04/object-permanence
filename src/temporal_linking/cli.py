@@ -67,8 +67,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--activation-topk",
         type=int,
-        default=128,
-        help="Keep first K activation dims and L2-renormalize before linking (default: 128).",
+        default=64,
+        help="Keep first K activation dims and L2-renormalize before linking (default: 64).",
     )
 
     parser.add_argument(
