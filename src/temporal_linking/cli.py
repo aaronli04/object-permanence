@@ -79,10 +79,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Minimum hits required for tracks to be relink candidates.",
     )
     parser.add_argument(
-        "--relink-fallback-percentile",
+        "--relink-max-pixels-per-frame",
         type=float,
-        default=90.0,
-        help="Percentile used by fallback cross-track scoring.",
+        default=15.0,
+        help="Maximum plausible drift rate (pixels/frame) used by spatial relink fallback scoring.",
     )
     parser.add_argument(
         "--relink-fallback-threshold",
@@ -119,7 +119,7 @@ def _build_config(args: argparse.Namespace) -> TemporalLinkingConfig:
         relink_threshold=args.relink_threshold,
         relink_max_gap_frames=args.relink_max_gap_frames,
         relink_min_track_hits=args.relink_min_track_hits,
-        relink_fallback_percentile=args.relink_fallback_percentile,
+        relink_max_pixels_per_frame=args.relink_max_pixels_per_frame,
         relink_fallback_threshold=args.relink_fallback_threshold,
     )
 

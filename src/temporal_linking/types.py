@@ -61,6 +61,7 @@ class Track:
     observations: list[dict[str, Any]] = field(default_factory=list)
     events: list[dict[str, Any]] = field(default_factory=list)
     obs_vecs: list[np.ndarray] = field(default_factory=list)
+    obs_positions: list[tuple[float, float, int]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -72,6 +73,8 @@ class TrackFragment:
     hits: int
     centroid: np.ndarray
     frame_vecs: np.ndarray
+    last_positions: list[tuple[float, float, int]]
+    first_position: tuple[float, float, int]
 
 
 @dataclass(frozen=True)
@@ -79,7 +82,7 @@ class RelinkEdge:
     predecessor_id: int
     successor_id: int
     score: float
-    method: Literal["centroid", "fallback"]
+    method: Literal["centroid", "spatial"]
 
 
 @dataclass(frozen=True)

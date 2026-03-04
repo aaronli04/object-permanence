@@ -59,7 +59,7 @@ Matching policy:
 - Pair is eligible only if visual similarity is above threshold
 - Same threshold applies to normal links and lost-track recovery
 - Spatial and consistency terms are secondary tie-break terms
-- **Relink controls:** `relink_threshold`, `relink_max_gap_frames`, `relink_min_track_hits`, `relink_fallback_percentile`, `relink_fallback_threshold`
+- **Relink controls:** `relink_threshold`, `relink_max_gap_frames`, `relink_min_track_hits`, `relink_max_pixels_per_frame`, `relink_fallback_threshold`
 
 Output artifacts per video:
 - `experiments/results/enriched/<video_name>/linked_detections.json`
@@ -86,7 +86,7 @@ Entrypoint:
 
 2. **Relink sweep (post-hoc):**
 - Evaluates closed track fragments of the same class.
-- Uses centroid similarity first, then fallback percentile scoring for unresolved pairs.
+- Uses centroid similarity first, then fallback spatial plausibility scoring for unresolved pairs.
 - Applies accepted links as merged final track IDs.
 
 ### Enriched Detection Schema (core fields)
@@ -181,8 +181,13 @@ python3 src/run_temporal_linking.py \
 - `--relink-threshold` (default `0.55`): centroid similarity gate for relink acceptance.
 - `--relink-max-gap-frames` (default `-1`): max allowed frame gap between fragments (`-1` means no cap).
 - `--relink-min-track-hits` (default `2`): minimum observations required for a fragment to be relink-eligible.
-- `--relink-fallback-percentile` (default `90.0`): percentile used for cross-track fallback scoring.
+- `--relink-max-pixels-per-frame` (default `15.0`): maximum plausible drift rate (pixels/frame) for spatial fallback scoring.
 - `--relink-fallback-threshold` (default `0.40`): fallback score gate after centroid pass.
+
+### Calibration Note
+
+Long-gap calibration on `Right_to_left` showed that cross-track percentile cosine scores remained unstable for the sports-ball 8→18 gap.
+The fallback pass therefore uses spatial plausibility (trajectory extrapolation + drift-rate normalization) rather than percentile cosine.
 
 ### Output Files
 

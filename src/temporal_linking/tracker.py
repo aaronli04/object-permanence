@@ -61,6 +61,9 @@ class TrackManager:
             }
         )
         track.obs_vecs.append(det.activation_vec.copy())
+        cx = (float(det.bbox_xyxy[0]) + float(det.bbox_xyxy[2])) * 0.5
+        cy = (float(det.bbox_xyxy[1]) + float(det.bbox_xyxy[3])) * 0.5
+        track.obs_positions.append((cx, cy, int(frame_num)))
 
         self._set_active(track)
         return track
@@ -97,6 +100,9 @@ class TrackManager:
             }
         )
         track.obs_vecs.append(det.activation_vec.copy())
+        cx = (float(det.bbox_xyxy[0]) + float(det.bbox_xyxy[2])) * 0.5
+        cy = (float(det.bbox_xyxy[1]) + float(det.bbox_xyxy[3])) * 0.5
+        track.obs_positions.append((cx, cy, int(frame_num)))
 
         if source_status == TrackStatus.LOST:
             track.status = TrackStatus.ACTIVE

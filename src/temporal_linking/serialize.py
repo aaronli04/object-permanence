@@ -236,7 +236,7 @@ def build_relink_manifest(
         "relink_threshold": float(cfg.relink_threshold),
         "relink_max_gap_frames": int(cfg.relink_max_gap_frames),
         "relink_min_track_hits": int(cfg.relink_min_track_hits),
-        "relink_fallback_percentile": float(cfg.relink_fallback_percentile),
+        "relink_max_pixels_per_frame": float(cfg.relink_max_pixels_per_frame),
         "relink_fallback_threshold": float(cfg.relink_fallback_threshold),
     }
     manifest = RelinkManifest(

@@ -27,9 +27,12 @@ def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
             continue
         if not track.obs_vecs:
             continue
+        if not track.obs_positions:
+            continue
 
         frame_vecs = np.stack([_l2_norm(v) for v in track.obs_vecs], axis=0).astype(np.float32, copy=False)
         centroid = _l2_norm(np.mean(frame_vecs, axis=0))
+        positions = list(track.obs_positions)
         fragments.append(
             TrackFragment(
                 track_id=int(track.track_id),
@@ -39,6 +42,8 @@ def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
                 hits=int(track.hits),
                 centroid=centroid,
                 frame_vecs=frame_vecs,
+                last_positions=positions[-3:],
+                first_position=positions[0],
             )
         )
 
@@ -86,22 +91,48 @@ def score_centroid(candidates: list[tuple[TrackFragment, TrackFragment]]) -> lis
 
 def score_fallback(
     candidates: list[tuple[TrackFragment, TrackFragment]],
-    percentile: float,
+    max_pixels_per_frame: float,
 ) -> list[RelinkEdge]:
-    """Cross-track percentile score for each candidate pair."""
+    """Spatial plausibility score for each candidate pair."""
     edges: list[RelinkEdge] = []
     for pred, succ in candidates:
-        sim_matrix = pred.frame_vecs @ succ.frame_vecs.T
-        score = float(np.percentile(sim_matrix, percentile))
+        score = _spatial_plausibility_score(pred, succ, max_pixels_per_frame)
         edges.append(
             RelinkEdge(
                 predecessor_id=pred.track_id,
                 successor_id=succ.track_id,
                 score=score,
-                method="fallback",
+                method="spatial",
             )
         )
     return edges
+
+
+def _spatial_plausibility_score(
+    frag_a: TrackFragment,
+    frag_b: TrackFragment,
+    max_pixels_per_frame: float,
+) -> float:
+    pts = frag_a.last_positions
+    if len(pts) >= 2:
+        frames = np.asarray([p[2] for p in pts], dtype=np.float64)
+        xs = np.asarray([p[0] for p in pts], dtype=np.float64)
+        ys = np.asarray([p[1] for p in pts], dtype=np.float64)
+        vx = float(np.polyfit(frames, xs, 1)[0])
+        vy = float(np.polyfit(frames, ys, 1)[0])
+    else:
+        vx = 0.0
+        vy = 0.0
+
+    last_cx, last_cy, last_frame = frag_a.last_positions[-1]
+    gap = max(1, int(frag_b.first_frame - last_frame))
+    pred_cx = float(last_cx) + (vx * float(gap))
+    pred_cy = float(last_cy) + (vy * float(gap))
+
+    actual_cx, actual_cy, _ = frag_b.first_position
+    pixel_error = float(np.hypot(pred_cx - float(actual_cx), pred_cy - float(actual_cy)))
+    pixels_per_frame_error = pixel_error / float(gap)
+    return 1.0 - (pixels_per_frame_error / float(max_pixels_per_frame))
 
 
 def greedy_assign(
@@ -207,7 +238,7 @@ def run_relink(
     candidates = build_candidates(fragments, cfg.relink_max_gap_frames)
 
     centroid_edges = score_centroid(candidates)
-    fallback_edges = score_fallback(candidates, cfg.relink_fallback_percentile)
+    fallback_edges = score_fallback(candidates, cfg.relink_max_pixels_per_frame)
     # Treat 1.0 as an explicit no-merge setting for each pass.
     centroid_threshold = float(cfg.relink_threshold)
     fallback_threshold = float(cfg.relink_fallback_threshold)
@@ -227,7 +258,7 @@ def run_relink(
     centroid_edges_above = sum(1 for edge in centroid_edges if edge.score >= centroid_threshold)
     fallback_edges_above = sum(1 for edge in fallback_edges if edge.score >= fallback_threshold)
     accepted_centroid = sum(1 for edge in accepted_edges if edge.method == "centroid")
-    accepted_fallback = sum(1 for edge in accepted_edges if edge.method == "fallback")
+    accepted_fallback = sum(1 for edge in accepted_edges if edge.method == "spatial")
 
     stats = {
         "num_closed_tracks": int(num_closed_tracks),

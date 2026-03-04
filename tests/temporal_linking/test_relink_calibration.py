@@ -53,11 +53,17 @@ def _load_track_fixture() -> list[Track]:
         track.events = list(item.get("events", []))
         track.observations = list(item.get("observations", []))
         track.obs_vecs = []
+        track.obs_positions = []
         for obs in track.observations:
             key = (int(obs["frame_num"]), int(obs["det_index"]))
             vec = vec_map.get(key)
             if vec is not None:
                 track.obs_vecs.append(vec.copy())
+            bbox = obs.get("bbox", [0.0, 0.0, 0.0, 0.0])
+            x1, y1, x2, y2 = [float(v) for v in bbox]
+            cx = (x1 + x2) * 0.5
+            cy = (y1 + y2) * 0.5
+            track.obs_positions.append((cx, cy, int(obs["frame_num"])))
         tracks.append(track)
 
     return tracks
@@ -81,7 +87,7 @@ class RelinkCalibrationTests(unittest.TestCase):
         pred, succ = target_pair  # type: ignore[misc]
 
         centroid_edge = score_centroid([target_pair])[0]  # type: ignore[arg-type]
-        fallback_edge = score_fallback([target_pair], percentile=90.0)[0]  # type: ignore[arg-type]
+        fallback_edge = score_fallback([target_pair], max_pixels_per_frame=15.0)[0]  # type: ignore[arg-type]
 
         self.assertTrue(np.isfinite(centroid_edge.score))
         self.assertTrue(np.isfinite(fallback_edge.score))
@@ -91,7 +97,7 @@ class RelinkCalibrationTests(unittest.TestCase):
         print(f"gap_frames={succ.first_frame - pred.last_frame}")
         print(f"hits={pred.hits}->{succ.hits}")
         print(f"centroid_similarity={centroid_edge.score:.6f}")
-        print(f"fallback_percentile_similarity_p90={fallback_edge.score:.6f}")
+        print(f"spatial_plausibility_score={fallback_edge.score:.6f}")
 
 
 if __name__ == "__main__":
