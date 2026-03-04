@@ -18,7 +18,7 @@ High-level data flow:
 5. Link detections over time using cosine similarity plus tie-break scores.
 6. Run a second relink pass for fragmented closed tracks.
 
-## Technical Pipeline Details
+## Pipeline Details
 
 ### Stage 1: Activation Enrichment
 
@@ -82,7 +82,7 @@ Output per scenario:
 Entrypoint:
 - `src/run_temporal_linking.py`
 
-## Why These Defaults (Data-Backed)
+## Why These Defaults
 
 ### Layer Selection Evidence
 
