@@ -29,6 +29,7 @@ from .model import (
     extract_detections_from_result,
     get_module_map,
     load_yolo,
+    resolve_hook_layer_name,
 )
 from .sampler import FrameSampler
 from .types import CollectedDetection, CollectedFrame, CollectionStats, HookConfig, RunConfig
@@ -65,8 +66,10 @@ def _iter_detections(frames: list[CollectedFrame]) -> Iterable[CollectedDetectio
 def _layer_manifest_section(cfg: HookConfig) -> dict[str, Any]:
     return {
         "aliases": list(ACTIVATION_LAYER_ALIASES),
-        "actual": {"neck_c2f_15": cfg.layer},
-        "strides": {"neck_c2f_15": cfg.stride},
+        "requested": cfg.requested_layer,
+        "resolved": cfg.layer,
+        "actual": {"resolved_hook_layer": cfg.layer},
+        "strides": {"resolved_hook_layer": cfg.stride},
     }
 
 
@@ -76,6 +79,14 @@ def _pad_and_normalize_projection(vec: "np.ndarray", source_dim: int, target_dim
         padded[:source_dim] = vec
         vec = padded
     return l2_normalize(vec)
+
+
+def _projection_caveats(*, total_detections: int, effective_pca_dim: int) -> list[str]:
+    caveats: list[str] = []
+    # Per-run PCA can be unstable when fitted on a small number of detections relative to components.
+    if total_detections < max(50, (3 * max(1, effective_pca_dim))):
+        caveats.append("low_sample_count_for_per_run_pca_fit")
+    return caveats
 
 
 def collect_single_pass_trace(
@@ -214,6 +225,11 @@ def build_manifest(
         "projection_file": os.path.basename(artifacts.pca_path),
         "projection_dim": int(run_config.pca_dim),
         "fitted_pca_components": int(effective_pca_dim),
+        "projection_fit_scope": "per_run_all_detections",
+        "projection_caveats": _projection_caveats(
+            total_detections=int(stats.total_detections),
+            effective_pca_dim=int(effective_pca_dim),
+        ),
         "fit_timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "input_video_hash_sha256": sha256_file(run_config.video_path),
         "input_video_file": os.path.basename(run_config.video_path),
@@ -263,13 +279,15 @@ def run_trace_enrichment(
         pca_dim=pca_dim,
         output_dir=output_dir,
     )
-    hook_config = HookConfig(
-        layer=layer_name,
-        stride=stride,
-    )
     artifacts = build_output_artifacts(output_dir)
 
     yolo = load_yolo(model_name)
+    resolved_layer = resolve_hook_layer_name(yolo, layer_name)
+    hook_config = HookConfig(
+        layer=resolved_layer,
+        stride=stride,
+        requested_layer=layer_name,
+    )
     frames, stats = collect_single_pass_trace(
         yolo=yolo,
         video_path=video_path,

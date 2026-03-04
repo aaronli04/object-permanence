@@ -10,10 +10,10 @@ import numpy as np
 
 try:
     from common.io import load_json, write_json
-    from common.numeric import topk_l2_renorm_pad
+    from common.numeric import topk_l2_renorm
 except ImportError:  # pragma: no cover - import-path compatibility
     from src.common.io import load_json, write_json  # type: ignore
-    from src.common.numeric import topk_l2_renorm_pad  # type: ignore
+    from src.common.numeric import topk_l2_renorm  # type: ignore
 
 from .types import Detection, FrameDetections, TemporalLinkArtifacts
 
@@ -63,11 +63,7 @@ def load_enriched_frames(path: str, *, activation_topk: int | None = None) -> li
                     f"{EXPECTED_ACTIVATION_DIM}, got {activation_dim}"
                 )
             if activation_topk is not None:
-                activation_vec = topk_l2_renorm_pad(
-                    activation_vec,
-                    topk=int(activation_topk),
-                    target_dim=EXPECTED_ACTIVATION_DIM,
-                )
+                activation_vec = topk_l2_renorm(activation_vec, topk=int(activation_topk))
 
             bbox = det.get("bbox")
             if not isinstance(bbox, list) or len(bbox) != 4:

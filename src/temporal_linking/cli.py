@@ -67,8 +67,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--activation-topk",
         type=int,
-        default=None,
-        help="If set, keep first K activation dims, L2-renormalize, and zero-pad back to 256 before linking.",
+        default=128,
+        help="Keep first K activation dims and L2-renormalize before linking (default: 128).",
     )
 
     parser.add_argument(
@@ -80,8 +80,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--relink-max-gap-frames",
         type=int,
-        default=-1,
-        help="Maximum frame gap for relink candidates (-1 means unlimited).",
+        default=120,
+        help="Maximum frame gap for relink candidates (default: 120; use -1 for unlimited).",
     )
     parser.add_argument(
         "--relink-min-track-hits",

@@ -10,6 +10,7 @@ from typing import Any
 class HookConfig:
     layer: str
     stride: int
+    requested_layer: str
 
 
 @dataclass(frozen=True)

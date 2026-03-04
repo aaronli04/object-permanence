@@ -34,7 +34,7 @@ def main() -> None:
         print(f"  [{idx}] {name} | type={module.__class__.__name__}")
     print("")
     print("Recommended hook target:")
-    print("  15  (C2f block in the neck, accessed as model.model[15])")
+    print("  neck.C2f.15  (resolved to top-level C2f module near index 15)")
 
 
 if __name__ == "__main__":

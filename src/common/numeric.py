@@ -20,15 +20,20 @@ def l2_normalize_rows(matrix: np.ndarray) -> np.ndarray:
     return (matrix / safe_norms).astype(np.float32, copy=False)
 
 
+def topk_l2_renorm(vec: np.ndarray, *, topk: int) -> np.ndarray:
+    """Keep first K dims and L2-renormalize the truncated vector."""
+    k = min(int(topk), int(vec.shape[0]))
+    if k <= 0:
+        raise ValueError("topk must be > 0")
+    return l2_normalize(vec[:k].astype(np.float32, copy=False))
+
+
 def topk_l2_renorm_pad(vec: np.ndarray, *, topk: int, target_dim: int) -> np.ndarray:
     """Keep first K dims, L2-renormalize, and zero-pad to target_dim."""
     if target_dim <= 0:
         raise ValueError("target_dim must be > 0")
     k = min(int(topk), int(vec.shape[0]), int(target_dim))
-    if k <= 0:
-        raise ValueError("topk must be > 0")
-
-    sliced = l2_normalize(vec[:k].astype(np.float32, copy=False))
+    sliced = topk_l2_renorm(vec, topk=k)
     out = np.zeros((int(target_dim),), dtype=np.float32)
     out[:k] = sliced
     return out

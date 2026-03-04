@@ -35,13 +35,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--head-layer",
         default=DEFAULT_HEAD_LAYER,
-        help="Named module hook target (default: 15 for model.model[15]).",
+        help=(
+            "Named module hook target. Accepts exact module names (e.g. '15'), "
+            "model-style paths (e.g. 'model.model[15]'), or aliases 'neck.C2f.15' / 'neck.C2f.mid'."
+        ),
     )
     parser.add_argument(
         "--head-stride",
         type=int,
         default=DEFAULT_HEAD_STRIDE,
-        help="Hook layer stride metadata stored in manifest (default: 8 for model.model[15]).",
+        help="Hook layer stride metadata stored in manifest (default: 8 for neck.C2f.15).",
     )
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE, help="YOLO inference batch size.")
     parser.add_argument("--pca-dim", type=int, default=OUTPUT_VECTOR_DIM, help="Target PCA dimension.")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from typing import Any, Optional, Sequence
 
 from .constants import POOL_SIZE
@@ -45,6 +46,59 @@ def list_c2f_module_names(yolo) -> list[str]:
         for name, module in yolo.model.model.named_modules()
         if module.__class__.__name__ == "C2f"
     ]
+
+
+def _top_level_c2f_indices(yolo) -> list[int]:
+    module_map = get_module_map(yolo)
+    indices: list[int] = []
+    for name, module in module_map.items():
+        if not name.isdigit():
+            continue
+        if module.__class__.__name__ != "C2f":
+            continue
+        indices.append(int(name))
+    indices.sort()
+    return indices
+
+
+def resolve_hook_layer_name(yolo, requested_layer: str) -> str:
+    """Resolve user-facing layer identifiers to a concrete named module key."""
+    module_map = get_module_map(yolo)
+    requested = str(requested_layer).strip()
+    if not requested:
+        raise ValueError("requested_layer cannot be empty")
+
+    if requested in module_map:
+        return requested
+
+    if requested.isdigit():
+        normalized = str(int(requested))
+        if normalized in module_map:
+            return normalized
+
+    bracket_match = re.fullmatch(r"model\.model\[(\d+)\]", requested)
+    if bracket_match:
+        idx = str(int(bracket_match.group(1)))
+        if idx in module_map:
+            return idx
+
+    c2f_indices = _top_level_c2f_indices(yolo)
+    if requested in {"neck.C2f.15", "neck_c2f_15", "neck.C2f.mid", "neck_c2f_mid"}:
+        if 15 in c2f_indices:
+            return "15"
+        if len(c2f_indices) >= 3:
+            return str(c2f_indices[-2])
+        if c2f_indices:
+            return str(c2f_indices[-1])
+
+    c2f_names = list_c2f_module_names(yolo)
+    available_hint = ", ".join(c2f_names[:12])
+    if len(c2f_names) > 12:
+        available_hint += ", ..."
+    raise KeyError(
+        f"Hook layer '{requested_layer}' not found. "
+        f"Run discover_layers to inspect names. C2f candidates: {available_hint or '(none)'}"
+    )
 
 
 class FeatureHookCollector:

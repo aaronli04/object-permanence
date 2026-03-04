@@ -26,7 +26,7 @@ Input:
 - Raw video frames from `data/raw_videos/*.mp4`
 
 Core mechanics:
-- Hook target defaults to `model.model[15]` (neck C2f block).
+- Hook target defaults to `--head-layer neck.C2f.15` (resolved to the neck C2f block).
 - For each detection bbox `[x1, y1, x2, y2]` on a frame `(frame_w, frame_h)`, map to feature-map ROI `(fmap_w, fmap_h)`:
   - `fx1 = floor((x1 / frame_w) * fmap_w)`
   - `fy1 = floor((y1 / frame_h) * fmap_h)`
@@ -54,7 +54,7 @@ Core mechanics:
 - Optional descriptor truncation via `--activation-topk K`:
   - Keep first `K` dims of each 256-D vector
   - L2-renormalize
-  - Zero-pad back to 256-D (for schema/compatibility)
+  - Link directly in K-dimensional space (no internal zero-padding)
 - Track reference descriptor is a weighted blend:
   - `ref = normalize(w_last * last_vec + w_ema * ema_vec + w_hist * hist_mean)`
 - Match score components:
@@ -105,7 +105,7 @@ Top layers by temporal stability (`mean_consecutive_cosine`):
 | 5 | `0.conv` | `Conv2d` | 16 | 0.999556 | 0.201582 |
 
 Selected default layer:
-- `model.model[15]` (`neck.C2f.15`)
+- `--head-layer neck.C2f.15` (resolved to `model.model[15]` on `yolov8n`)
 - Stability result: mean cosine `0.995373`, norm std `0.042314`, feature dim `64` (typically ranked in the 30s/154 on this sweep; exact rank shifts with tied scores)
 
 Selection rationale:
@@ -121,14 +121,24 @@ Top-k cosine sweep on `Right_to_left` sports-ball descriptors:
   - `within_late`: mean pairwise cosine among late frames
   - `cross`: mean cosine between early vs late groups
 
-To avoid low-dimensional over-bias, we enforced `k >= 12`. Under that constraint:
-- Best `cross` occurs at `k = 12`
-- `within_early = 0.837967`
-- `within_late = 0.788560`
-- `cross = 0.714120`
+Sweeps were run to `k=256` to test both low-dimensional and high-dimensional regimes.
+
+Top-k experiment summary:
+
+| k | within_early | within_late | cross | Right_to_left (ball/total/valid tracks) | Notes |
+|---:|---:|---:|---:|---:|---|
+| 12 | 0.837967 | 0.788560 | 0.714120 | `1 / 5 / 3` | Best `cross` among `k >= 12` |
+| 128 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Uses substantially more activation dims |
+| 256 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Identical to `k=128` in sweep + linking outcomes |
+
+Cross-scenario linking behavior (`k=128` vs prior `k=12` outputs):
+- Ball-track count changed in `2/8` scenarios:
+  - `Left_bounce_back`: `1 -> 2`
+  - `No_occlusion_ball_removed`: `2 -> 1`
+- `k=256` matched `k=128` across all tested scenarios.
 
 Chosen default:
-- `--activation-topk 12`
+- `--activation-topk 128`
 
 ### Reproduce Calibration Commands
 
@@ -155,15 +165,15 @@ python3 experiments/extract_object_vectors.py \
   --min-confidence 0.25
 ```
 
-Top-k cosine sweep CSV (`k=2..40`, step 2):
+Top-k cosine sweep CSV (`k=2..256`, step 2):
 
 ```bash
 python3 experiments/analyze_topk_dims.py \
   --input-json experiments/results/activation_enrichment/Right_to_left/object_vectors_layer15.json \
-  --output-csv experiments/results/topk_similarity_sweep_layer15.csv \
+  --output-csv experiments/results/topk_similarity_sweep_layer15_k256.csv \
   --skip-plot \
   --min-k 2 \
-  --max-k 40 \
+  --max-k 256 \
   --step-k 2 \
   --early-frames 0,5,10,15 \
   --late-frames 70,75,80,85,90,95,100
@@ -172,20 +182,32 @@ python3 experiments/analyze_topk_dims.py \
 ### Scenario Outcomes with Current Baseline
 
 Current baseline:
-- Enrichment: `head-layer=15`, `head-stride=8`, pool `1x1`
-- Linking: `activation_topk=12`, `similarity_threshold=0.65`, `relink_threshold=0.55`, `relink_fallback_threshold=0.40`
+- Enrichment: `head-layer=neck.C2f.15`, `head-stride=8`, pool `1x1`
+- Linking: `activation_topk=128`, `similarity_threshold=0.65`, `relink_threshold=0.55`, `relink_max_gap_frames=120`, `relink_fallback_threshold=0.40`
+
+### Caveats and Guardrails
+
+- Top-k truncation math:
+  - Cosine is computed on normalized truncated vectors directly (K dims).
+  - If vectors are both truncated to K and then zero-padded equally, cosine is unchanged; we keep K-dim compute for clarity.
+- PCA fit scope:
+  - PCA is fit per run over all detections in that run (not globally across scenarios).
+  - Low detection counts can make projections noisier; this is now flagged in `projection_manifest.json` via `projection_fit_scope` and `projection_caveats`.
+- Relink gap:
+  - Default `--relink-max-gap-frames` is `120` to avoid accidental very-long-gap merges.
+  - Use `-1` only when you intentionally want unlimited relinking distance.
 
 Results across scenarios:
 
 | Scenario | Frames | Detections | Ball Tracks | Tracks Total | Tracks Valid |
 |---|---:|---:|---:|---:|---:|
-| `10sec_Left_to_Right` | 133 | 160 | 1 | 6 | 5 |
-| `3sec_Left_to_Right` | 49 | 77 | 1 | 7 | 5 |
+| `10sec_Left_to_Right` | 133 | 160 | 1 | 7 | 6 |
+| `3sec_Left_to_Right` | 49 | 77 | 1 | 8 | 6 |
 | `Exit_frame_while_occluded` | 53 | 72 | 1 | 5 | 4 |
-| `Left_bounce_back` | 64 | 105 | 1 | 5 | 4 |
+| `Left_bounce_back` | 64 | 105 | 2 | 6 | 5 |
 | `Left_to_right` | 25 | 52 | 1 | 7 | 5 |
-| `No_occlusion_ball_removed` | 34 | 37 | 2 | 9 | 6 |
-| `Occlusion_ball_removed` | 48 | 114 | 1 | 14 | 8 |
+| `No_occlusion_ball_removed` | 34 | 37 | 1 | 8 | 5 |
+| `Occlusion_ball_removed` | 48 | 114 | 1 | 15 | 9 |
 | `Right_to_left` | 21 | 40 | 1 | 5 | 3 |
 
 ## Threshold and Parameter Reference
@@ -200,7 +222,7 @@ Results across scenarios:
 - `--relink-fallback-threshold`:
   - Spatial plausibility threshold for fallback relink scoring.
 - `--relink-max-gap-frames`:
-  - Max allowed frame gap for relink candidate pairs (`-1` means unlimited).
+  - Max allowed frame gap for relink candidate pairs (default `120`; set `-1` for unlimited).
 - `--relink-min-track-hits`:
   - Min observations required for track fragment to participate in relinking.
 - `--relink-max-pixels-per-frame`:
@@ -217,6 +239,8 @@ Results across scenarios:
 
 ### Lifecycle and Assignment Controls
 
+- `--activation-topk`:
+  - Activation descriptor truncation dimension used for linking (default `128`).
 - `--max-lost-frames`: close track after this many missed sampled frames.
 - `--min-hits-to-activate`: tentative -> active promotion threshold.
 - `--min-track-length`: validity threshold in summary reporting.
@@ -244,7 +268,7 @@ python3 src/run_pipeline.py \
   --video data/raw_videos/3sec_Left_to_Right.mp4 \
   --sample-rate 5 \
   --model yolov8n.pt \
-  --head-layer 15 \
+  --head-layer neck.C2f.15 \
   --head-stride 8
 ```
 
@@ -256,7 +280,7 @@ python3 src/run_pipeline.py \
   --pattern "*.mp4" \
   --sample-rate 5 \
   --model yolov8n.pt \
-  --head-layer 15 \
+  --head-layer neck.C2f.15 \
   --head-stride 8
 ```
 
@@ -265,9 +289,10 @@ python3 src/run_pipeline.py \
 ```bash
 python3 src/run_temporal_linking.py \
   --enriched-json experiments/results/activation_enrichment/3sec_Left_to_Right/enriched_detections.json \
-  --activation-topk 12 \
+  --activation-topk 128 \
   --similarity-threshold 0.65 \
   --relink-threshold 0.55 \
+  --relink-max-gap-frames 120 \
   --relink-fallback-threshold 0.40
 ```
 
@@ -277,9 +302,10 @@ python3 src/run_temporal_linking.py \
 for f in experiments/results/activation_enrichment/*/enriched_detections.json; do
   python3 src/run_temporal_linking.py \
     --enriched-json "$f" \
-    --activation-topk 12 \
+    --activation-topk 128 \
     --similarity-threshold 0.65 \
     --relink-threshold 0.55 \
+    --relink-max-gap-frames 120 \
     --relink-fallback-threshold 0.40
 done
 ```
@@ -292,15 +318,16 @@ python3 src/run_pipeline.py \
   --pattern "*.mp4" \
   --sample-rate 5 \
   --model yolov8n.pt \
-  --head-layer 15 \
+  --head-layer neck.C2f.15 \
   --head-stride 8
 
 for f in experiments/results/activation_enrichment/*/enriched_detections.json; do
   python3 src/run_temporal_linking.py \
     --enriched-json "$f" \
-    --activation-topk 12 \
+    --activation-topk 128 \
     --similarity-threshold 0.65 \
     --relink-threshold 0.55 \
+    --relink-max-gap-frames 120 \
     --relink-fallback-threshold 0.40
 done
 ```
@@ -310,7 +337,7 @@ done
 ```bash
 python3 src/run_temporal_linking.py \
   --enriched-json experiments/results/activation_enrichment/3sec_Left_to_Right/enriched_detections.json \
-  --activation-topk 12 \
+  --activation-topk 128 \
   --similarity-threshold 0.65 \
   --relink-threshold 1.0 \
   --relink-fallback-threshold 1.0
