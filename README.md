@@ -82,7 +82,7 @@ Output per scenario:
 Entrypoint:
 - `src/run_temporal_linking.py`
 
-## Why These Defaults (Data-Backed)
+## Why These Defaults
 
 ### Layer Selection Evidence
 
