@@ -1,13 +1,15 @@
 # Object Permanence
 
-Single-pass YOLOv8 detection + activation trace enrichment for object permanence experiments.
+Single-pass YOLOv8 detection enrichment and offline temporal linking for object permanence experiments.
 
-This repository's current scope is only enriched trace generation:
-- sampled-frame detections
-- backbone activation embeddings
-- PCA projection artifacts and provenance
+## Project Scope
 
-It does not implement temporal linking, tracking, re-identification, occlusion handling, or any later reasoning stage.
+This repository currently runs two stages:
+
+1. **Trace Enrichment** (`src/trace_enrichment/`)
+2. **Temporal Linking** (`src/temporal_linking/`)
+
+The system is designed for offline video processing over complete recorded videos.
 
 ## Setup
 
@@ -18,7 +20,104 @@ python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 ```
 
-## Run Trace Enrichment
+## Architecture
+
+### Stage 1: Trace Enrichment
+
+Input:
+- Raw video frames
+
+Core responsibilities:
+- Sample every `N`th frame
+- Run YOLOv8 detections
+- Capture backbone activations from configured hook layers
+- Build per-detection activation vectors
+- Fit PCA and project vectors to 256 dims
+- L2-normalize projected vectors
+
+Output artifacts per video:
+- `experiments/results/enriched/<video_name>/enriched_detections.json`
+- `experiments/results/enriched/<video_name>/pca_projection.pkl`
+- `experiments/results/enriched/<video_name>/projection_manifest.json`
+
+Entrypoint:
+- `src/run_pipeline.py`
+
+### Stage 2: Temporal Linking
+
+Input:
+- `enriched_detections.json` from Stage 1
+
+Core responsibilities:
+- Walk frames in temporal order
+- Build track-to-detection similarity matrix each frame
+- Solve one-to-one assignment (Hungarian default, greedy fallback)
+- Assign persistent `track_id` values
+- Handle unmatched tracks as `LOST` then `CLOSED` after miss budget
+- Spawn new tracks for unmatched detections
+
+Matching policy:
+- **Single gating threshold:** `similarity_threshold`
+- Pair is eligible only if visual similarity is above threshold
+- Same threshold applies to normal links and lost-track recovery
+- Spatial and consistency terms are secondary tie-break terms
+
+Output artifacts per video:
+- `experiments/results/enriched/<video_name>/linked_detections.json`
+- `experiments/results/enriched/<video_name>/tracks.json`
+- `experiments/results/enriched/<video_name>/linking_manifest.json`
+
+Entrypoint:
+- `src/run_temporal_linking.py`
+
+## How It Works
+
+### End-to-End Flow
+
+1. Run enrichment on a video (or batch of videos).
+2. Inspect/validate enriched activation outputs.
+3. Run temporal linking on each enriched trace.
+4. Validate linked outputs and track statistics.
+
+### Enriched Detection Schema (core fields)
+
+```json
+{
+  "class_id": 32,
+  "class_name": "sports ball",
+  "bbox": [41.71, 532.64, 322.24, 779.72],
+  "confidence": 0.818,
+  "activation": {
+    "vector": [0.013, -0.224],
+    "dim": 256,
+    "layers": ["backbone.C2f_deep", "backbone.C2f_mid"],
+    "pool": "adaptive_avg_3x3",
+    "projection": "pca_256",
+    "small_crop_flag": false
+  }
+}
+```
+
+### Linked Detection Additions (core fields)
+
+```json
+{
+  "det_index": 0,
+  "temporal_link": {
+    "track_id": 12,
+    "track_status": "active",
+    "source_track_status": "lost",
+    "visual_similarity": 0.744,
+    "spatial_score": 0.602,
+    "total_score": 0.901,
+    "age_since_seen": 0
+  }
+}
+```
+
+## Usage
+
+### Run Trace Enrichment
 
 Single video:
 
@@ -39,18 +138,6 @@ python3 src/run_pipeline.py \
   --model yolov8n.pt
 ```
 
-Batch mode processes videos sequentially, logs progress per video, continues on failures, and exits nonzero if any video fails.
-
-### Optional: Discover Hook Layers
-
-```bash
-python3 -m src.trace_enrichment.discover_layers --model yolov8n.pt
-```
-
-Typical YOLOv8n/YOLOv8m defaults used by the pipeline:
-- deep layer: `8` (stride `32`)
-- mid layer: `6` (stride `16`)
-
 ### Validate Enriched Output
 
 ```bash
@@ -59,52 +146,26 @@ python3 -m src.trace_enrichment.validate \
   --expected-dim 256
 ```
 
-## Outputs
+### Run Temporal Linking
 
-For input video `<video_name>.mp4`, the pipeline writes:
-
-- `experiments/results/enriched/<video_name>/enriched_detections.json`
-- `experiments/results/enriched/<video_name>/pca_projection.pkl`
-- `experiments/results/enriched/<video_name>/projection_manifest.json`
-
-`enriched_detections.json` is the main downstream artifact and preserves per-frame detections with activation metadata.
-
-`pca_projection.pkl` is the fitted PCA model for that video's activation vectors.
-
-`projection_manifest.json` records provenance and projection settings (model, hook layers/strides, pooling strategy, PCA dims, sample rate, counts, and input video hash).
-
-## How It Works
-
-The pipeline is single-pass with respect to YOLO inference on sampled frames:
-
-1. Sample every Nth frame from the input video.
-2. Run YOLOv8 on batches of sampled frames.
-3. Capture backbone feature maps via forward hooks during the same forward pass.
-4. For each detection, crop feature ROIs from the hooked maps using the same detection bbox.
-5. Adaptive-average-pool each ROI to `3x3`, flatten, and concatenate (deep + mid) into a raw activation vector.
-6. Fit PCA across all detections in the trace.
-7. Project to 256 dimensions (or fewer fitted components padded to 256), then L2-normalize.
-8. Write the enriched trace and PCA provenance artifacts.
-
-No IoU reconciliation or internal artifact "linking" is used. Detection decisions and activation vectors come from the same forward pass.
-
-## Enriched Detection Schema (Activation Payload)
-
-Each detection in `enriched_detections.json` includes:
-
-```json
-{
-  "class_id": 32,
-  "class_name": "sports ball",
-  "bbox": [41.71, 532.64, 322.24, 779.72],
-  "confidence": 0.818,
-  "activation": {
-    "vector": [0.013, -0.224],
-    "dim": 256,
-    "layers": ["backbone.C2f_deep", "backbone.C2f_mid"],
-    "pool": "adaptive_avg_3x3",
-    "projection": "pca_256",
-    "small_crop_flag": false
-  }
-}
+```bash
+python3 src/run_temporal_linking.py \
+  --enriched-json experiments/results/enriched/3sec_Left_to_Right/enriched_detections.json \
+  --similarity-threshold 0.65
 ```
+
+### Validate Temporal Linking Output
+
+```bash
+python3 -m src.temporal_linking.validate \
+  experiments/results/enriched/3sec_Left_to_Right/linked_detections.json \
+  experiments/results/enriched/3sec_Left_to_Right/tracks.json \
+  experiments/results/enriched/3sec_Left_to_Right/linking_manifest.json
+```
+
+## What We Are Working On Next
+
+1. **Occlusion continuity:** improve identity recovery when objects re-emerge after long occlusions.
+2. **Threshold calibration workflow:** define repeatable tuning protocol for `similarity_threshold` across videos.
+3. **Sampling strategy evaluation:** compare `sample-rate` settings to reduce identity fragmentation.
+4. **Tracking quality metrics:** add aggregate metrics for ID continuity and track fragmentation in manifests/reports.
