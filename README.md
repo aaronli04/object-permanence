@@ -129,8 +129,6 @@ Top-k experiment summary:
 |---:|---:|---:|---:|---:|---|
 | 12 | 0.837967 | 0.788560 | 0.714120 | `1 / 5 / 3` | Best `cross` among `k >= 12` |
 | 64 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Uses all raw dims available from `neck.C2f.15` |
-| 128 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Beyond raw layer dim cap; no added signal vs `k=64` |
-| 256 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Identical to `k=64`/`k=128` in sweep + linking outcomes |
 
 Dimension-cap validation for `neck.C2f.15`:
 - `raw_activation_dim = 64` in all current scenario manifests.
