@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
 import sys
+import tempfile
 import unittest
 
 import numpy as np
@@ -11,7 +13,7 @@ if PROJECT_SRC not in sys.path:
     sys.path.insert(0, PROJECT_SRC)
 
 from temporal_linking.config import TemporalLinkingConfig
-from temporal_linking.pipeline import link_video_frames
+from temporal_linking.pipeline import link_video_frames, run_temporal_linking
 from temporal_linking.types import Detection, FrameDetections
 
 
@@ -85,6 +87,101 @@ class PipelineIntegrationTests(unittest.TestCase):
         first_track = result.linked_frames[0]["detections"][0]["temporal_link"]["track_id"]
         later_track = result.linked_frames[3]["detections"][0]["temporal_link"]["track_id"]
         self.assertNotEqual(first_track, later_track)
+
+    def test_noop_relink_thresholds_keep_single_sweep_behavior(self) -> None:
+        cfg_noop = TemporalLinkingConfig(
+            similarity_threshold=0.7,
+            max_lost_frames=1,
+            min_hits_to_activate=1,
+            relink_min_track_hits=1,
+            relink_threshold=1.0,
+            relink_fallback_threshold=1.0,
+        )
+        cfg_merge = TemporalLinkingConfig(
+            similarity_threshold=0.7,
+            max_lost_frames=1,
+            min_hits_to_activate=1,
+            relink_min_track_hits=1,
+            relink_threshold=0.55,
+            relink_fallback_threshold=0.40,
+        )
+
+        vec_first = np.asarray([1.0, 0.0, 0.0], dtype=np.float32)
+        vec_late = np.asarray([0.95, 0.31, 0.0], dtype=np.float32)
+        frames = [
+            FrameDetections(frame_num=0, detections=[_make_detection(0, 0, vec_first)]),
+            FrameDetections(frame_num=1, detections=[]),
+            FrameDetections(frame_num=2, detections=[]),
+            FrameDetections(frame_num=3, detections=[_make_detection(3, 0, vec_late)]),
+        ]
+
+        result_noop = link_video_frames(frames, cfg_noop, enriched_json_path="synthetic.json")
+        first_track_noop = result_noop.linked_frames[0]["detections"][0]["temporal_link"]["track_id"]
+        later_track_noop = result_noop.linked_frames[3]["detections"][0]["temporal_link"]["track_id"]
+        self.assertNotEqual(first_track_noop, later_track_noop)
+
+        result_merge = link_video_frames(frames, cfg_merge, enriched_json_path="synthetic.json")
+        first_track_merge = result_merge.linked_frames[0]["detections"][0]["temporal_link"]["track_id"]
+        later_track_merge = result_merge.linked_frames[3]["detections"][0]["temporal_link"]["track_id"]
+        self.assertEqual(first_track_merge, later_track_merge)
+
+    def test_run_temporal_linking_writes_relink_manifest(self) -> None:
+        vec = np.zeros((256,), dtype=np.float32)
+        vec[0] = 1.0
+        enriched = [
+            {
+                "frame_num": 0,
+                "detections": [
+                    {
+                        "class_id": 32,
+                        "class_name": "sports ball",
+                        "bbox": [10.0, 10.0, 20.0, 20.0],
+                        "confidence": 0.9,
+                        "activation": {"vector": vec.tolist(), "dim": 256, "small_crop_flag": False},
+                    }
+                ],
+            },
+            {"frame_num": 1, "detections": []},
+            {"frame_num": 2, "detections": []},
+            {
+                "frame_num": 3,
+                "detections": [
+                    {
+                        "class_id": 32,
+                        "class_name": "sports ball",
+                        "bbox": [10.0, 10.0, 20.0, 20.0],
+                        "confidence": 0.9,
+                        "activation": {"vector": vec.tolist(), "dim": 256, "small_crop_flag": False},
+                    }
+                ],
+            },
+        ]
+
+        cfg = TemporalLinkingConfig(
+            similarity_threshold=0.7,
+            max_lost_frames=1,
+            min_hits_to_activate=1,
+            relink_min_track_hits=1,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            enriched_path = os.path.join(tmpdir, "enriched.json")
+            with open(enriched_path, "w", encoding="utf-8") as f:
+                json.dump(enriched, f)
+
+            outputs = run_temporal_linking(
+                enriched_json_path=enriched_path,
+                output_dir=tmpdir,
+                config=cfg,
+            )
+
+            self.assertIn("relink_manifest", outputs)
+            self.assertTrue(os.path.exists(outputs["relink_manifest"]))
+
+            with open(outputs["relink_manifest"], "r", encoding="utf-8") as f:
+                relink_manifest = json.load(f)
+            self.assertEqual(relink_manifest["schema_version"], "temporal_linking_relink_manifest_v1")
+            self.assertIn("stats", relink_manifest)
 
 
 if __name__ == "__main__":

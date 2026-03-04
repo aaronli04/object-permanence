@@ -60,6 +60,7 @@ class TrackManager:
                 "visual_similarity": None,
             }
         )
+        track.obs_vecs.append(det.activation_vec.copy())
 
         self._set_active(track)
         return track
@@ -95,6 +96,7 @@ class TrackManager:
                 "visual_similarity": float(assignment.visual_similarity),
             }
         )
+        track.obs_vecs.append(det.activation_vec.copy())
 
         if source_status == TrackStatus.LOST:
             track.status = TrackStatus.ACTIVE
@@ -137,6 +139,10 @@ class TrackManager:
     def close_remaining(self) -> None:
         for track in list(self.state.active.values()) + list(self.state.lost.values()):
             self.close(track, end_frame=track.last_seen_frame)
+
+    def finalize(self) -> list[Track]:
+        self.close_remaining()
+        return self.closed_tracks()
 
     def closed_tracks(self) -> list[Track]:
         tracks = list(self.state.closed.values())

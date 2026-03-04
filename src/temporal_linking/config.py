@@ -35,9 +35,26 @@ class TemporalLinkingConfig:
     match_within_class: bool = True
     filter_short_tracks_in_summary: bool = True
 
+    # Post-hoc relinking controls (always evaluated in sweep 2).
+    relink_threshold: float = 0.55
+    relink_max_gap_frames: int = -1
+    relink_min_track_hits: int = 2
+    relink_fallback_percentile: float = 90.0
+    relink_fallback_threshold: float = 0.40
+
     def __post_init__(self) -> None:
         if not -1.0 <= self.similarity_threshold <= 1.0:
             raise ValueError("similarity_threshold must be in [-1.0, 1.0]")
+        if not -1.0 <= self.relink_threshold <= 1.0:
+            raise ValueError("relink_threshold must be in [-1.0, 1.0]")
+        if self.relink_max_gap_frames < -1:
+            raise ValueError("relink_max_gap_frames must be -1 or >= 0")
+        if self.relink_min_track_hits <= 0:
+            raise ValueError("relink_min_track_hits must be > 0")
+        if not 0.0 <= self.relink_fallback_percentile <= 100.0:
+            raise ValueError("relink_fallback_percentile must be in [0.0, 100.0]")
+        if not -1.0 <= self.relink_fallback_threshold <= 1.0:
+            raise ValueError("relink_fallback_threshold must be in [-1.0, 1.0]")
         if self.max_lost_frames < 0:
             raise ValueError("max_lost_frames must be >= 0")
         if self.min_hits_to_activate <= 0:

@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import os
+
 from .assignment import assign_frame
 from .config import TemporalLinkingConfig
-from .io import build_output_paths, load_enriched_frames, write_linking_outputs
+from .io import build_output_paths, load_enriched_frames, write_json, write_linking_outputs
+from .relink import run_relink
 from .serialize import (
+    build_relink_manifest,
     match_link_meta,
     new_track_link_meta,
+    remap_linked_frames_track_ids,
     serialize_linked_frame,
     serialize_manifest,
     serialize_tracks,
@@ -65,22 +70,28 @@ def link_video_frames(
 
         linked_frames.append(serialize_linked_frame(frame, per_det_link_meta))
 
-    manager.close_remaining()
-
+    closed_tracks = manager.finalize()
+    merge_map, relink_result = run_relink(closed_tracks, cfg)
+    linked_frames = remap_linked_frames_track_ids(linked_frames, merge_map)
     effective_enriched_json = enriched_json_path or "enriched_detections.json"
-    closed_tracks = manager.closed_tracks()
-    tracks_payload = serialize_tracks(closed_tracks, cfg)
+    tracks_payload = serialize_tracks(closed_tracks, cfg, merge_map=merge_map)
     manifest_payload = serialize_manifest(
         enriched_json_path=effective_enriched_json,
         linked_frames=linked_frames,
         tracks_payload=tracks_payload,
         cfg=cfg,
     )
+    relink_manifest_payload = build_relink_manifest(
+        cfg=cfg,
+        relink_result=relink_result,
+        merge_map=merge_map,
+    )
 
     return TemporalLinkingResult(
         linked_frames=linked_frames,
         tracks_payload=tracks_payload,
         manifest_payload=manifest_payload,
+        relink_manifest_payload=relink_manifest_payload,
     )
 
 
@@ -100,9 +111,12 @@ def run_temporal_linking(
         tracks_payload=result.tracks_payload,
         manifest_payload=result.manifest_payload,
     )
+    relink_manifest_path = os.path.join(output_dir, "relink_manifest.json")
+    write_json(relink_manifest_path, result.relink_manifest_payload)
 
     return {
         "linked_detections": artifacts.linked_detections_path,
         "tracks": artifacts.tracks_path,
         "linking_manifest": artifacts.manifest_path,
+        "relink_manifest": relink_manifest_path,
     }

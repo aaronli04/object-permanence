@@ -49,23 +49,23 @@ Input:
 - `enriched_detections.json` from Stage 1
 
 Core responsibilities:
-- Walk frames in temporal order
-- Build track-to-detection similarity matrix each frame
-- Solve one-to-one assignment (Hungarian default, greedy fallback)
-- Assign persistent `track_id` values
-- Handle unmatched tracks as `LOST` then `CLOSED` after miss budget
-- Spawn new tracks for unmatched detections
+- Sweep 1: walk frames in temporal order and assign detections to tracks
+- Keep track lifecycle state (`TENTATIVE`, `ACTIVE`, `LOST`, `CLOSED`)
+- Sweep 2: relink compatible closed fragments across gaps
+- Produce final merged track IDs in output artifacts
 
 Matching policy:
 - **Single gating threshold:** `similarity_threshold`
 - Pair is eligible only if visual similarity is above threshold
 - Same threshold applies to normal links and lost-track recovery
 - Spatial and consistency terms are secondary tie-break terms
+- **Relink controls:** `relink_threshold`, `relink_max_gap_frames`, `relink_min_track_hits`, `relink_fallback_percentile`, `relink_fallback_threshold`
 
 Output artifacts per video:
 - `experiments/results/enriched/<video_name>/linked_detections.json`
 - `experiments/results/enriched/<video_name>/tracks.json`
 - `experiments/results/enriched/<video_name>/linking_manifest.json`
+- `experiments/results/enriched/<video_name>/relink_manifest.json`
 
 Entrypoint:
 - `src/run_temporal_linking.py`
@@ -78,6 +78,16 @@ Entrypoint:
 2. Inspect/validate enriched activation outputs.
 3. Run temporal linking on each enriched trace.
 4. Validate linked outputs and track statistics.
+
+### Temporal Linking Sweeps
+
+1. **Primary sweep (frame-by-frame):**
+- Builds track continuity over adjacent sampled frames using visual similarity plus tie-break features.
+
+2. **Relink sweep (post-hoc):**
+- Evaluates closed track fragments of the same class.
+- Uses centroid similarity first, then fallback percentile scoring for unresolved pairs.
+- Applies accepted links as merged final track IDs.
 
 ### Enriched Detection Schema (core fields)
 
@@ -151,8 +161,35 @@ python3 -m src.trace_enrichment.validate \
 ```bash
 python3 src/run_temporal_linking.py \
   --enriched-json experiments/results/enriched/3sec_Left_to_Right/enriched_detections.json \
-  --similarity-threshold 0.65
+  --similarity-threshold 0.65 \
+  --relink-threshold 0.55 \
+  --relink-fallback-threshold 0.40
 ```
+
+Disable relink merges (no-op sweep) by setting strict thresholds:
+
+```bash
+python3 src/run_temporal_linking.py \
+  --enriched-json experiments/results/enriched/3sec_Left_to_Right/enriched_detections.json \
+  --similarity-threshold 0.65 \
+  --relink-threshold 1.0 \
+  --relink-fallback-threshold 1.0
+```
+
+### Relink Options
+
+- `--relink-threshold` (default `0.55`): centroid similarity gate for relink acceptance.
+- `--relink-max-gap-frames` (default `-1`): max allowed frame gap between fragments (`-1` means no cap).
+- `--relink-min-track-hits` (default `2`): minimum observations required for a fragment to be relink-eligible.
+- `--relink-fallback-percentile` (default `90.0`): percentile used for cross-track fallback scoring.
+- `--relink-fallback-threshold` (default `0.40`): fallback score gate after centroid pass.
+
+### Output Files
+
+- `linked_detections.json`: per-detection temporal link metadata with final track IDs.
+- `tracks.json`: merged final tracks and per-track summary fields.
+- `linking_manifest.json`: run config and aggregate stage statistics.
+- `relink_manifest.json`: relink diagnostics (candidate counts, accepted links, merge map).
 
 ### Validate Temporal Linking Output
 

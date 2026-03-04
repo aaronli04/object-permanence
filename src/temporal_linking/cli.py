@@ -16,7 +16,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output-dir",
         default=None,
-        help="Output directory for linked_detections.json, tracks.json, linking_manifest.json. "
+        help="Output directory for linked_detections.json, tracks.json, linking_manifest.json, relink_manifest.json. "
         "Default: directory containing enriched JSON.",
     )
 
@@ -59,6 +59,37 @@ def build_parser() -> argparse.ArgumentParser:
         default=True,
         help="Only count tracks with hits >= min_track_length as valid in summary stats.",
     )
+
+    parser.add_argument(
+        "--relink-threshold",
+        type=float,
+        default=0.55,
+        help="Centroid similarity gate used in post-hoc relinking.",
+    )
+    parser.add_argument(
+        "--relink-max-gap-frames",
+        type=int,
+        default=-1,
+        help="Maximum frame gap for relink candidates (-1 means unlimited).",
+    )
+    parser.add_argument(
+        "--relink-min-track-hits",
+        type=int,
+        default=2,
+        help="Minimum hits required for tracks to be relink candidates.",
+    )
+    parser.add_argument(
+        "--relink-fallback-percentile",
+        type=float,
+        default=90.0,
+        help="Percentile used by fallback cross-track scoring.",
+    )
+    parser.add_argument(
+        "--relink-fallback-threshold",
+        type=float,
+        default=0.40,
+        help="Fallback score threshold used after centroid-based relinking.",
+    )
     return parser
 
 
@@ -85,6 +116,11 @@ def _build_config(args: argparse.Namespace) -> TemporalLinkingConfig:
         assignment_method=args.assignment_method,
         match_within_class=bool(args.match_within_class),
         filter_short_tracks_in_summary=bool(args.filter_short_tracks_in_summary),
+        relink_threshold=args.relink_threshold,
+        relink_max_gap_frames=args.relink_max_gap_frames,
+        relink_min_track_hits=args.relink_min_track_hits,
+        relink_fallback_percentile=args.relink_fallback_percentile,
+        relink_fallback_threshold=args.relink_fallback_threshold,
     )
 
 
@@ -110,6 +146,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"Saved linked detections to {outputs['linked_detections']}")
     print(f"Saved tracks to {outputs['tracks']}")
     print(f"Saved linking manifest to {outputs['linking_manifest']}")
+    print(f"Saved relink manifest to {outputs['relink_manifest']}")
     return 0
 
 

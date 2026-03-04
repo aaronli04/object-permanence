@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -60,6 +60,35 @@ class Track:
 
     observations: list[dict[str, Any]] = field(default_factory=list)
     events: list[dict[str, Any]] = field(default_factory=list)
+    obs_vecs: list[np.ndarray] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class TrackFragment:
+    track_id: int
+    class_id: int
+    first_frame: int
+    last_frame: int
+    hits: int
+    centroid: np.ndarray
+    frame_vecs: np.ndarray
+
+
+@dataclass(frozen=True)
+class RelinkEdge:
+    predecessor_id: int
+    successor_id: int
+    score: float
+    method: Literal["centroid", "fallback"]
+
+
+@dataclass(frozen=True)
+class RelinkManifest:
+    schema_version: str
+    config: dict[str, Any]
+    stats: dict[str, int]
+    accepted_edges: list[dict[str, Any]]
+    merge_map: dict[str, int]
 
 
 @dataclass(frozen=True)
@@ -101,3 +130,4 @@ class TemporalLinkingResult:
     linked_frames: list[dict[str, Any]]
     tracks_payload: dict[str, Any]
     manifest_payload: dict[str, Any]
+    relink_manifest_payload: dict[str, Any]
