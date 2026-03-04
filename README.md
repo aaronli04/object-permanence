@@ -387,9 +387,3 @@ Linked detection additions:
   }
 }
 ```
-
-## Repository Hygiene
-
-- `experiments/results/` is intentionally gitignored.
-- Keep benchmark/progress narrative in this README + output manifests.
-- Keep ad-hoc analysis scratch files out of repo root.
