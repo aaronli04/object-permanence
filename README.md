@@ -195,10 +195,12 @@ Sweeps were run to `k=256` to test both low-dimensional and high-dimensional reg
 
 Top-k experiment summary:
 
-| k | within_early | within_late | cross | Right_to_left (ball/total/valid tracks) | Notes |
-|---:|---:|---:|---:|---:|---|
-| 12 | 0.837967 | 0.788560 | 0.714120 | `1 / 5 / 3` | Best `cross` among `k >= 12` |
-| 64 | 0.828755 | 0.771111 | 0.704412 | `1 / 5 / 3` | Uses all raw dims available from `neck.C2f.15` |
+Right_to_left linking outcomes for each `k`:
+
+| k | within_early | within_late | cross | ball_tracks | total_tracks | valid_tracks | Notes |
+|---:|---:|---:|---:|---:|---:|---:|---|
+| 12 | 0.837967 | 0.788560 | 0.714120 | 1 | 5 | 3 | Best `cross` among `k >= 12` |
+| 64 | 0.828755 | 0.771111 | 0.704412 | 1 | 5 | 3 | Uses all raw dims available from `neck.C2f.15` |
 
 Dimension-cap validation for `neck.C2f.15`:
 - `raw_activation_dim = 64` in all current scenario manifests.
