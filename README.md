@@ -143,6 +143,130 @@ Core mechanics:
   - Pass 2: spatial plausibility fallback with `relink_fallback_threshold`
   - One-to-one greedy acceptance + chain resolution
 
+#### Frame-to-Frame Link Score
+
+Reference descriptor for each track:
+
+```python
+hist_mean = np.mean(np.stack(track.vec_history), axis=0) if track.vec_history else track.last_vec
+ref = l2_normalize(
+    (cfg.w_last * track.last_vec)
+    + (cfg.w_ema * track.ema_vec)
+    + (cfg.w_hist * hist_mean)
+)
+```
+
+Per pair `(track, det)`:
+
+```python
+# visual term
+vis = float(np.dot(ref, det.activation_vec))
+
+# spatial term
+iou = bbox_iou(track.last_bbox_xyxy, det.bbox_xyxy)
+center_delta = bbox_center(track.last_bbox_xyxy) - bbox_center(det.bbox_xyxy)
+center_dist = float(np.linalg.norm(center_delta))
+scale = max(bbox_diag(track.last_bbox_xyxy), bbox_diag(det.bbox_xyxy), 1.0)
+center_term = float(math.exp(-center_dist / scale))
+sp = float((0.5 * iou) + (0.5 * center_term))
+
+# consistency + age terms
+cons = float(np.mean(track.sim_history)) if track.sim_history else vis
+age_decay = float(math.exp(-float(track.miss_streak) / float(max(cfg.max_lost_frames, 1))))
+
+# tie-break and final assignment score
+tie = (cfg.w_spatial * sp) + (cfg.w_consistency * cons) + (cfg.w_age * age_decay)
+eligible = vis >= cfg.similarity_threshold
+if cfg.match_within_class and track.class_id != det.class_id:
+    eligible = False
+
+assignment_score = vis + tie if eligible else -np.inf
+```
+
+How pair scores become links:
+
+```python
+# Hungarian (default)
+cost = np.where(eligible_matrix, -assignment_score_matrix, 1e9)
+rows, cols = linear_sum_assignment(cost)  # minimize cost = maximize total assignment_score
+
+# Greedy option
+# sort all eligible pairs by assignment_score desc; keep one-to-one non-conflicting pairs
+```
+
+#### Relink Internals
+
+Relinking runs after all tracks are closed and only uses fragments that satisfy:
+
+```python
+track.status == CLOSED
+track.hits >= cfg.relink_min_track_hits
+len(track.obs_vecs) > 0 and len(track.obs_positions) > 0
+```
+
+Candidate construction:
+
+```python
+same_class = (pred.class_id == succ.class_id)
+temporal_order = (pred.last_frame < succ.first_frame)
+gap = succ.first_frame - pred.last_frame
+gap_ok = (cfg.relink_max_gap_frames == -1) or (gap <= cfg.relink_max_gap_frames)
+
+candidate = same_class and temporal_order and gap_ok
+```
+
+Relink scores:
+
+```python
+# build fragment centroid from track observations
+frame_vecs = np.stack([l2_normalize(v) for v in track.obs_vecs], axis=0).astype(np.float32, copy=False)
+centroid = l2_normalize(np.mean(frame_vecs, axis=0))
+
+# centroid edge score (for candidate pred -> succ fragments)
+score_centroid = float(np.dot(pred.centroid, succ.centroid))
+
+# spatial fallback score
+pts = pred.last_positions
+if len(pts) >= 2:
+    frames = np.asarray([p[2] for p in pts], dtype=np.float64)
+    xs = np.asarray([p[0] for p in pts], dtype=np.float64)
+    ys = np.asarray([p[1] for p in pts], dtype=np.float64)
+    vx = float(np.polyfit(frames, xs, 1)[0])
+    vy = float(np.polyfit(frames, ys, 1)[0])
+else:
+    vx = 0.0
+    vy = 0.0
+
+last_cx, last_cy, last_frame = pred.last_positions[-1]
+g = max(1, int(succ.first_frame - last_frame))
+pred_cx = float(last_cx) + (vx * float(g))
+pred_cy = float(last_cy) + (vy * float(g))
+actual_cx, actual_cy, _ = succ.first_position
+pixel_error = float(np.hypot(pred_cx - float(actual_cx), pred_cy - float(actual_cy)))
+score_spatial = 1.0 - ((pixel_error / g) / cfg.relink_max_pixels_per_frame)
+```
+
+Acceptance and chain merge:
+
+```python
+# pass 1: centroid edges
+accept edge if score_centroid >= cfg.relink_threshold and pred/succ both unused
+
+# pass 2: fallback edges
+accept edge if score_spatial >= cfg.relink_fallback_threshold and pred/succ both unused
+```
+
+```python
+# union accepted edges into chains
+# canonical track_id = member with earliest first_frame (tie -> smaller track_id)
+merge_map[absorbed_track_id] = canonical_track_id
+```
+
+Serialization after relink:
+- `linked_detections.json`: remap `temporal_link.track_id` through `merge_map`.
+- `tracks.json`: merge absorbed members into canonical track and record absorbed IDs in `relinked_from`.
+- `relink_manifest.json`: stores relink config, candidate/acceptance stats, accepted edges, and `merge_map`.
+
 Output per scenario:
 - `experiments/results/linking/<scenario>/linked_detections.json`
 - `experiments/results/linking/<scenario>/tracks.json`
