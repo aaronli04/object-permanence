@@ -18,6 +18,76 @@ High-level data flow:
 5. Link detections over time using cosine similarity plus tie-break scores.
 6. Run a second relink pass for fragmented closed tracks.
 
+## Intuition Behind Linking
+
+### Vectors
+
+When a detection is produced, the pipeline also extracts an internal appearance descriptor from YOLO features.  
+For the default hook (`neck.C2f.15`), the raw pooled descriptor is 64 values (`raw_activation_dim = 64`), which acts like a compact fingerprint of appearance.
+
+At enrichment time:
+- Raw vectors are projected with PCA and stored in a fixed 256-D schema.
+- For this hook layer, effective signal is still capped by the fitted PCA components (at most 64, often lower on short clips).
+
+At linking time (default):
+- `--activation-topk 64` keeps the first 64 projected dims.
+- Vectors are L2-normalized before cosine scoring.
+
+### Cosine similarity
+
+Each descriptor is treated as a vector in feature space. Cosine similarity asks whether two vectors point in the same direction:
+
+- `1.0`: same direction (very similar appearance)
+- `0.0`: orthogonal (unrelated)
+- `-1.0`: opposite direction
+
+Because vectors are L2-normalized, cosine becomes a dot product:
+
+`cos(a, b) = dot(a, b)`
+
+That is the primary visual identity score used by the tracker.
+
+### Frame-to-frame matching
+
+For every sampled frame pair, the tracker scores all candidate track-detection pairs, then applies two constraints:
+
+- Hard gate first: pair is ineligible if `visual_similarity < 0.65` (`--similarity-threshold`).
+- One-to-one matching: each detection can match at most one track, and each track can match at most one detection.
+
+Assignment is solved with Hungarian by default (`--assignment-method hungarian`), which maximizes total assignment quality globally rather than picking greedy local matches.
+
+### Track memory
+
+A track reference vector is not only "last seen descriptor". It is:
+
+`ref = normalize(w_last * last + w_ema * ema + w_hist * history_mean)`
+
+Defaults:
+- `w_last = 0.55`
+- `w_ema = 0.30`
+- `w_hist = 0.15`
+
+This reduces brittleness from single-frame artifacts (blur, partial occlusion, odd pose).
+
+### Relinking
+
+If a track is closed and the object later reappears, relink tries to merge fragments:
+
+1. Same class and temporal order (successor starts after predecessor ends).
+2. Centroid descriptor cosine gate (`--relink-threshold`, default `0.55`).
+3. If centroid gate fails, spatial fallback score (`--relink-fallback-threshold`, default `0.40`).
+4. Gap guardrail via `--relink-max-gap-frames` (default `120`).
+
+Accepted edges are merged into canonical track IDs.
+
+### End-to-end summary
+
+Every sampled frame:
+
+detect -> extract descriptor -> compare by cosine -> Hungarian assignment -> lifecycle updates (`TENTATIVE/ACTIVE/LOST/CLOSED`) -> relink closed fragments.
+
+Goal: maintain identity continuity through motion, misses, and short occlusions.
+
 ## Pipeline Details
 
 ### Stage 1: Activation Enrichment
