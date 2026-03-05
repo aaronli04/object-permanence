@@ -145,122 +145,81 @@ Core mechanics:
 
 #### Frame-to-Frame Link Score
 
-Reference descriptor for each track:
+For a track `t` and detection `d`, the score is built as:
 
-```python
-hist_mean = np.mean(np.stack(track.vec_history), axis=0) if track.vec_history else track.last_vec
-ref = l2_normalize(
-    (cfg.w_last * track.last_vec)
-    + (cfg.w_ema * track.ema_vec)
-    + (cfg.w_hist * hist_mean)
-)
-```
+`h_t = mean(vec_history_t)` (or `last_t` if no history)  
+`ref_t = normalize(w_last * last_t + w_ema * ema_t + w_hist * h_t)`
 
-Per pair `(track, det)`:
+`v_{t,d} = ref_t . a_d`  
+where `a_d` is the detection activation vector.
 
-```python
-# visual term
-vis = float(np.dot(ref, det.activation_vec))
+Spatial term:
 
-# spatial term
-iou = bbox_iou(track.last_bbox_xyxy, det.bbox_xyxy)
-center_delta = bbox_center(track.last_bbox_xyxy) - bbox_center(det.bbox_xyxy)
-center_dist = float(np.linalg.norm(center_delta))
-scale = max(bbox_diag(track.last_bbox_xyxy), bbox_diag(det.bbox_xyxy), 1.0)
-center_term = float(math.exp(-center_dist / scale))
-sp = float((0.5 * iou) + (0.5 * center_term))
+`IoU_{t,d} = IoU(last_bbox_t, bbox_d)`  
+`dist_{t,d} = ||center(last_bbox_t) - center(bbox_d)||_2`  
+`scale_{t,d} = max(diag(last_bbox_t), diag(bbox_d), 1)`  
+`c_{t,d} = exp(-dist_{t,d} / scale_{t,d})`  
+`s_{t,d} = 0.5 * IoU_{t,d} + 0.5 * c_{t,d}`
 
-# consistency + age terms
-cons = float(np.mean(track.sim_history)) if track.sim_history else vis
-age_decay = float(math.exp(-float(track.miss_streak) / float(max(cfg.max_lost_frames, 1))))
+Consistency and age terms:
 
-# tie-break and final assignment score
-tie = (cfg.w_spatial * sp) + (cfg.w_consistency * cons) + (cfg.w_age * age_decay)
-eligible = vis >= cfg.similarity_threshold
-if cfg.match_within_class and track.class_id != det.class_id:
-    eligible = False
+`k_{t,d} = mean(sim_history_t)` (or `v_{t,d}` if no history)  
+`age_t = exp(-miss_streak_t / max(max_lost_frames, 1))`
 
-assignment_score = vis + tie if eligible else -np.inf
-```
+Tie-break:
 
-How pair scores become links:
+`tie_{t,d} = w_spatial * s_{t,d} + w_consistency * k_{t,d} + w_age * age_t`
 
-```python
-# Hungarian (default)
-cost = np.where(eligible_matrix, -assignment_score_matrix, 1e9)
-rows, cols = linear_sum_assignment(cost)  # minimize cost = maximize total assignment_score
+Eligibility gate:
 
-# Greedy option
-# sort all eligible pairs by assignment_score desc; keep one-to-one non-conflicting pairs
-```
+`eligible_{t,d} = class_ok AND (v_{t,d} >= similarity_threshold)`
+
+Final pair score:
+
+`score_{t,d} = v_{t,d} + tie_{t,d}` if eligible, else `-inf`.
+
+How scores become links:
+- Hungarian (default): solve a one-to-one assignment that maximizes total score.
+  Equivalent implementation is min-cost with `cost = -score` for eligible pairs.
+- Greedy: sort eligible pairs by descending score and keep non-conflicting pairs.
 
 #### Relink Internals
 
-Relinking runs after all tracks are closed and only uses fragments that satisfy:
+Relinking runs after all tracks are closed and only uses fragments with:
+- closed status
+- at least `relink_min_track_hits` observations
+- descriptor history and position history present.
 
-```python
-track.status == CLOSED
-track.hits >= cfg.relink_min_track_hits
-len(track.obs_vecs) > 0 and len(track.obs_positions) > 0
-```
+Candidate pair `(p -> q)` must satisfy:
 
-Candidate construction:
+`same_class`  
+`p.last_frame < q.first_frame`  
+`gap_ok = (relink_max_gap_frames == -1) OR ((q.first_frame - p.last_frame) <= relink_max_gap_frames)`
 
-```python
-same_class = (pred.class_id == succ.class_id)
-temporal_order = (pred.last_frame < succ.first_frame)
-gap = succ.first_frame - pred.last_frame
-gap_ok = (cfg.relink_max_gap_frames == -1) or (gap <= cfg.relink_max_gap_frames)
+Centroid relink score:
 
-candidate = same_class and temporal_order and gap_ok
-```
+`centroid_f = normalize(mean(normalize(obs_vec_i for fragment f)))`  
+`centroid_score_{p,q} = centroid_p . centroid_q`
 
-Relink scores:
+Spatial fallback score:
 
-```python
-# build fragment centroid from track observations
-frame_vecs = np.stack([l2_normalize(v) for v in track.obs_vecs], axis=0).astype(np.float32, copy=False)
-centroid = l2_normalize(np.mean(frame_vecs, axis=0))
+Estimate predecessor velocity `(vx, vy)` from its recent positions over time.  
+For gap `g = max(1, q.first_frame - p.last_frame)`:
 
-# centroid edge score (for candidate pred -> succ fragments)
-score_centroid = float(np.dot(pred.centroid, succ.centroid))
+`x_hat = x_last + vx * g`  
+`y_hat = y_last + vy * g`
 
-# spatial fallback score
-pts = pred.last_positions
-if len(pts) >= 2:
-    frames = np.asarray([p[2] for p in pts], dtype=np.float64)
-    xs = np.asarray([p[0] for p in pts], dtype=np.float64)
-    ys = np.asarray([p[1] for p in pts], dtype=np.float64)
-    vx = float(np.polyfit(frames, xs, 1)[0])
-    vy = float(np.polyfit(frames, ys, 1)[0])
-else:
-    vx = 0.0
-    vy = 0.0
+`e = ||(x_hat, y_hat) - (x_q_start, y_q_start)||_2`  
+`spatial_score_{p,q} = 1 - ((e / g) / relink_max_pixels_per_frame)`
 
-last_cx, last_cy, last_frame = pred.last_positions[-1]
-g = max(1, int(succ.first_frame - last_frame))
-pred_cx = float(last_cx) + (vx * float(g))
-pred_cy = float(last_cy) + (vy * float(g))
-actual_cx, actual_cy, _ = succ.first_position
-pixel_error = float(np.hypot(pred_cx - float(actual_cx), pred_cy - float(actual_cy)))
-score_spatial = 1.0 - ((pixel_error / g) / cfg.relink_max_pixels_per_frame)
-```
+Acceptance logic:
+- Pass 1: accept centroid edges with `centroid_score >= relink_threshold`, one-to-one greedy.
+- Pass 2: for unresolved nodes, accept spatial edges with `spatial_score >= relink_fallback_threshold`, one-to-one greedy.
 
-Acceptance and chain merge:
-
-```python
-# pass 1: centroid edges
-accept edge if score_centroid >= cfg.relink_threshold and pred/succ both unused
-
-# pass 2: fallback edges
-accept edge if score_spatial >= cfg.relink_fallback_threshold and pred/succ both unused
-```
-
-```python
-# union accepted edges into chains
-# canonical track_id = member with earliest first_frame (tie -> smaller track_id)
-merge_map[absorbed_track_id] = canonical_track_id
-```
+Chain merge:
+- Accepted edges are unioned into chains.
+- Canonical track ID is the member with earliest `first_frame` (tie-break: smaller `track_id`).
+- `merge_map[absorbed] = canonical`.
 
 Serialization after relink:
 - `linked_detections.json`: remap `temporal_link.track_id` through `merge_map`.
