@@ -76,7 +76,7 @@ If a track is closed and the object later reappears, relink tries to merge fragm
 1. Same class and temporal order (successor starts after predecessor ends).
 2. Centroid descriptor cosine gate (`--relink-threshold`, default `0.55`).
 3. If centroid gate fails, spatial fallback score (`--relink-fallback-threshold`, default `0.40`).
-4. Gap guardrail via `--relink-max-gap-frames` (default `120`).
+4. Gap control via `--relink-max-gap-frames` (default `-1`, unlimited).
 
 Accepted edges are merged into canonical track IDs.
 
@@ -259,7 +259,7 @@ python3 experiments/analyze_topk_dims.py \
 
 Current baseline:
 - Enrichment: `head-layer=neck.C2f.15`, `head-stride=8`, pool `1x1`
-- Linking: `activation_topk=64`, `similarity_threshold=0.65`, `relink_threshold=0.55`, `relink_max_gap_frames=120`, `relink_fallback_threshold=0.40`
+- Linking: `activation_topk=64`, `similarity_threshold=0.65`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`
 
 ### Caveats and Guardrails
 
@@ -270,21 +270,21 @@ Current baseline:
   - PCA is fit per run over all detections in that run (not globally across scenarios).
   - Low detection counts can make projections noisier; this is now flagged in `projection_manifest.json` via `projection_fit_scope` and `projection_caveats`.
 - Relink gap:
-  - Default `--relink-max-gap-frames` is `120` to avoid accidental very-long-gap merges.
-  - Use `-1` only when you intentionally want unlimited relinking distance.
+  - Default `--relink-max-gap-frames` is `-1` (unlimited relinking distance).
+  - Use a finite value when you want to constrain long-gap merges.
 
 Results across scenarios:
 
-| Scenario | Frames | Detections | Ball Tracks | Tracks Total | Tracks Valid |
-|---|---:|---:|---:|---:|---:|
-| `10sec_Left_to_Right` | 133 | 160 | 1 | 7 | 6 |
-| `3sec_Left_to_Right` | 49 | 77 | 1 | 8 | 6 |
-| `Exit_frame_while_occluded` | 53 | 72 | 1 | 5 | 4 |
-| `Left_bounce_back` | 64 | 105 | 2 | 6 | 5 |
-| `Left_to_right` | 25 | 52 | 1 | 7 | 5 |
-| `No_occlusion_ball_removed` | 34 | 37 | 1 | 8 | 5 |
-| `Occlusion_ball_removed` | 48 | 114 | 1 | 15 | 9 |
-| `Right_to_left` | 21 | 40 | 1 | 5 | 3 |
+| Scenario | Frames | Detections | Ball Tracks | Tracks Total | Tracks Valid | Relink Edges Accepted |
+|---|---:|---:|---:|---:|---:|---:|
+| `10sec_Left_to_Right` | 133 | 160 | 1 | 6 | 5 | 1 |
+| `3sec_Left_to_Right` | 49 | 77 | 1 | 7 | 5 | 1 |
+| `Exit_frame_while_occluded` | 53 | 72 | 1 | 5 | 4 | 0 |
+| `Left_bounce_back` | 64 | 105 | 1 | 5 | 4 | 2 |
+| `Left_to_right` | 25 | 52 | 1 | 7 | 5 | 1 |
+| `No_occlusion_ball_removed` | 34 | 37 | 1 | 8 | 5 | 2 |
+| `Occlusion_ball_removed` | 48 | 114 | 1 | 14 | 8 | 2 |
+| `Right_to_left` | 21 | 40 | 1 | 5 | 3 | 1 |
 
 ## Threshold and Parameter Reference
 
@@ -298,7 +298,7 @@ Results across scenarios:
 - `--relink-fallback-threshold`:
   - Spatial plausibility threshold for fallback relink scoring.
 - `--relink-max-gap-frames`:
-  - Max allowed frame gap for relink candidate pairs (default `120`; set `-1` for unlimited).
+  - Max allowed frame gap for relink candidate pairs (default `-1` for unlimited).
 - `--relink-min-track-hits`:
   - Min observations required for track fragment to participate in relinking.
 - `--relink-max-pixels-per-frame`:
@@ -368,7 +368,7 @@ python3 src/run_temporal_linking.py \
   --activation-topk 64 \
   --similarity-threshold 0.65 \
   --relink-threshold 0.55 \
-  --relink-max-gap-frames 120 \
+  --relink-max-gap-frames -1 \
   --relink-fallback-threshold 0.40
 ```
 
@@ -381,7 +381,7 @@ for f in experiments/results/activation_enrichment/*/enriched_detections.json; d
     --activation-topk 64 \
     --similarity-threshold 0.65 \
     --relink-threshold 0.55 \
-    --relink-max-gap-frames 120 \
+    --relink-max-gap-frames -1 \
     --relink-fallback-threshold 0.40
 done
 ```
@@ -403,7 +403,7 @@ for f in experiments/results/activation_enrichment/*/enriched_detections.json; d
     --activation-topk 64 \
     --similarity-threshold 0.65 \
     --relink-threshold 0.55 \
-    --relink-max-gap-frames 120 \
+    --relink-max-gap-frames -1 \
     --relink-fallback-threshold 0.40
 done
 ```

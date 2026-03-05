@@ -80,8 +80,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--relink-max-gap-frames",
         type=int,
-        default=120,
-        help="Maximum frame gap for relink candidates (default: 120; use -1 for unlimited).",
+        default=-1,
+        help="Maximum frame gap for relink candidates (default: -1 for unlimited).",
     )
     parser.add_argument(
         "--relink-min-track-hits",

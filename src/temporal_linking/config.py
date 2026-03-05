@@ -38,7 +38,7 @@ class TemporalLinkingConfig:
 
     # Post-hoc relinking controls (always evaluated in sweep 2).
     relink_threshold: float = 0.55
-    relink_max_gap_frames: int = 120  # finite by default to reduce long-gap false merges
+    relink_max_gap_frames: int = -1  # unlimited by default to favor long-gap relinking
     relink_min_track_hits: int = 2
     relink_max_pixels_per_frame: float = 15.0
     relink_fallback_threshold: float = 0.40
