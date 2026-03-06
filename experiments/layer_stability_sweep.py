@@ -23,6 +23,21 @@ if PROJECT_SRC not in sys.path:
 
 from trace_enrichment.model import get_module_map, load_yolo  # noqa: E402
 from trace_enrichment.sampler import FrameSampler  # noqa: E402
+from trace_enrichment.constants import (  # noqa: E402
+    DINO_CROP_PADDING_RATIO,
+    DINO_EMBEDDING_DIM,
+    DINO_INPUT_SIZE,
+    DINO_LOAD_TIMEOUT_SECONDS,
+    DINO_MODEL_NAME,
+    DINO_MODEL_REPO,
+    DINO_TINY_CROP_MIN_SIZE,
+)
+from trace_enrichment.dino import (  # noqa: E402
+    DinoEmbedder,
+    DinoUnavailableError,
+    extract_dino_embedding,
+    load_dino_embedder,
+)
 
 try:
     import torch
@@ -166,6 +181,18 @@ def _resolve_group_key(*, track_id: int | None, class_id: int, require_track_id:
     return int(class_id)
 
 
+def _infer_model_device(yolo: Any) -> str | None:
+    try:
+        params = getattr(getattr(yolo, "model", None), "parameters", None)
+        if callable(params):
+            first = next(params(), None)
+            if first is not None and hasattr(first, "device"):
+                return str(first.device)
+    except Exception:
+        return None
+    return None
+
+
 def _compute_separability(
     vectors_by_group: dict[int, list[np.ndarray]],
 ) -> tuple[float, float, float, int]:
@@ -295,6 +322,11 @@ def main() -> int:
         default="experiments/results/layer_selection/per_video/layer_stability_sweep.csv",
         help="CSV output path.",
     )
+    parser.add_argument(
+        "--dino",
+        action="store_true",
+        help="When set, include DINO CLS embeddings (dino_vits8) as an additional sweep candidate.",
+    )
     parser.add_argument("--top-n", type=int, default=10, help="Number of top rows to print.")
     args = parser.parse_args()
 
@@ -304,9 +336,31 @@ def main() -> int:
         raise ValueError("--max-sampled-frames must be > 0")
 
     yolo = load_yolo(args.model)
+    dino_embedder: DinoEmbedder | None = None
+    if bool(args.dino):
+        preferred_device = _infer_model_device(yolo)
+        try:
+            dino_embedder = load_dino_embedder(
+                model_name=DINO_MODEL_NAME,
+                feature_dim=DINO_EMBEDDING_DIM,
+                hub_repo=DINO_MODEL_REPO,
+                preferred_device=preferred_device,
+                load_timeout_seconds=DINO_LOAD_TIMEOUT_SECONDS,
+                input_size=DINO_INPUT_SIZE,
+                tiny_crop_min=DINO_TINY_CROP_MIN_SIZE,
+                crop_padding_ratio=DINO_CROP_PADDING_RATIO,
+            )
+        except DinoUnavailableError as exc:
+            raise RuntimeError(
+                "DINO preflight load failed before sweep start. "
+                "No output CSV was written for this run. "
+                f"Error: {exc}"
+            ) from exc
+
     module_map = get_module_map(yolo)
     module_types = {name: module.__class__.__name__ for name, module in module_map.items()}
     layer_data: dict[str, LayerAccum] = {}
+    warn_once: set[str] = set()
 
     sampled_frames: list[int] = []
     target_detection_count = 0
@@ -401,6 +455,49 @@ def main() -> int:
                     accum.norms.append(norm)
                     accum.vectors_by_frame.setdefault(int(frame_num), []).append(vec)
                     accum.vectors_by_group.setdefault(group_key, []).append(vec)
+
+                if dino_embedder is not None:
+                    try:
+                        dino_result = extract_dino_embedding(
+                            frame_bgr=frame,
+                            bbox_xyxy=bbox_xyxy,
+                            embedder=dino_embedder,
+                        )
+                        dino_raw_vec = dino_result.vector
+                    except Exception as exc:
+                        if "dino_extract_fail" not in warn_once:
+                            print(
+                                "WARNING: DINO extraction failed for one or more detections; "
+                                f"skipping those samples. Error: {exc}",
+                                file=sys.stderr,
+                            )
+                            warn_once.add("dino_extract_fail")
+                        continue
+
+                    if dino_result.tiny_crop and "dino_tiny_crop" not in warn_once:
+                        print(
+                            f"WARNING: One or more DINO crops were smaller than {DINO_TINY_CROP_MIN_SIZE}x"
+                            f"{DINO_TINY_CROP_MIN_SIZE}; sweep embeddings may be noisy.",
+                            file=sys.stderr,
+                        )
+                        warn_once.add("dino_tiny_crop")
+
+                    dino_norm = float(np.linalg.norm(dino_raw_vec))
+                    if not math.isfinite(dino_norm) or dino_norm <= 0.0:
+                        continue
+                    dino_vec = dino_raw_vec / dino_norm
+
+                    dino_accum = layer_data.setdefault("dino_cls", LayerAccum(module_type="DINO_ViT_CLS"))
+                    if dino_accum.feature_dim is None:
+                        dino_accum.feature_dim = int(dino_vec.shape[0])
+                    dino_accum.grouped_total += 1
+                    if track_id is not None:
+                        dino_accum.grouped_with_track_id += 1
+                    else:
+                        dino_accum.grouped_with_class_fallback += 1
+                    dino_accum.norms.append(dino_norm)
+                    dino_accum.vectors_by_frame.setdefault(int(frame_num), []).append(dino_vec.astype(np.float32))
+                    dino_accum.vectors_by_group.setdefault(group_key, []).append(dino_vec.astype(np.float32))
 
     rows = _layer_rows(layer_data=layer_data, sampled_frames=sampled_frames)
     output_csv = Path(args.output_csv)

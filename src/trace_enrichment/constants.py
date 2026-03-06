@@ -7,7 +7,7 @@ import os
 POOL_SIZE = (1, 1)
 POOL_STRATEGY = "adaptive_avg_1x1"
 ACTIVATION_LAYER_ALIASES = ["2.cv1"]
-# PCA compresses the 208-D combined multi-layer embedding to this target dimension.
+# PCA compresses the raw embedding (default 592-D with DINO enabled) to this target dimension.
 OUTPUT_VECTOR_DIM = 128
 DEFAULT_BATCH_SIZE = 8
 # Selected from multi-video separability calibration with winner constraints
@@ -23,6 +23,17 @@ EMBEDDING_LAYERS = [
     ("15", 0.351),
     ("22.cv3.0", 0.100),
 ]
+# DINO tier candidates (name, provisional separability-derived weight).
+# Weight is provisional and should be recalibrated with --dino sweeps.
+DINO_LAYERS = [("dino_cls", 0.400)]
+DINO_EMBEDDING_DIM = 384
+DINO_MODEL_REPO = "facebookresearch/dino:main"
+DINO_MODEL_NAME = "dino_vits8"
+DINO_INPUT_SIZE = 224
+DINO_TINY_CROP_MIN_SIZE = 32
+DINO_CROP_PADDING_RATIO = 0.05
+DINO_LOAD_TIMEOUT_SECONDS = 20.0
+DISABLE_DINO_ENV = "TRACE_DISABLE_DINO"
 # Feature flag: set TRACE_DISABLE_MULTI_LAYER_EMBEDDING=1 to force single-layer extraction.
 DISABLE_MULTI_LAYER_EMBEDDING_ENV = "TRACE_DISABLE_MULTI_LAYER_EMBEDDING"
 DEFAULT_HEAD_STRIDE = 8

@@ -14,6 +14,15 @@ except ImportError:  # pragma: no cover - import-path compatibility
 
 from .constants import (
     ACTIVATION_LAYER_ALIASES,
+    DINO_CROP_PADDING_RATIO,
+    DINO_EMBEDDING_DIM,
+    DINO_INPUT_SIZE,
+    DINO_LAYERS,
+    DINO_LOAD_TIMEOUT_SECONDS,
+    DINO_MODEL_NAME,
+    DINO_MODEL_REPO,
+    DINO_TINY_CROP_MIN_SIZE,
+    DISABLE_DINO_ENV,
     DISABLE_MULTI_LAYER_EMBEDDING_ENV,
     DEFAULT_BATCH_SIZE,
     DEFAULT_HEAD_LAYER,
@@ -24,6 +33,7 @@ from .constants import (
     POOL_STRATEGY,
     SCHEMA_VERSION,
 )
+from .dino import DinoEmbedder, DinoUnavailableError, extract_dino_embedding, load_dino_embedder
 from .io import build_output_artifacts, sha256_file, write_json
 from .model import (
     FeatureHookCollector,
@@ -74,6 +84,31 @@ def _is_truthy_env(value: str | None) -> bool:
 
 def _multi_layer_embedding_disabled() -> bool:
     return _is_truthy_env(os.environ.get(DISABLE_MULTI_LAYER_EMBEDDING_ENV))
+
+
+def _dino_disabled() -> bool:
+    return _is_truthy_env(os.environ.get(DISABLE_DINO_ENV))
+
+
+def _dino_tier_weight() -> float:
+    if not DINO_LAYERS:
+        return 0.0
+    total = float(sum(max(0.0, float(weight)) for _, weight in DINO_LAYERS))
+    if not np.isfinite(total):
+        return 0.0
+    return float(min(max(total, 0.0), 1.0))
+
+
+def _infer_model_device(yolo: Any) -> str | None:
+    try:
+        params = getattr(getattr(yolo, "model", None), "parameters", None)
+        if callable(params):
+            first = next(params(), None)
+            if first is not None and hasattr(first, "device"):
+                return str(first.device)
+    except Exception:
+        return None
+    return None
 
 
 def _normalize_weights(items: list[tuple[str, float]]) -> list[tuple[str, float]]:
@@ -262,6 +297,8 @@ def collect_single_pass_trace(
     sample_rate: int,
     hook_config: HookConfig,
     batch_size: int,
+    dino_embedder: DinoEmbedder | None = None,
+    dino_tier_weight: float = 0.0,
 ) -> tuple[list[CollectedFrame], CollectionStats]:
     if batch_size <= 0:
         raise ValueError("batch_size must be > 0")
@@ -277,6 +314,9 @@ def collect_single_pass_trace(
     layer_weights = tuple(hook_config.layer_weights) if hook_config.layer_weights else (1.0,)
     is_multi = bool(hook_config.multi_layer_enabled and len(layer_names) > 1)
     warn_once: set[str] = set()
+    dino_weight = float(min(max(float(dino_tier_weight), 0.0), 1.0))
+    yolo_weight = float(1.0 - dino_weight)
+    dino_active = bool(dino_embedder is not None and dino_weight > 0.0)
 
     def process_batch(batch_items: list[tuple[int, Any]]) -> None:
         if not batch_items:
@@ -310,7 +350,7 @@ def collect_single_pass_trace(
                 detections = extract_detections_from_result(results[index], sort_by_confidence=True)
                 for det in detections:
                     if is_multi:
-                        combined_vec, small_crop_flag = _build_weighted_embedding(
+                        yolo_vec, small_crop_flag = _build_weighted_embedding(
                             layer_outputs=layer_outputs,
                             layer_names=layer_names,
                             layer_weights=layer_weights,
@@ -321,23 +361,76 @@ def collect_single_pass_trace(
                             frame_w=int(_frame.shape[1]),
                             warn_once=warn_once,
                         )
-                        det.raw_vector = combined_vec
-                        det.small_crop_flag = bool(small_crop_flag)
                     else:
                         single_output = layer_outputs.get(hook_config.layer)
                         if single_output is None:
                             raise RuntimeError(
                                 f"Expected hook output for single layer '{hook_config.layer}' is missing."
                             )
-                        raw_vec, small_crop_flag = build_raw_activation_vector(
+                        yolo_vec, small_crop_flag = build_raw_activation_vector(
                             fmap=single_output[index],
                             bbox_xyxy=det.bbox,
                             pool=pool,
                             frame_h=int(_frame.shape[0]),
                             frame_w=int(_frame.shape[1]),
                         )
-                        det.raw_vector = raw_vec
+
+                    if not dino_active:
+                        det.raw_vector = yolo_vec
                         det.small_crop_flag = bool(small_crop_flag)
+                        continue
+
+                    # YOLO vector entering tier blend is already the final weighted composite in multi-layer mode.
+                    yolo_vec_n = l2_normalize(yolo_vec)
+                    dino_small_crop = False
+                    dino_valid_crop = True
+                    try:
+                        dino_result = extract_dino_embedding(
+                            frame_bgr=_frame,
+                            bbox_xyxy=det.bbox,
+                            embedder=dino_embedder,
+                        )
+                        dino_vec = dino_result.vector
+                        dino_small_crop = bool(dino_result.tiny_crop)
+                        dino_valid_crop = bool(dino_result.valid_crop)
+                    except Exception as exc:
+                        warn_key = "dino_extract_fail"
+                        if warn_key not in warn_once:
+                            print(
+                                "WARNING: DINO embedding extraction failed; "
+                                f"using zero-vector fallback for affected detections. Error: {exc}",
+                                file=sys.stderr,
+                            )
+                            warn_once.add(warn_key)
+                        dino_vec = np.zeros((DINO_EMBEDDING_DIM,), dtype=np.float32)
+                        dino_valid_crop = False
+
+                    if not dino_valid_crop:
+                        warn_key = "dino_invalid_crop"
+                        if warn_key not in warn_once:
+                            print(
+                                "WARNING: One or more detection crops were invalid for DINO; "
+                                "using zero-vector fallback for those detections.",
+                                file=sys.stderr,
+                            )
+                            warn_once.add(warn_key)
+
+                    if dino_small_crop:
+                        warn_key = "dino_tiny_crop"
+                        if warn_key not in warn_once:
+                            print(
+                                f"WARNING: One or more DINO crops were smaller than {DINO_TINY_CROP_MIN_SIZE}x"
+                                f"{DINO_TINY_CROP_MIN_SIZE}; embeddings may be unreliable.",
+                                file=sys.stderr,
+                            )
+                            warn_once.add(warn_key)
+
+                    blended = np.concatenate(
+                        [yolo_vec_n * yolo_weight, dino_vec * dino_weight],
+                        axis=0,
+                    ).astype(np.float32, copy=False)
+                    det.raw_vector = l2_normalize(blended)
+                    det.small_crop_flag = bool(small_crop_flag or dino_small_crop or (not dino_valid_crop))
 
                 frames.append(CollectedFrame(frame_num=int(frame_num), detections=detections))
                 stats.total_sampled_frames += 1
@@ -385,8 +478,14 @@ def build_enriched_payload(
     frames: list[CollectedFrame],
     projection_dim: int,
     hook_config: HookConfig,
+    *,
+    dino_enabled: bool = False,
 ) -> list[dict[str, Any]]:
     activation_layers = list(hook_config.layers) if hook_config.layers else [hook_config.layer]
+    if dino_enabled:
+        for layer_name, layer_weight in DINO_LAYERS:
+            if float(layer_weight) > 0.0:
+                activation_layers.append(str(layer_name))
     payload: list[dict[str, Any]] = []
     for frame in frames:
         detections_payload: list[dict[str, Any]] = []
@@ -420,12 +519,17 @@ def build_manifest(
     effective_pca_dim: int,
     frames: list[CollectedFrame],
     stats: CollectionStats,
+    dino_enabled: bool = False,
+    dino_model: str | None = None,
+    dino_load_error: str | None = None,
+    dino_weight: float = 0.0,
 ) -> dict[str, Any]:
     first_detection = next(_iter_detections(frames), None)
     if first_detection is None or first_detection.raw_vector is None:
         raise RuntimeError("Cannot build manifest without at least one activation vector")
 
     artifacts = build_output_artifacts(run_config.output_dir)
+    raw_dim = int(len(first_detection.raw_vector))
     return {
         "schema_version": SCHEMA_VERSION,
         "projection_file": os.path.basename(artifacts.pca_path),
@@ -443,7 +547,13 @@ def build_manifest(
         "pool": POOL_STRATEGY,
         "pool_size": list(POOL_SIZE),
         "layers": _layer_manifest_section(hook_config),
-        "raw_activation_dim": int(len(first_detection.raw_vector)),
+        "raw_activation_dim": raw_dim,
+        "raw_embedding_dim": raw_dim,
+        "dino_enabled": bool(dino_enabled),
+        "dino_model": str(dino_model or ""),
+        "dino_load_error": str(dino_load_error or ""),
+        "dino_weight": float(dino_weight if dino_enabled else 0.0),
+        "dino_feature_dim": int(DINO_EMBEDDING_DIM if dino_enabled else 0),
         "num_vectors_fit": int(stats.total_detections),
         "model_name": run_config.model_name,
         "batch_size": int(run_config.batch_size),
@@ -509,6 +619,38 @@ def run_trace_enrichment(
     artifacts = build_output_artifacts(output_dir)
 
     yolo = load_yolo(model_name)
+    dino_weight = 0.0
+    dino_load_error = ""
+    dino_embedder: DinoEmbedder | None = None
+    dino_requested = bool(not _dino_disabled())
+    if dino_requested:
+        dino_weight = _dino_tier_weight()
+    if dino_requested and dino_weight > 0.0:
+        preferred_device = _infer_model_device(yolo)
+        try:
+            dino_embedder = load_dino_embedder(
+                model_name=DINO_MODEL_NAME,
+                feature_dim=DINO_EMBEDDING_DIM,
+                hub_repo=DINO_MODEL_REPO,
+                preferred_device=preferred_device,
+                load_timeout_seconds=DINO_LOAD_TIMEOUT_SECONDS,
+                input_size=DINO_INPUT_SIZE,
+                tiny_crop_min=DINO_TINY_CROP_MIN_SIZE,
+                crop_padding_ratio=DINO_CROP_PADDING_RATIO,
+            )
+        except DinoUnavailableError as exc:
+            dino_load_error = str(exc)
+            dino_embedder = None
+            print(
+                "WARNING: DINO model failed to load; falling back to YOLO-only embeddings for this run. "
+                "Re-identification quality may be degraded. "
+                f"Error: {exc}",
+                file=sys.stderr,
+            )
+    dino_enabled = bool(dino_embedder is not None and dino_weight > 0.0)
+    if not dino_enabled:
+        dino_weight = 0.0
+
     hook_config = _build_hook_config(yolo, layer_name=layer_name, stride=stride)
     frames, stats = collect_single_pass_trace(
         yolo=yolo,
@@ -516,6 +658,8 @@ def run_trace_enrichment(
         sample_rate=sample_rate,
         hook_config=hook_config,
         batch_size=batch_size,
+        dino_embedder=dino_embedder,
+        dino_tier_weight=dino_weight,
     )
 
     if stats.total_detections <= 0:
@@ -524,13 +668,22 @@ def run_trace_enrichment(
         )
 
     pca, effective_pca_dim = fit_pca_and_project(frames, pca_dim)
-    enriched_payload = build_enriched_payload(frames, effective_pca_dim, hook_config)
+    enriched_payload = build_enriched_payload(
+        frames,
+        effective_pca_dim,
+        hook_config,
+        dino_enabled=dino_enabled,
+    )
     manifest = build_manifest(
         run_config=run_config,
         hook_config=hook_config,
         effective_pca_dim=effective_pca_dim,
         frames=frames,
         stats=stats,
+        dino_enabled=dino_enabled,
+        dino_model=f"{DINO_MODEL_REPO}/{DINO_MODEL_NAME}",
+        dino_load_error=dino_load_error,
+        dino_weight=dino_weight,
     )
 
     os.makedirs(output_dir, exist_ok=True)

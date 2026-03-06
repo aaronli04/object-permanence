@@ -137,6 +137,8 @@ class ProjectionBehaviorTests(unittest.TestCase):
         self.assertEqual(manifest["projection_dim"], 2)
         self.assertEqual(manifest["projection_dim_requested"], 128)
         self.assertEqual(manifest["fitted_pca_components"], 2)
+        self.assertEqual(manifest["raw_activation_dim"], 3)
+        self.assertEqual(manifest["raw_embedding_dim"], 3)
 
 
 if __name__ == "__main__":

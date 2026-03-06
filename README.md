@@ -20,37 +20,43 @@ Links detections across sampled frames using cosine similarity on normalized emb
 
 ## Multi-Layer Identity Embedding
 
-Each detection's identity vector is a weighted combination of feature activations from three complementary layers of the YOLOv8 backbone and head. Layers were selected and weighted using a separability-driven calibration sweep across all scenario videos (see [Layer Calibration](#layer-calibration)).
+Each detection's identity vector is built from a YOLO multi-layer composite plus an optional DINO CLS tier for instance discrimination. Layer/tier weights are calibration-driven (see [Layer Calibration](#layer-calibration)).
 
 | Layer | Tier | Raw Dim | Sweep Separability | Weight |
 |---|---|---:|---:|---:|
 | `4.cv1` | Appearance | 64 | 15.495 | 0.549 |
 | `15` | Semantic | 64 | 9.926 | 0.351 |
 | `22.cv3.0` | Class-level | 80 | 13.902 | 0.100 |
+| `dino_cls` | Instance identity | 384 | TBD (recalibrate with `--dino`) | 0.400 (provisional) |
 
-**Why three tiers?**
+**Why these tiers?**
 - **Appearance (4.cv1):** Early backbone activations encode texture and color patterns, a strong signal for distinguishing objects that look different.
 - **Semantic (15):** Mid-network neck activations encode spatial context and object structure, which stays stable across viewpoint changes and partial occlusion.
 - **Class-level (22.cv3.0):** Detection-head activations encode class probability space. It is retained as a class-consistency gate but weighted conservatively because same-class instances are often near-identical in this space.
+- **Instance identity (dino_cls):** DINO's self-supervised ViT CLS embedding is added to improve same-class instance separation (re-identification).
 
 **Embedding construction per detection:**
-1. Register forward hooks on all configured embedding layers.
+1. Register forward hooks on configured YOLO embedding layers.
 2. Run YOLO forward pass and map each detection ROI onto each hooked feature map.
-3. Adaptive-average pool each layer ROI to a single vector.
-4. L2-normalize each vector independently.
-5. Multiply each normalized vector by its separability-derived weight.
-6. Concatenate the vectors to a 208-D combined embedding (`64 + 64 + 80`).
-7. L2-normalize the final concatenated embedding.
-8. Fit PCA on run detections and reduce the 208-D embedding to a 128-D target projection (or lower effective dim when detections are fewer than 128). PCA is used for compression, not expansion.
+3. Adaptive-average pool each YOLO layer ROI, L2-normalize per-layer vectors, apply YOLO layer weights, concatenate, then L2-normalize to a YOLO composite vector.
+4. Crop the detection box from the original frame (with padding), resize to `224x224`, ImageNet-normalize, and extract DINO CLS (`384-D`).
+5. Tier-blend without re-weighting individual YOLO layers again: `concat(yolo_composite * (1 - dino_weight), dino_vec * dino_weight)`, then final L2 normalization.
+6. Default raw dim is `592` (`208 + 384`) when DINO is active; fallback/raw dims can be smaller when DINO is disabled/unavailable.
+7. Fit PCA on run detections and reduce raw embeddings to a 128-D target projection (or lower effective dim when detections are fewer than 128). PCA is used for compression, not expansion.
 
 **Resilience:**
 - Hooks are registered and removed atomically around each forward pass to prevent memory leaks in long-running sessions.
 - If a layer is unavailable in a model variant, remaining layer weights are renormalized to sum to 1.
 - If fewer than 2 embedding layers are available, enrichment raises a clear error rather than silently degrading.
 - Single-layer fallback is available via `TRACE_DISABLE_MULTI_LAYER_EMBEDDING=1`.
+- DINO can be disabled via `TRACE_DISABLE_DINO=1`.
+- If DINO load fails (e.g., offline and uncached), enrichment logs a loud warning and falls back to YOLO-only embeddings for that run.
+- Tiny/invalid DINO crops use zero-vector fallback and warning-once behavior.
 - `projection_manifest.json` records both actual `projection_dim` and requested `projection_dim_requested`.
 
-Embedding configuration is stored in `src/trace_enrichment/constants.py` as `EMBEDDING_LAYERS` (list of `(layer_name, weight)` tuples). Weights should be recalibrated by re-running the aggregate sweep if the model or video distribution changes.
+Embedding configuration lives in `src/trace_enrichment/constants.py`:
+- `EMBEDDING_LAYERS`: YOLO per-layer weights.
+- `DINO_LAYERS`: DINO tier weight(s), provisional until recalibration.
 
 ---
 
@@ -82,6 +88,7 @@ After the primary linking run, a second pass evaluates pairs of closed track fra
 ## Layer Calibration
 
 Layer selection is driven by a separability metric, a Fisher-style ratio measuring how well each layer's activations separate different objects while remaining consistent within an object.
+When `--dino` is enabled in the sweep script, `dino_cls` is evaluated as an additional candidate alongside YOLO module layers.
 
 **Metrics computed per layer:**
 - `within_var`: mean per-group variance across feature dimensions.
@@ -89,7 +96,7 @@ Layer selection is driven by a separability metric, a Fisher-style ratio measuri
 - `separability = between_var / (within_var + 1e-8)`.
 - `track_id_coverage`: fraction of grouped detections using `track_id` (vs class fallback).
 
-**Grouping policy:** use `track_id` when available on YOLO boxes; fallback to `class_id` unless `--require-track-id` is set.
+**Grouping policy:** use `track_id` when available on detections; fallback to `class_id` unless `--require-track-id` is set.
 Instance-level grouping is preferred for re-identification calibration. When `track_id_coverage` is low, separability mostly reflects class-level separation.
 
 **Ranking policy:** descending `separability` -> descending `mean_consecutive_cosine` -> ascending `layer_name`.
@@ -111,7 +118,7 @@ Layers with `track_id_coverage < 0.30` emit warnings, and aggregate winner selec
 | 4 | `22.cv3.0` | Sequential | 80 | 13.902 | 0.9981 | 0.0000 |
 | 5 | `15` | C2f | 64 | 9.926 | 0.9809 | 0.0000 |
 
-If sweeps are run without tracking-enabled detections, `track_id_coverage` can be `0.0` across layers. In that case, separability rankings should be treated as class-level approximations until sweeps are rerun with stable track IDs.
+If sweeps are run without tracking-enabled detections, `track_id_coverage` can be `0.0` across layers. In that case, separability rankings should be treated as class-level approximations until sweeps are rerun with stable track IDs (recommended: `--dino --require-track-id`).
 
 Calibration artifacts:
 ```text
@@ -134,7 +141,7 @@ Default: `--activation-topk 64`.
 
 ### End-to-End Scenario Results
 
-Configuration: embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.351/0.100`, raw dim `208`, PCA target `128` (effective dim may be lower on small runs), `activation_topk=64`, `similarity_threshold=0.70`, `max_centroid_distance=0.40`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
+Configuration below reflects the baseline pre-DINO run: embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.351/0.100`, raw dim `208`, PCA target `128` (effective dim may be lower on small runs), `activation_topk=64`, `similarity_threshold=0.70`, `max_centroid_distance=0.40`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
 
 | Scenario | Frames | Detections | Ball Tracks | Total Tracks | Valid Tracks | Relink Edges |
 |---|---:|---:|---:|---:|---:|---:|
@@ -185,10 +192,11 @@ for v in data/raw_videos/*.mp4; do
     --max-sampled-frames 20 \
     --class-id -1 \
     --min-confidence 0.25 \
+    --dino \
     --output-csv "experiments/results/layer_selection/per_video/layer_stability_sweep_${stem}.csv"
 done
 ```
-Add `--require-track-id` when source detections include stable YOLO track IDs. If tracking is unavailable, leaving it unset avoids dropping all detections.
+Add `--require-track-id` when source detections include stable track IDs. For DINO weight recalibration, use both `--dino` and `--require-track-id`.
 
 ### 2. Aggregate layer sweeps
 ```bash
@@ -207,6 +215,7 @@ python3 src/run_pipeline.py \
   --sample-rate 5 \
   --model yolov8n.pt
 ```
+Set `TRACE_DISABLE_DINO=1` to force YOLO-only enrichment. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and falls back to YOLO-only for that run.
 
 ### 4. Temporal linking (batch)
 ```bash
