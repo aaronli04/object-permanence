@@ -59,7 +59,7 @@ Embedding configuration is stored in `src/trace_enrichment/constants.py` as `EMB
 Frame-to-frame linking operates on cosine similarity between normalized projected embeddings.
 
 **Matching:**
-- Similarity gate: `visual_similarity >= similarity_threshold` (default `0.65`).
+- Similarity gate: `visual_similarity >= similarity_threshold` (recommended `0.70`).
 - Spatial plausibility gate: centroid distance must be <= `max_centroid_distance` (default `0.40`, normalized by frame diagonal) before cosine scoring.
 - Assignment: Hungarian algorithm for globally consistent one-to-one matching per frame pair.
 
@@ -134,7 +134,7 @@ Default: `--activation-topk 64`.
 
 ### End-to-End Scenario Results
 
-Configuration: embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.351/0.100`, raw dim `208`, PCA target `128` (effective dim may be lower on small runs), `activation_topk=64`, `similarity_threshold=0.65`, `max_centroid_distance=0.40`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
+Configuration: embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.351/0.100`, raw dim `208`, PCA target `128` (effective dim may be lower on small runs), `activation_topk=64`, `similarity_threshold=0.70`, `max_centroid_distance=0.40`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
 
 | Scenario | Frames | Detections | Ball Tracks | Total Tracks | Valid Tracks | Relink Edges |
 |---|---:|---:|---:|---:|---:|---:|
@@ -147,6 +147,17 @@ Configuration: embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.35
 | Occlusion_ball_removed | 48 | 114 | 1 | 14 | 8 | 2 |
 | Right_to_left | 21 | 40 | 1 | 4 | 3 | 1 |
 | **Totals** | **427** | **657** | **8** | **56** | **39** | **8** |
+
+### Similarity Threshold Sweep (totals)
+
+All runs used the same configuration as above except `similarity_threshold`.
+
+| similarity_threshold | Total Tracks | Valid Tracks | Recoveries | Ball Tracks | Relink Edges |
+|---:|---:|---:|---:|---:|---:|
+| 0.65 | 56 | 39 | 13 | 8 | 8 |
+| 0.70 | 56 | 39 | 13 | 8 | 8 |
+| 0.75 | 59 | 39 | 13 | 9 | 8 |
+| 0.80 | 62 | 39 | 12 | 9 | 8 |
 
 ---
 
@@ -172,12 +183,12 @@ for v in data/raw_videos/*.mp4; do
     --model yolov8n.pt \
     --sample-rate 5 \
     --max-sampled-frames 20 \
-    --require-track-id \
     --class-id -1 \
     --min-confidence 0.25 \
     --output-csv "experiments/results/layer_selection/per_video/layer_stability_sweep_${stem}.csv"
 done
 ```
+Add `--require-track-id` when source detections include stable YOLO track IDs. If tracking is unavailable, leaving it unset avoids dropping all detections.
 
 ### 2. Aggregate layer sweeps
 ```bash
@@ -203,7 +214,7 @@ for f in experiments/results/activation_enrichment/*/enriched_detections.json; d
   python3 src/run_temporal_linking.py \
     --enriched-json "$f" \
     --activation-topk 64 \
-    --similarity-threshold 0.65 \
+    --similarity-threshold 0.70 \
     --max-centroid-distance 0.40 \
     --relink-threshold 0.55 \
     --relink-max-gap-frames -1 \
