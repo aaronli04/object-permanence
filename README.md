@@ -177,6 +177,23 @@ python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 ```
 
+### DINO installation (one-time cache warmup)
+```bash
+export TORCH_HOME="$PWD/.torch_cache"
+export SSL_CERT_FILE="$(python3 -c 'import certifi; print(certifi.where())')"
+
+python3 - <<'PY'
+import torch
+_ = torch.hub.load("facebookresearch/dino:main", "dino_vits8")
+print("DINO cached in:", torch.hub.get_dir())
+PY
+```
+
+Verify weights exist:
+```bash
+find .torch_cache/hub/checkpoints -name "dino_deitsmall8_pretrain.pth"
+```
+
 ---
 
 ## Run Commands
