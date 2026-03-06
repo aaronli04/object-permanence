@@ -4,7 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import os
+import sys
 from typing import Any
+
+if __package__ in (None, ""):
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from common.io import load_json
 
