@@ -18,7 +18,7 @@ from .serialize import (
     serialize_tracks,
 )
 from .tracker import TrackManager
-from .types import FrameDetections, TemporalLinkingResult
+from .types import FrameDetections, TemporalLinkingOutputs, TemporalLinkingResult
 
 
 def link_video_frames(
@@ -100,7 +100,7 @@ def run_temporal_linking(
     enriched_json_path: str,
     output_dir: str,
     config: TemporalLinkingConfig,
-) -> dict[str, str]:
+) -> TemporalLinkingOutputs:
     frames = load_enriched_frames(enriched_json_path, activation_topk=config.activation_topk)
     result = link_video_frames(frames, config, enriched_json_path=enriched_json_path)
 
@@ -114,9 +114,9 @@ def run_temporal_linking(
     relink_manifest_path = os.path.join(output_dir, "relink_manifest.json")
     write_json(relink_manifest_path, result.relink_manifest_payload)
 
-    return {
-        "linked_detections": artifacts.linked_detections_path,
-        "tracks": artifacts.tracks_path,
-        "linking_manifest": artifacts.manifest_path,
-        "relink_manifest": relink_manifest_path,
-    }
+    return TemporalLinkingOutputs(
+        linked_detections=artifacts.linked_detections_path,
+        tracks=artifacts.tracks_path,
+        linking_manifest=artifacts.manifest_path,
+        relink_manifest=relink_manifest_path,
+    )

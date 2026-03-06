@@ -13,6 +13,7 @@ if PROJECT_SRC not in sys.path:
     sys.path.insert(0, PROJECT_SRC)
 
 from common.numeric import l2_normalize
+from common.warn_once import WarnOnce
 from trace_enrichment.constants import DEFAULT_HEAD_LAYER
 from trace_enrichment.pipeline import _build_hook_config, _build_weighted_embedding
 from trace_enrichment.types import HookConfig
@@ -46,7 +47,7 @@ class MultiLayerEmbeddingTests(unittest.TestCase):
                 pool=object(),
                 frame_h=10,
                 frame_w=10,
-                warn_once=set(),
+                warn=WarnOnce(),
             )
 
         parts = [
@@ -70,7 +71,7 @@ class MultiLayerEmbeddingTests(unittest.TestCase):
         }
         vec_a = np.asarray([2.0, 0.0], dtype=np.float32)
         vec_b = np.asarray([0.0, 3.0], dtype=np.float32)
-        warn_once: set[str] = set()
+        warn = WarnOnce()
 
         with mock.patch(
             "trace_enrichment.pipeline.build_raw_activation_vector",
@@ -85,7 +86,7 @@ class MultiLayerEmbeddingTests(unittest.TestCase):
                 pool=object(),
                 frame_h=10,
                 frame_w=10,
-                warn_once=warn_once,
+                warn=warn,
             )
 
         # Missing layer c => weights renormalize from [0.5, 0.3] to [0.625, 0.375].
@@ -99,7 +100,7 @@ class MultiLayerEmbeddingTests(unittest.TestCase):
             )
         )
         self.assertTrue(np.allclose(combined, expected, atol=1e-6))
-        self.assertIn("missing_output:c", warn_once)
+        self.assertTrue(warn.seen("missing_output:c"))
 
     def test_weighted_embedding_raises_when_less_than_two_layers_available(self) -> None:
         layer_names = ("a", "b", "c")
@@ -123,7 +124,7 @@ class MultiLayerEmbeddingTests(unittest.TestCase):
                     pool=object(),
                     frame_h=10,
                     frame_w=10,
-                    warn_once=set(),
+                    warn=WarnOnce(),
                 )
 
     def test_build_hook_config_uses_single_layer_when_custom_head_requested(self) -> None:

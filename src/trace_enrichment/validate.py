@@ -7,10 +7,7 @@ import argparse
 import math
 from typing import Any
 
-try:
-    from common.io import load_json
-except ImportError:  # pragma: no cover - import-path compatibility
-    from src.common.io import load_json  # type: ignore
+from common.io import load_json
 
 
 def _infer_expected_dim(frames: list[dict[str, Any]]) -> int:

@@ -33,6 +33,13 @@ class OutputArtifacts:
     manifest_path: str
 
 
+@dataclass(frozen=True)
+class TraceEnrichmentOutputs:
+    enriched_detections: str
+    pca_projection: str
+    projection_manifest: str
+
+
 @dataclass
 class CollectedDetection:
     class_id: int

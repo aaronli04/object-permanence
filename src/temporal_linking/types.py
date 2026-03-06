@@ -142,3 +142,11 @@ class TemporalLinkingResult:
     tracks_payload: dict[str, Any]
     manifest_payload: dict[str, Any]
     relink_manifest_payload: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class TemporalLinkingOutputs:
+    linked_detections: str
+    tracks: str
+    linking_manifest: str
+    relink_manifest: str

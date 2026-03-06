@@ -14,6 +14,7 @@ from .constants import (
     OUTPUT_VECTOR_DIM,
 )
 from .io import build_enriched_output_dir, find_videos
+from .types import TraceEnrichmentOutputs
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -60,7 +61,7 @@ def _load_runner():
     return run_trace_enrichment
 
 
-def _run_for_video(run_trace_enrichment, args: argparse.Namespace, video_path: str) -> dict[str, str]:
+def _run_for_video(run_trace_enrichment, args: argparse.Namespace, video_path: str) -> TraceEnrichmentOutputs:
     output_dir = build_enriched_output_dir(args.output_root, video_path)
     return run_trace_enrichment(
         video_path=video_path,
@@ -74,10 +75,10 @@ def _run_for_video(run_trace_enrichment, args: argparse.Namespace, video_path: s
     )
 
 
-def _print_artifacts(outputs: dict[str, str]) -> None:
-    print(f"Saved enriched detections to {outputs['enriched_detections']}")
-    print(f"Saved PCA projection to {outputs['pca_projection']}")
-    print(f"Saved projection manifest to {outputs['projection_manifest']}")
+def _print_artifacts(outputs: TraceEnrichmentOutputs) -> None:
+    print(f"Saved enriched detections to {outputs.enriched_detections}")
+    print(f"Saved PCA projection to {outputs.pca_projection}")
+    print(f"Saved projection manifest to {outputs.projection_manifest}")
 
 
 def _run_single(run_trace_enrichment, args: argparse.Namespace) -> int:

@@ -7,12 +7,8 @@ import hashlib
 import os
 from typing import Any
 
-try:
-    from common.io import write_json
-    from common.paths import video_stem
-except ImportError:  # pragma: no cover - import-path compatibility
-    from src.common.io import write_json  # type: ignore
-    from src.common.paths import video_stem  # type: ignore
+from common.io import write_json
+from common.paths import video_stem
 
 from .types import OutputArtifacts
 

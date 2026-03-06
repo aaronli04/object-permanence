@@ -9,12 +9,9 @@ from typing import Any
 
 import numpy as np
 
-try:
-    from common.io import load_json, write_json
-    from common.numeric import topk_l2_renorm
-except ImportError:  # pragma: no cover - import-path compatibility
-    from src.common.io import load_json, write_json  # type: ignore
-    from src.common.numeric import topk_l2_renorm  # type: ignore
+from common.io import load_json, write_json
+from common.numeric import topk_l2_renorm
+from common.warn_once import WarnOnce
 
 from .types import Detection, FrameDetections, TemporalLinkArtifacts
 
@@ -80,6 +77,116 @@ def _infer_global_bbox_dims(raw: list[Any]) -> tuple[float | None, float | None]
     return float(max_x2), float(max_y2)
 
 
+def _parse_activation_vector(
+    *,
+    activation_item: dict[str, Any],
+    frame_num: int,
+    det_index: int,
+    expected_activation_dim: int | None,
+    activation_topk: int | None,
+) -> tuple[np.ndarray, int]:
+    vec = activation_item.get("vector")
+    if not isinstance(vec, list):
+        raise ValueError(f"Detection at frame {frame_num} index {det_index} activation.vector must be a list")
+    activation_vec = np.asarray(vec, dtype=np.float32)
+    if activation_vec.ndim != 1:
+        raise ValueError(f"Detection at frame {frame_num} index {det_index} activation vector must be 1D")
+
+    activation_dim = int(activation_vec.shape[0])
+    if expected_activation_dim is not None and activation_dim != expected_activation_dim:
+        raise ValueError(
+            f"Detection at frame {frame_num} index {det_index} activation vector dim must be "
+            f"{expected_activation_dim}, got {activation_dim}"
+        )
+
+    declared_dim = activation_item.get("dim")
+    if declared_dim is not None and int(declared_dim) != activation_dim:
+        raise ValueError(
+            f"Detection at frame {frame_num} index {det_index} activation.dim must be "
+            f"{activation_dim}, got {declared_dim}"
+        )
+
+    if activation_topk is not None:
+        activation_vec = topk_l2_renorm(activation_vec, topk=int(activation_topk))
+    return activation_vec, activation_dim
+
+
+def _parse_dino_vector(
+    activation_item: dict[str, Any],
+    *,
+    warn: WarnOnce,
+) -> np.ndarray | None:
+    dino_raw = activation_item.get("dino_vector")
+    dino_available_raw = activation_item.get("dino_available")
+    dino_available = bool(dino_available_raw) if dino_available_raw is not None else (dino_raw is not None)
+    if not dino_available:
+        return None
+
+    if not isinstance(dino_raw, list):
+        warn.warn(
+            key="dino_non_list",
+            message="Encountered non-list dino_vector in enriched detections; treating those entries as unavailable.",
+        )
+        return None
+
+    dino_arr = np.asarray(dino_raw, dtype=np.float32)
+    if (
+        dino_arr.ndim != 1
+        or int(dino_arr.shape[0]) != _DINO_VECTOR_DIM
+        or not bool(np.isfinite(dino_arr).all())
+    ):
+        warn.warn(
+            key="dino_invalid_shape",
+            message=(
+                "Encountered invalid dino_vector shape/content in enriched detections; "
+                "treating those entries as unavailable."
+            ),
+        )
+        return None
+
+    dino_norm = float(np.linalg.norm(dino_arr))
+    if dino_norm <= 0.0:
+        warn.warn(
+            key="dino_zero_norm",
+            message="Encountered zero-norm dino_vector in enriched detections; treating those entries as unavailable.",
+        )
+        return None
+    return (dino_arr / dino_norm).astype(np.float32, copy=False)
+
+
+def _resolve_frame_dims(
+    *,
+    frame_item: dict[str, Any],
+    det_item: dict[str, Any],
+    activation_item: dict[str, Any],
+    fallback_width: float | None,
+    fallback_height: float | None,
+    warn: WarnOnce,
+) -> tuple[float | None, float | None]:
+    frame_width, frame_height = _extract_explicit_frame_dims(frame_item, det_item, activation_item)
+    if frame_width is not None and frame_height is not None:
+        return frame_width, frame_height
+
+    if fallback_width is not None and fallback_height is not None:
+        warn.warn(
+            key="inferred_dims",
+            message=(
+                "frame dimensions missing in enriched detections; using global bbox-inferred dimensions "
+                f"w={fallback_width:.1f}, h={fallback_height:.1f}."
+            ),
+        )
+        return fallback_width, fallback_height
+
+    warn.warn(
+        key="missing_dims",
+        message=(
+            "frame dimensions unavailable in enriched detections and cannot be inferred from bbox ranges; "
+            "centroid-distance gating will be skipped for affected pairs."
+        ),
+    )
+    return None, None
+
+
 def load_enriched_frames(path: str, *, activation_topk: int | None = None) -> list[FrameDetections]:
     raw = load_json(path)
     if not isinstance(raw, list):
@@ -87,9 +194,7 @@ def load_enriched_frames(path: str, *, activation_topk: int | None = None) -> li
 
     expected_activation_dim: int | None = None
     fallback_width, fallback_height = _infer_global_bbox_dims(raw)
-    warned_inferred_dims = False
-    warned_missing_dims = False
-    warned_invalid_dino = False
+    warn = WarnOnce()
     valid_dino_vectors = 0
     total_detections = 0
 
@@ -114,94 +219,30 @@ def load_enriched_frames(path: str, *, activation_topk: int | None = None) -> li
             if not isinstance(activation, dict):
                 raise ValueError(f"Detection at frame {frame_num} index {det_index} missing activation")
 
-            vec = activation.get("vector")
-            if not isinstance(vec, list):
-                raise ValueError(f"Detection at frame {frame_num} index {det_index} activation.vector must be a list")
-            activation_vec = np.asarray(vec, dtype=np.float32)
-            if activation_vec.ndim != 1:
-                raise ValueError(f"Detection at frame {frame_num} index {det_index} activation vector must be 1D")
-            activation_dim = int(activation_vec.shape[0])
+            activation_vec, activation_dim = _parse_activation_vector(
+                activation_item=activation,
+                frame_num=frame_num,
+                det_index=det_index,
+                expected_activation_dim=expected_activation_dim,
+                activation_topk=activation_topk,
+            )
             if expected_activation_dim is None:
                 expected_activation_dim = activation_dim
-            elif activation_dim != expected_activation_dim:
-                raise ValueError(
-                    f"Detection at frame {frame_num} index {det_index} activation vector dim must be "
-                    f"{expected_activation_dim}, got {activation_dim}"
-                )
-            declared_dim = activation.get("dim")
-            if declared_dim is not None and int(declared_dim) != activation_dim:
-                raise ValueError(
-                    f"Detection at frame {frame_num} index {det_index} activation.dim must be "
-                    f"{activation_dim}, got {declared_dim}"
-                )
-            if activation_topk is not None:
-                activation_vec = topk_l2_renorm(activation_vec, topk=int(activation_topk))
-
-            dino_vec: np.ndarray | None = None
-            dino_raw = activation.get("dino_vector")
-            dino_available_raw = activation.get("dino_available")
-            dino_available = (
-                bool(dino_available_raw)
-                if dino_available_raw is not None
-                else (dino_raw is not None)
-            )
-            if dino_available:
-                if isinstance(dino_raw, list):
-                    dino_arr = np.asarray(dino_raw, dtype=np.float32)
-                    if (
-                        dino_arr.ndim == 1
-                        and int(dino_arr.shape[0]) == _DINO_VECTOR_DIM
-                        and bool(np.isfinite(dino_arr).all())
-                    ):
-                        dino_norm = float(np.linalg.norm(dino_arr))
-                        if dino_norm > 0.0:
-                            dino_vec = (dino_arr / dino_norm).astype(np.float32, copy=False)
-                        elif not warned_invalid_dino:
-                            print(
-                                "WARNING: Encountered zero-norm dino_vector in enriched detections; "
-                                "treating those entries as unavailable.",
-                                file=sys.stderr,
-                            )
-                            warned_invalid_dino = True
-                    elif not warned_invalid_dino:
-                        print(
-                            "WARNING: Encountered invalid dino_vector shape/content in enriched detections; "
-                            "treating those entries as unavailable.",
-                            file=sys.stderr,
-                        )
-                        warned_invalid_dino = True
-                elif not warned_invalid_dino:
-                    print(
-                        "WARNING: Encountered non-list dino_vector in enriched detections; "
-                        "treating those entries as unavailable.",
-                        file=sys.stderr,
-                    )
-                    warned_invalid_dino = True
+            dino_vec = _parse_dino_vector(activation, warn=warn)
 
             bbox = det.get("bbox")
             if not isinstance(bbox, list) or len(bbox) != 4:
                 raise ValueError(f"Detection at frame {frame_num} index {det_index} bbox must be list[4]")
             bbox_xyxy = np.asarray(bbox, dtype=np.float32)
 
-            frame_width, frame_height = _extract_explicit_frame_dims(frame_item, det, activation)
-            if frame_width is None or frame_height is None:
-                if fallback_width is not None and fallback_height is not None:
-                    frame_width = fallback_width
-                    frame_height = fallback_height
-                    if not warned_inferred_dims:
-                        print(
-                            "WARNING: frame dimensions missing in enriched detections; "
-                            f"using global bbox-inferred dimensions w={fallback_width:.1f}, h={fallback_height:.1f}.",
-                            file=sys.stderr,
-                        )
-                        warned_inferred_dims = True
-                elif not warned_missing_dims:
-                    print(
-                        "WARNING: frame dimensions unavailable in enriched detections and cannot be inferred from "
-                        "bbox ranges; centroid-distance gating will be skipped for affected pairs.",
-                        file=sys.stderr,
-                    )
-                    warned_missing_dims = True
+            frame_width, frame_height = _resolve_frame_dims(
+                frame_item=frame_item,
+                det_item=det,
+                activation_item=activation,
+                fallback_width=fallback_width,
+                fallback_height=fallback_height,
+                warn=warn,
+            )
 
             detections.append(
                 Detection(

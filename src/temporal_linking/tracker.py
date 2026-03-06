@@ -5,10 +5,7 @@ from __future__ import annotations
 from collections import deque
 import numpy as np
 
-try:
-    from common.numeric import l2_normalize
-except ImportError:  # pragma: no cover - import-path compatibility
-    from src.common.numeric import l2_normalize  # type: ignore
+from common.numeric import l2_normalize
 
 from .config import TemporalLinkingConfig
 from .types import Assignment, Detection, Track, TrackStatus, TrackerState

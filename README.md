@@ -115,6 +115,8 @@ When `--dino` is enabled in the sweep script, `dino_cls` is evaluated as an addi
 **Grouping policy:** use `track_id` when available on detections; fallback to `class_id` unless `--require-track-id` is set.
 Instance-level grouping is preferred for re-identification calibration. When `track_id_coverage` is low, separability mostly reflects class-level separation.
 
+**Current calibration context:** the aggregate leaderboard below was produced with class-level fallback (`track_id_coverage = 0.0` across layers). Treat it as class-separability guidance, not instance-level ID calibration.
+
 **Ranking policy:** descending `separability` -> descending `mean_consecutive_cosine` -> ascending `layer_name`.
 
 **Degenerate handling:** layers with fewer than 2 distinct groups receive `separability = 0.0` and emit a warning.
@@ -220,6 +222,7 @@ find .torch_cache/hub/checkpoints -name "dino_deitsmall8_pretrain.pth"
 ## Run Commands
 
 ### 1. Per-video layer sweeps
+Instance-level sweep (recommended when detections include stable `track_id`):
 ```bash
 for v in data/raw_videos/*.mp4; do
   stem="$(basename "$v" .mp4)"
@@ -231,10 +234,11 @@ for v in data/raw_videos/*.mp4; do
     --class-id -1 \
     --min-confidence 0.25 \
     --dino \
+    --require-track-id \
     --output-csv "experiments/results/layer_selection/per_video/layer_stability_sweep_${stem}.csv"
 done
 ```
-Add `--require-track-id` when source detections include stable track IDs. For DINO separability diagnostics, use both `--dino` and `--require-track-id`.
+Class-level fallback sweep (when `track_id` is unavailable) is the same command without `--require-track-id`.
 
 ### 2. Aggregate layer sweeps
 ```bash

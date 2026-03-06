@@ -6,10 +6,7 @@ from typing import Any
 
 import numpy as np
 
-try:
-    from common.numeric import l2_normalize
-except ImportError:  # pragma: no cover - import-path compatibility
-    from src.common.numeric import l2_normalize  # type: ignore
+from common.numeric import l2_normalize
 
 from .config import TemporalLinkingConfig
 from .types import RelinkEdge, Track, TrackFragment, TrackStatus
@@ -327,8 +324,6 @@ def run_relink(
         "num_accepted_yolo": int(accepted_yolo),
         "num_accepted_dino": int(accepted_dino),
         "num_accepted_fallback": int(accepted_fallback),
-        # Backward-compat aliases for existing dashboards.
-        "num_accepted_centroid": int(accepted_yolo),
         "num_absorbed_tracks": int(len(merge_map)),
         "relink_dino_coverage": float(dino_coverage),
         "relink_dino_accepted": int(accepted_dino),

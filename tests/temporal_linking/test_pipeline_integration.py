@@ -177,15 +177,14 @@ class PipelineIntegrationTests(unittest.TestCase):
                 config=cfg,
             )
 
-            self.assertIn("relink_manifest", outputs)
-            self.assertTrue(os.path.exists(outputs["relink_manifest"]))
+            self.assertTrue(os.path.exists(outputs.relink_manifest))
 
-            with open(outputs["relink_manifest"], "r", encoding="utf-8") as f:
+            with open(outputs.relink_manifest, "r", encoding="utf-8") as f:
                 relink_manifest = json.load(f)
             self.assertEqual(relink_manifest["schema_version"], "temporal_linking_relink_manifest_v1")
             self.assertIn("stats", relink_manifest)
 
-            with open(outputs["linking_manifest"], "r", encoding="utf-8") as f:
+            with open(outputs.linking_manifest, "r", encoding="utf-8") as f:
                 linking_manifest = json.load(f)
             self.assertIn("max_centroid_distance", linking_manifest["config"])
 

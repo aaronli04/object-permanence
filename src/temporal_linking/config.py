@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Literal
+from dataclasses import MISSING, dataclass, fields
+from typing import Any, Literal, Mapping
 
 
 @dataclass(frozen=True)
@@ -46,6 +46,39 @@ class TemporalLinkingConfig:
     relink_use_dino: bool = True
     relink_dino_threshold: float = 0.55
     relink_dino_min_detections: int = 2
+
+    @classmethod
+    def defaults(cls) -> dict[str, Any]:
+        defaults: dict[str, Any] = {}
+        for field in fields(cls):
+            if field.default is not MISSING:
+                defaults[field.name] = field.default
+                continue
+            if field.default_factory is not MISSING:  # type: ignore[comparison-overlap]
+                defaults[field.name] = field.default_factory()  # type: ignore[misc]
+        return defaults
+
+    @classmethod
+    def from_cli_values(cls, values: Mapping[str, Any]) -> "TemporalLinkingConfig":
+        kwargs: dict[str, Any] = {}
+        for field in fields(cls):
+            if field.name in values:
+                kwargs[field.name] = values[field.name]
+                continue
+            if field.default is MISSING and field.default_factory is MISSING:  # type: ignore[comparison-overlap]
+                raise ValueError(f"Missing required temporal linking config value: {field.name}")
+
+        if "no_relink_dino" in values:
+            kwargs["relink_use_dino"] = not bool(values["no_relink_dino"])
+        if "match_within_class" in kwargs:
+            kwargs["match_within_class"] = bool(kwargs["match_within_class"])
+        if "filter_short_tracks_in_summary" in kwargs:
+            kwargs["filter_short_tracks_in_summary"] = bool(kwargs["filter_short_tracks_in_summary"])
+        return cls(**kwargs)
+
+    @classmethod
+    def from_cli_namespace(cls, args: Any) -> "TemporalLinkingConfig":
+        return cls.from_cli_values(vars(args))
 
     def __post_init__(self) -> None:
         if not -1.0 <= self.similarity_threshold <= 1.0:

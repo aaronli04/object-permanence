@@ -6,10 +6,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-try:
-    from common.io import load_json
-except ImportError:  # pragma: no cover - import-path compatibility
-    from src.common.io import load_json  # type: ignore
+from common.io import load_json
 
 
 def validate_linked_detections(

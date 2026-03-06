@@ -8,10 +8,7 @@ import threading
 from dataclasses import dataclass
 from typing import Any, Optional, Sequence
 
-try:
-    from common.numeric import l2_normalize
-except ImportError:  # pragma: no cover - import-path compatibility
-    from src.common.numeric import l2_normalize  # type: ignore
+from common.numeric import l2_normalize
 
 try:
     import cv2

@@ -7,10 +7,8 @@ import os
 import sys
 from typing import Any, Iterable, Optional
 
-try:
-    from common.numeric import l2_normalize
-except ImportError:  # pragma: no cover - import-path compatibility
-    from src.common.numeric import l2_normalize  # type: ignore
+from common.numeric import l2_normalize
+from common.warn_once import WarnOnce
 
 from .constants import (
     ACTIVATION_LAYER_ALIASES,
@@ -44,7 +42,7 @@ from .model import (
     resolve_hook_layer_name,
 )
 from .sampler import FrameSampler
-from .types import CollectedDetection, CollectedFrame, CollectionStats, HookConfig, RunConfig
+from .types import CollectedDetection, CollectedFrame, CollectionStats, HookConfig, RunConfig, TraceEnrichmentOutputs
 
 import numpy as np
 
@@ -162,7 +160,7 @@ def _build_weighted_embedding(
     pool: "torch.nn.Module",
     frame_h: int,
     frame_w: int,
-    warn_once: set[str],
+    warn: WarnOnce,
 ) -> tuple["np.ndarray", bool]:
     available_vectors: list["np.ndarray"] = []
     available_weights: list[float] = []
@@ -171,33 +169,26 @@ def _build_weighted_embedding(
     for layer_name, layer_weight in zip(layer_names, layer_weights):
         output = layer_outputs.get(layer_name)
         if output is None:
-            warn_key = f"missing_output:{layer_name}"
-            if warn_key not in warn_once:
-                print(
-                    f"WARNING: layer '{layer_name}' did not produce hook output; skipping this layer for embedding.",
-                    file=sys.stderr,
-                )
-                warn_once.add(warn_key)
+            warn.warn(
+                key=f"missing_output:{layer_name}",
+                message=f"layer '{layer_name}' did not produce hook output; skipping this layer for embedding.",
+            )
             continue
         if not hasattr(output, "ndim") or int(output.ndim) != 4:
-            warn_key = f"invalid_ndim:{layer_name}"
-            if warn_key not in warn_once:
-                shape = tuple(output.shape) if hasattr(output, "shape") else "(unknown)"
-                print(
-                    f"WARNING: layer '{layer_name}' output shape {shape} is not [B,C,H,W]; skipping this layer.",
-                    file=sys.stderr,
-                )
-                warn_once.add(warn_key)
+            shape = tuple(output.shape) if hasattr(output, "shape") else "(unknown)"
+            warn.warn(
+                key=f"invalid_ndim:{layer_name}",
+                message=f"layer '{layer_name}' output shape {shape} is not [B,C,H,W]; skipping this layer.",
+            )
             continue
         if int(output.shape[0]) <= int(batch_index):
-            warn_key = f"short_batch:{layer_name}"
-            if warn_key not in warn_once:
-                print(
-                    f"WARNING: layer '{layer_name}' output batch ({int(output.shape[0])}) is smaller than "
-                    f"requested index {batch_index}; skipping this layer.",
-                    file=sys.stderr,
-                )
-                warn_once.add(warn_key)
+            warn.warn(
+                key=f"short_batch:{layer_name}",
+                message=(
+                    f"layer '{layer_name}' output batch ({int(output.shape[0])}) is smaller than "
+                    f"requested index {batch_index}; skipping this layer."
+                ),
+            )
             continue
 
         try:
@@ -209,24 +200,18 @@ def _build_weighted_embedding(
                 frame_w=frame_w,
             )
         except Exception as exc:
-            warn_key = f"extract_fail:{layer_name}"
-            if warn_key not in warn_once:
-                print(
-                    f"WARNING: failed to extract pooled vector for layer '{layer_name}': {exc}",
-                    file=sys.stderr,
-                )
-                warn_once.add(warn_key)
+            warn.warn(
+                key=f"extract_fail:{layer_name}",
+                message=f"failed to extract pooled vector for layer '{layer_name}': {exc}",
+            )
             continue
 
         vec_n = l2_normalize(raw_vec)
         if float(np.linalg.norm(vec_n)) <= 0.0:
-            warn_key = f"zero_norm:{layer_name}"
-            if warn_key not in warn_once:
-                print(
-                    f"WARNING: layer '{layer_name}' produced zero-norm pooled vector; skipping this layer.",
-                    file=sys.stderr,
-                )
-                warn_once.add(warn_key)
+            warn.warn(
+                key=f"zero_norm:{layer_name}",
+                message=f"layer '{layer_name}' produced zero-norm pooled vector; skipping this layer.",
+            )
             continue
 
         available_vectors.append(vec_n.astype(np.float32, copy=False))
@@ -302,7 +287,7 @@ def collect_single_pass_trace(
     layer_names = tuple(hook_config.layers) if hook_config.layers else (hook_config.layer,)
     layer_weights = tuple(hook_config.layer_weights) if hook_config.layer_weights else (1.0,)
     is_multi = bool(hook_config.multi_layer_enabled and len(layer_names) > 1)
-    warn_once: set[str] = set()
+    warn = WarnOnce()
     dino_active = bool(dino_embedder is not None)
 
     def process_batch(batch_items: list[tuple[int, Any]]) -> None:
@@ -346,7 +331,7 @@ def collect_single_pass_trace(
                             pool=pool,
                             frame_h=int(_frame.shape[0]),
                             frame_w=int(_frame.shape[1]),
-                            warn_once=warn_once,
+                            warn=warn,
                         )
                     else:
                         single_output = layer_outputs.get(hook_config.layer)
@@ -381,59 +366,51 @@ def collect_single_pass_trace(
                         dino_small_crop = bool(dino_result.tiny_crop)
                         dino_valid_crop = bool(dino_result.valid_crop)
                     except Exception as exc:
-                        warn_key = "dino_extract_fail"
-                        if warn_key not in warn_once:
-                            print(
-                                "WARNING: DINO embedding extraction failed; "
-                                "marking DINO sidecar unavailable for affected detections. "
-                                f"Error: {exc}",
-                                file=sys.stderr,
-                            )
-                            warn_once.add(warn_key)
+                        warn.warn(
+                            key="dino_extract_fail",
+                            message=(
+                                "DINO embedding extraction failed; marking DINO sidecar unavailable for affected "
+                                f"detections. Error: {exc}"
+                            ),
+                        )
                         continue
 
                     if not dino_valid_crop:
-                        warn_key = "dino_invalid_crop"
-                        if warn_key not in warn_once:
-                            print(
-                                "WARNING: One or more detection crops were invalid for DINO; "
-                                "marking DINO sidecar unavailable for those detections.",
-                                file=sys.stderr,
-                            )
-                            warn_once.add(warn_key)
+                        warn.warn(
+                            key="dino_invalid_crop",
+                            message=(
+                                "One or more detection crops were invalid for DINO; marking DINO sidecar "
+                                "unavailable for those detections."
+                            ),
+                        )
                         continue
 
                     if dino_small_crop:
-                        warn_key = "dino_tiny_crop"
-                        if warn_key not in warn_once:
-                            print(
-                                f"WARNING: One or more DINO crops were smaller than {DINO_TINY_CROP_MIN_SIZE}x"
-                                f"{DINO_TINY_CROP_MIN_SIZE}; marking DINO sidecar unavailable for those detections.",
-                                file=sys.stderr,
-                            )
-                            warn_once.add(warn_key)
+                        warn.warn(
+                            key="dino_tiny_crop",
+                            message=(
+                                f"One or more DINO crops were smaller than {DINO_TINY_CROP_MIN_SIZE}x"
+                                f"{DINO_TINY_CROP_MIN_SIZE}; marking DINO sidecar unavailable for those detections."
+                            ),
+                        )
                         continue
 
                     if int(dino_vec.shape[0]) != int(DINO_EMBEDDING_DIM):
-                        warn_key = "dino_dim_mismatch"
-                        if warn_key not in warn_once:
-                            print(
-                                "WARNING: DINO embedding had unexpected dimension; "
-                                "marking DINO sidecar unavailable for affected detections.",
-                                file=sys.stderr,
-                            )
-                            warn_once.add(warn_key)
+                        warn.warn(
+                            key="dino_dim_mismatch",
+                            message=(
+                                "DINO embedding had unexpected dimension; marking DINO sidecar unavailable for "
+                                "affected detections."
+                            ),
+                        )
                         continue
 
                     dino_vec = l2_normalize(dino_vec)
                     if float(np.linalg.norm(dino_vec)) <= 0.0:
-                        warn_key = "dino_zero_norm"
-                        if warn_key not in warn_once:
-                            print(
-                                "WARNING: DINO embedding had zero norm; marking DINO sidecar unavailable.",
-                                file=sys.stderr,
-                            )
-                            warn_once.add(warn_key)
+                        warn.warn(
+                            key="dino_zero_norm",
+                            message="DINO embedding had zero norm; marking DINO sidecar unavailable.",
+                        )
                         continue
 
                     det.dino_vector = dino_vec.astype(np.float32, copy=False)
@@ -603,7 +580,7 @@ def run_trace_enrichment(
     stride: int = DEFAULT_HEAD_STRIDE,
     batch_size: int = DEFAULT_BATCH_SIZE,
     pca_dim: int = OUTPUT_VECTOR_DIM,
-) -> dict[str, str]:
+) -> TraceEnrichmentOutputs:
     ensure_pipeline_runtime_dependencies()
 
     if sample_rate <= 0:
@@ -683,8 +660,8 @@ def run_trace_enrichment(
     write_json(artifacts.enriched_json_path, enriched_payload)
     write_json(artifacts.manifest_path, manifest)
 
-    return {
-        "enriched_detections": artifacts.enriched_json_path,
-        "pca_projection": artifacts.pca_path,
-        "projection_manifest": artifacts.manifest_path,
-    }
+    return TraceEnrichmentOutputs(
+        enriched_detections=artifacts.enriched_json_path,
+        pca_projection=artifacts.pca_path,
+        projection_manifest=artifacts.manifest_path,
+    )
