@@ -247,14 +247,6 @@ def _layer_manifest_section(cfg: HookConfig) -> dict[str, Any]:
     }
 
 
-def _pad_and_normalize_projection(vec: "np.ndarray", source_dim: int, target_dim: int) -> "np.ndarray":
-    if source_dim < target_dim:
-        padded = np.zeros((target_dim,), dtype=np.float32)
-        padded[:source_dim] = vec
-        vec = padded
-    return l2_normalize(vec)
-
-
 def _projection_caveats(*, total_detections: int, effective_pca_dim: int) -> list[str]:
     caveats: list[str] = []
     # Per-run PCA can be unstable when fitted on a small number of detections relative to components.
@@ -384,12 +376,16 @@ def fit_pca_and_project(frames: list[CollectedFrame], pca_dim: int):
     pca = PCA(n_components=effective_pca_dim, svd_solver="auto", random_state=0)
     projected = pca.fit_transform(raw_matrix).astype(np.float32, copy=False)
     for det, proj in zip(detections, projected):
-        det.projected_vector = _pad_and_normalize_projection(proj, effective_pca_dim, pca_dim)
+        det.projected_vector = l2_normalize(proj)
 
     return pca, int(effective_pca_dim)
 
 
-def build_enriched_payload(frames: list[CollectedFrame], pca_dim: int, hook_config: HookConfig) -> list[dict[str, Any]]:
+def build_enriched_payload(
+    frames: list[CollectedFrame],
+    projection_dim: int,
+    hook_config: HookConfig,
+) -> list[dict[str, Any]]:
     activation_layers = list(hook_config.layers) if hook_config.layers else [hook_config.layer]
     payload: list[dict[str, Any]] = []
     for frame in frames:
@@ -405,10 +401,10 @@ def build_enriched_payload(frames: list[CollectedFrame], pca_dim: int, hook_conf
                     "confidence": float(det.confidence),
                     "activation": {
                         "vector": [float(v) for v in det.projected_vector.tolist()],
-                        "dim": int(pca_dim),
+                        "dim": int(projection_dim),
                         "layers": activation_layers,
                         "pool": POOL_STRATEGY,
-                        "projection": f"pca_{pca_dim}",
+                        "projection": f"pca_{projection_dim}",
                         "small_crop_flag": bool(det.small_crop_flag),
                     },
                 }
@@ -433,7 +429,8 @@ def build_manifest(
     return {
         "schema_version": SCHEMA_VERSION,
         "projection_file": os.path.basename(artifacts.pca_path),
-        "projection_dim": int(run_config.pca_dim),
+        "projection_dim": int(effective_pca_dim),
+        "projection_dim_requested": int(run_config.pca_dim),
         "fitted_pca_components": int(effective_pca_dim),
         "projection_fit_scope": "per_run_all_detections",
         "projection_caveats": _projection_caveats(
@@ -527,7 +524,7 @@ def run_trace_enrichment(
         )
 
     pca, effective_pca_dim = fit_pca_and_project(frames, pca_dim)
-    enriched_payload = build_enriched_payload(frames, pca_dim, hook_config)
+    enriched_payload = build_enriched_payload(frames, effective_pca_dim, hook_config)
     manifest = build_manifest(
         run_config=run_config,
         hook_config=hook_config,

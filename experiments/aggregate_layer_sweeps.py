@@ -7,6 +7,7 @@ import argparse
 import csv
 import glob
 import math
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -23,6 +24,7 @@ class LayerAggregate:
     within_var: list[float] = field(default_factory=list)
     mean_consecutive_cosine: list[float] = field(default_factory=list)
     norm_std: list[float] = field(default_factory=list)
+    track_id_coverage: list[float] = field(default_factory=list)
 
 
 def _mean_finite(values: list[float]) -> float:
@@ -61,6 +63,7 @@ def _read_csvs(paths: list[Path]) -> dict[str, LayerAggregate]:
         "within_var",
         "between_var",
         "separability",
+        "track_id_coverage",
     }
 
     aggregates: dict[str, LayerAggregate] = {}
@@ -85,6 +88,7 @@ def _read_csvs(paths: list[Path]) -> dict[str, LayerAggregate]:
                 agg.within_var.append(_to_float(row, "within_var"))
                 agg.mean_consecutive_cosine.append(_to_float(row, "mean_consecutive_cosine"))
                 agg.norm_std.append(_to_float(row, "norm_std"))
+                agg.track_id_coverage.append(_to_float(row, "track_id_coverage"))
     return aggregates
 
 
@@ -102,6 +106,7 @@ def _build_rows(aggregates: dict[str, LayerAggregate]) -> list[dict[str, object]
                 "mean_within_var": _mean_finite(agg.within_var),
                 "mean_mean_consecutive_cosine": _mean_finite(agg.mean_consecutive_cosine),
                 "mean_norm_std": _mean_finite(agg.norm_std),
+                "mean_track_id_coverage": _mean_finite(agg.track_id_coverage),
             }
         )
 
@@ -168,6 +173,7 @@ def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
                 "mean_within_var",
                 "mean_mean_consecutive_cosine",
                 "mean_norm_std",
+                "mean_track_id_coverage",
             ],
         )
         writer.writeheader()
@@ -220,6 +226,13 @@ def main() -> int:
     _write_csv(output_csv, ranked)
 
     winner = ranked[0]
+    winner_track_coverage = float(winner["mean_track_id_coverage"])
+    if math.isfinite(winner_track_coverage) and winner_track_coverage < 0.5:
+        print(
+            "WARNING: selected winner has mean_track_id_coverage < 0.5; "
+            "separability may be primarily class-level.",
+            file=sys.stderr,
+        )
     print(f"input_files={len(paths)}")
     print(f"layers_aggregated={len(rows)}")
     print(f"layers_after_constraints={len(ranked)}")
@@ -231,6 +244,7 @@ def main() -> int:
         f"{winner['layer_name']}"
         f" mean_separability={float(winner['mean_separability']):.6f}"
         f" mean_cos={float(winner['mean_mean_consecutive_cosine']):.6f}"
+        f" mean_track_cov={winner_track_coverage:.6f}"
     )
     print("")
     print(f"Top {args.top_n} aggregate layers by mean_separability:")
@@ -241,7 +255,8 @@ def main() -> int:
             f"dim={int(row['feature_dim']):<4} "
             f"videos={int(row['videos_present']):<2} "
             f"mean_separability={float(row['mean_separability']):.6f} "
-            f"mean_cos={float(row['mean_mean_consecutive_cosine']):.6f}"
+            f"mean_cos={float(row['mean_mean_consecutive_cosine']):.6f} "
+            f"mean_track_cov={float(row['mean_track_id_coverage']):.6f}"
         )
     return 0
 

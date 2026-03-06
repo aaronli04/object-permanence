@@ -76,6 +76,29 @@ def _spatial_score(track: Track, det: Detection) -> float:
     return float((0.5 * iou) + (0.5 * center_term))
 
 
+def _pair_frame_dims(track: Track, det: Detection) -> tuple[float, float] | None:
+    width = det.frame_width if det.frame_width is not None else track.frame_width
+    height = det.frame_height if det.frame_height is not None else track.frame_height
+    if width is None or height is None:
+        return None
+    width = float(width)
+    height = float(height)
+    if width <= 0.0 or height <= 0.0:
+        return None
+    return width, height
+
+
+def _normalized_centroid_distance(track: Track, det: Detection) -> float | None:
+    dims = _pair_frame_dims(track, det)
+    if dims is None:
+        return None
+    width, height = dims
+    center_delta = _bbox_center(track.last_bbox_xyxy) - _bbox_center(det.bbox_xyxy)
+    dx = float(center_delta[0])
+    dy = float(center_delta[1])
+    return float(math.sqrt(((dx / width) ** 2) + ((dy / height) ** 2)) / math.sqrt(2.0))
+
+
 def compute_pair_scores(
     tracks: list[Track],
     detections: list[Detection],
@@ -83,7 +106,7 @@ def compute_pair_scores(
 ) -> PairScores:
     """Compute visual, tie-break, and assignment score matrices.
 
-    Eligibility is determined only by class policy and visual similarity threshold.
+    Eligibility is determined by class policy, spatial plausibility, and visual similarity threshold.
     """
     n_tracks = len(tracks)
     n_dets = len(detections)
@@ -104,6 +127,14 @@ def compute_pair_scores(
 
         for j, det in enumerate(detections):
             if cfg.match_within_class and track.class_id != det.class_id:
+                continue
+
+            centroid_distance = _normalized_centroid_distance(track, det)
+            if centroid_distance is not None and centroid_distance > cfg.max_centroid_distance:
+                visual[i, j] = np.float32(0.0)
+                spatial[i, j] = np.float32(0.0)
+                tie_break[i, j] = np.float32(0.0)
+                eligible[i, j] = False
                 continue
 
             vis = float(np.dot(ref_vec, det.activation_vec))

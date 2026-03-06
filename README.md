@@ -11,7 +11,7 @@ Most object detectors treat each frame independently. This pipeline adds a tempo
 The pipeline runs in two offline stages:
 
 **Stage 1 - Trace Enrichment** (`src/run_pipeline.py`)
-Samples frames from video, runs YOLOv8, extracts multi-layer feature embeddings per detection, and projects all embeddings to a fixed 256-D output schema via PCA.
+Samples frames from video, runs YOLOv8, extracts multi-layer feature embeddings per detection, and projects all embeddings to a 128-D target embedding via PCA (actual per-run output dim can be lower when sample count is small).
 
 **Stage 2 - Temporal Linking** (`src/run_temporal_linking.py`)
 Links detections across sampled frames using cosine similarity on normalized embeddings. Enforces one-to-one assignment via the Hungarian algorithm and runs a relink pass to recover fragmented tracks after occlusions.
@@ -24,14 +24,14 @@ Each detection's identity vector is a weighted combination of feature activation
 
 | Layer | Tier | Raw Dim | Sweep Separability | Weight |
 |---|---|---:|---:|---:|
-| `4.cv1` | Appearance | 64 | 15.495 | 0.398 |
-| `15` | Semantic | 64 | 9.926 | 0.255 |
-| `22.cv3.0` | Class-level | 80 | 13.902 | 0.357 |
+| `4.cv1` | Appearance | 64 | 15.495 | 0.549 |
+| `15` | Semantic | 64 | 9.926 | 0.351 |
+| `22.cv3.0` | Class-level | 80 | 13.902 | 0.100 |
 
 **Why three tiers?**
 - **Appearance (4.cv1):** Early backbone activations encode texture and color patterns, a strong signal for distinguishing objects that look different.
 - **Semantic (15):** Mid-network neck activations encode spatial context and object structure, which stays stable across viewpoint changes and partial occlusion.
-- **Class-level (22.cv3.0):** Detection-head activations encode class probability space, which anchors identity to semantic type.
+- **Class-level (22.cv3.0):** Detection-head activations encode class probability space. It is retained as a class-consistency gate but weighted conservatively because same-class instances are often near-identical in this space.
 
 **Embedding construction per detection:**
 1. Register forward hooks on all configured embedding layers.
@@ -41,12 +41,14 @@ Each detection's identity vector is a weighted combination of feature activation
 5. Multiply each normalized vector by its separability-derived weight.
 6. Concatenate the vectors to a 208-D combined embedding (`64 + 64 + 80`).
 7. L2-normalize the final concatenated embedding.
+8. Fit PCA on run detections and reduce the 208-D embedding to a 128-D target projection (or lower effective dim when detections are fewer than 128). PCA is used for compression, not expansion.
 
 **Resilience:**
 - Hooks are registered and removed atomically around each forward pass to prevent memory leaks in long-running sessions.
 - If a layer is unavailable in a model variant, remaining layer weights are renormalized to sum to 1.
 - If fewer than 2 embedding layers are available, enrichment raises a clear error rather than silently degrading.
 - Single-layer fallback is available via `TRACE_DISABLE_MULTI_LAYER_EMBEDDING=1`.
+- `projection_manifest.json` records both actual `projection_dim` and requested `projection_dim_requested`.
 
 Embedding configuration is stored in `src/trace_enrichment/constants.py` as `EMBEDDING_LAYERS` (list of `(layer_name, weight)` tuples). Weights should be recalibrated by re-running the aggregate sweep if the model or video distribution changes.
 
@@ -58,6 +60,7 @@ Frame-to-frame linking operates on cosine similarity between normalized projecte
 
 **Matching:**
 - Similarity gate: `visual_similarity >= similarity_threshold` (default `0.65`).
+- Spatial plausibility gate: centroid distance must be <= `max_centroid_distance` (default `0.40`, normalized by frame diagonal) before cosine scoring.
 - Assignment: Hungarian algorithm for globally consistent one-to-one matching per frame pair.
 
 **Track state machine:**
@@ -84,12 +87,15 @@ Layer selection is driven by a separability metric, a Fisher-style ratio measuri
 - `within_var`: mean per-group variance across feature dimensions.
 - `between_var`: variance of per-group mean vectors across dimensions.
 - `separability = between_var / (within_var + 1e-8)`.
+- `track_id_coverage`: fraction of grouped detections using `track_id` (vs class fallback).
 
-**Grouping policy:** use `track_id` when available on YOLO boxes; fallback to `class_id`.
+**Grouping policy:** use `track_id` when available on YOLO boxes; fallback to `class_id` unless `--require-track-id` is set.
+Instance-level grouping is preferred for re-identification calibration. When `track_id_coverage` is low, separability mostly reflects class-level separation.
 
 **Ranking policy:** descending `separability` -> descending `mean_consecutive_cosine` -> ascending `layer_name`.
 
 **Degenerate handling:** layers with fewer than 2 distinct groups receive `separability = 0.0` and emit a warning.
+Layers with `track_id_coverage < 0.30` emit warnings, and aggregate winner selection emits a warning if `mean_track_id_coverage < 0.50`.
 
 **Winner selection constraints:**
 - Exclude layers with `feature_dim < 32`.
@@ -97,13 +103,15 @@ Layer selection is driven by a separability metric, a Fisher-style ratio measuri
 
 **Current aggregate leaderboard (top 5, constrained):**
 
-| Rank | Layer | Type | Feature Dim | Mean Separability | Mean Cosine |
-|---|---|---:|---:|---:|---:|
-| 1 | `2.cv1` | Conv | 32 | 15.911 | 0.9776 |
-| 2 | `1` | Conv | 32 | 15.675 | 0.9440 |
-| 3 | `4.cv1` | Conv | 64 | 15.495 | 0.9673 |
-| 4 | `22.cv3.0` | Sequential | 80 | 13.902 | 0.9981 |
-| 5 | `15` | C2f | 64 | 9.926 | 0.9809 |
+| Rank | Layer | Type | Feature Dim | Mean Separability | Mean Cosine | Mean Track Coverage |
+|---|---|---:|---:|---:|---:|---:|
+| 1 | `2.cv1` | Conv | 32 | 15.911 | 0.9776 | 0.0000 |
+| 2 | `1` | Conv | 32 | 15.675 | 0.9440 | 0.0000 |
+| 3 | `4.cv1` | Conv | 64 | 15.495 | 0.9673 | 0.0000 |
+| 4 | `22.cv3.0` | Sequential | 80 | 13.902 | 0.9981 | 0.0000 |
+| 5 | `15` | C2f | 64 | 9.926 | 0.9809 | 0.0000 |
+
+If sweeps are run without tracking-enabled detections, `track_id_coverage` can be `0.0` across layers. In that case, separability rankings should be treated as class-level approximations until sweeps are rerun with stable track IDs.
 
 Calibration artifacts:
 ```text
@@ -126,7 +134,7 @@ Default: `--activation-topk 64`.
 
 ### End-to-End Scenario Results
 
-Configuration: embedding layers `4.cv1 + 15 + 22.cv3.0`, raw dim `208`, `activation_topk=64`, `similarity_threshold=0.65`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
+Configuration: embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.351/0.100`, raw dim `208`, PCA target `128` (effective dim may be lower on small runs), `activation_topk=64`, `similarity_threshold=0.65`, `max_centroid_distance=0.40`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
 
 | Scenario | Frames | Detections | Ball Tracks | Total Tracks | Valid Tracks | Relink Edges |
 |---|---:|---:|---:|---:|---:|---:|
@@ -164,6 +172,7 @@ for v in data/raw_videos/*.mp4; do
     --model yolov8n.pt \
     --sample-rate 5 \
     --max-sampled-frames 20 \
+    --require-track-id \
     --class-id -1 \
     --min-confidence 0.25 \
     --output-csv "experiments/results/layer_selection/per_video/layer_stability_sweep_${stem}.csv"
@@ -195,6 +204,7 @@ for f in experiments/results/activation_enrichment/*/enriched_detections.json; d
     --enriched-json "$f" \
     --activation-topk 64 \
     --similarity-threshold 0.65 \
+    --max-centroid-distance 0.40 \
     --relink-threshold 0.55 \
     --relink-max-gap-frames -1 \
     --relink-fallback-threshold 0.40

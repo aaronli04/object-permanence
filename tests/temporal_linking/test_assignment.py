@@ -23,8 +23,17 @@ def _normalize(vec: np.ndarray) -> np.ndarray:
     return (vec / norm).astype(np.float32)
 
 
-def _make_track(track_id: int, vec: np.ndarray, class_id: int = 32) -> Track:
+def _make_track(
+    track_id: int,
+    vec: np.ndarray,
+    class_id: int = 32,
+    *,
+    bbox: np.ndarray | None = None,
+    frame_width: float | None = 100.0,
+    frame_height: float | None = 100.0,
+) -> Track:
     vec_n = _normalize(vec)
+    bbox_xyxy = bbox if bbox is not None else np.asarray([10.0, 10.0, 20.0, 20.0], dtype=np.float32)
     track = Track(
         track_id=track_id,
         class_id=class_id,
@@ -32,32 +41,45 @@ def _make_track(track_id: int, vec: np.ndarray, class_id: int = 32) -> Track:
         status=TrackStatus.ACTIVE,
         start_frame=0,
         last_seen_frame=0,
-        last_bbox_xyxy=np.asarray([10.0, 10.0, 20.0, 20.0], dtype=np.float32),
+        last_bbox_xyxy=bbox_xyxy,
         last_vec=vec_n.copy(),
         ema_vec=vec_n.copy(),
+        frame_width=frame_width,
+        frame_height=frame_height,
     )
     track.vec_history = deque([vec_n.copy()], maxlen=5)
     return track
 
 
-def _make_det(det_index: int, vec: np.ndarray, class_id: int = 32) -> Detection:
+def _make_det(
+    det_index: int,
+    vec: np.ndarray,
+    class_id: int = 32,
+    *,
+    bbox: np.ndarray | None = None,
+    frame_width: float | None = 100.0,
+    frame_height: float | None = 100.0,
+) -> Detection:
     vec_n = _normalize(vec)
+    bbox_xyxy = bbox if bbox is not None else np.asarray([10.0, 10.0, 20.0, 20.0], dtype=np.float32)
     return Detection(
         frame_num=1,
         det_index=det_index,
         class_id=class_id,
         class_name="sports ball",
-        bbox_xyxy=np.asarray([10.0, 10.0, 20.0, 20.0], dtype=np.float32),
+        bbox_xyxy=bbox_xyxy,
         confidence=0.9,
         activation_vec=vec_n,
         small_crop_flag=False,
         raw_payload={
             "class_id": class_id,
             "class_name": "sports ball",
-            "bbox": [10.0, 10.0, 20.0, 20.0],
+            "bbox": [float(v) for v in bbox_xyxy.tolist()],
             "confidence": 0.9,
-            "activation": {"vector": vec_n.tolist(), "dim": 256, "small_crop_flag": False},
+            "activation": {"vector": vec_n.tolist(), "dim": int(vec_n.shape[0]), "small_crop_flag": False},
         },
+        frame_width=frame_width,
+        frame_height=frame_height,
     )
 
 
@@ -99,6 +121,35 @@ class AssignmentTests(unittest.TestCase):
 
         assignments = assign_frame([track], [det], cfg)
         self.assertEqual(assignments, [])
+
+    def test_spatial_gate_blocks_implausible_high_cosine_match(self) -> None:
+        cfg = TemporalLinkingConfig(similarity_threshold=0.0, max_centroid_distance=0.10)
+        vec = np.asarray([1.0, 0.0, 0.0], dtype=np.float32)
+        track = _make_track(
+            track_id=1,
+            vec=vec,
+            bbox=np.asarray([0.0, 0.0, 10.0, 10.0], dtype=np.float32),
+            frame_width=100.0,
+            frame_height=100.0,
+        )
+        far_det = _make_det(
+            det_index=0,
+            vec=vec,
+            bbox=np.asarray([90.0, 90.0, 100.0, 100.0], dtype=np.float32),
+            frame_width=100.0,
+            frame_height=100.0,
+        )
+        near_det = _make_det(
+            det_index=1,
+            vec=vec,
+            bbox=np.asarray([2.0, 2.0, 12.0, 12.0], dtype=np.float32),
+            frame_width=100.0,
+            frame_height=100.0,
+        )
+
+        assignments = assign_frame([track], [far_det, near_det], cfg)
+        self.assertEqual(len(assignments), 1)
+        self.assertEqual(assignments[0].det_index, 1)
 
 
 if __name__ == "__main__":

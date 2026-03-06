@@ -40,8 +40,10 @@ def _make_detection(frame_num: int, det_index: int, vec: np.ndarray) -> Detectio
             "class_name": "sports ball",
             "bbox": [10.0, 10.0, 20.0, 20.0],
             "confidence": 0.95,
-            "activation": {"vector": vec_n.tolist(), "small_crop_flag": False},
+            "activation": {"vector": vec_n.tolist(), "dim": int(vec_n.shape[0]), "small_crop_flag": False},
         },
+        frame_width=100.0,
+        frame_height=100.0,
     )
 
 
@@ -126,7 +128,7 @@ class PipelineIntegrationTests(unittest.TestCase):
         self.assertEqual(first_track_merge, later_track_merge)
 
     def test_run_temporal_linking_writes_relink_manifest(self) -> None:
-        vec = np.zeros((256,), dtype=np.float32)
+        vec = np.zeros((128,), dtype=np.float32)
         vec[0] = 1.0
         enriched = [
             {
@@ -137,7 +139,7 @@ class PipelineIntegrationTests(unittest.TestCase):
                         "class_name": "sports ball",
                         "bbox": [10.0, 10.0, 20.0, 20.0],
                         "confidence": 0.9,
-                        "activation": {"vector": vec.tolist(), "dim": 256, "small_crop_flag": False},
+                        "activation": {"vector": vec.tolist(), "dim": int(vec.shape[0]), "small_crop_flag": False},
                     }
                 ],
             },
@@ -151,7 +153,7 @@ class PipelineIntegrationTests(unittest.TestCase):
                         "class_name": "sports ball",
                         "bbox": [10.0, 10.0, 20.0, 20.0],
                         "confidence": 0.9,
-                        "activation": {"vector": vec.tolist(), "dim": 256, "small_crop_flag": False},
+                        "activation": {"vector": vec.tolist(), "dim": int(vec.shape[0]), "small_crop_flag": False},
                     }
                 ],
             },
@@ -182,6 +184,10 @@ class PipelineIntegrationTests(unittest.TestCase):
                 relink_manifest = json.load(f)
             self.assertEqual(relink_manifest["schema_version"], "temporal_linking_relink_manifest_v1")
             self.assertIn("stats", relink_manifest)
+
+            with open(outputs["linking_manifest"], "r", encoding="utf-8") as f:
+                linking_manifest = json.load(f)
+            self.assertIn("max_centroid_distance", linking_manifest["config"])
 
 
 if __name__ == "__main__":

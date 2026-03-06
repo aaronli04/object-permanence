@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import csv
+import io
 import os
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest import mock
 
@@ -30,6 +32,7 @@ def _write_sweep_csv(path: Path, rows: list[dict[str, object]]) -> None:
                 "within_var",
                 "between_var",
                 "separability",
+                "track_id_coverage",
             ],
         )
         writer.writeheader()
@@ -38,6 +41,39 @@ def _write_sweep_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 class AggregateLayerSweepsTests(unittest.TestCase):
+    def test_read_csvs_requires_track_id_coverage_column(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "layer_stability_sweep_old.csv"
+            with path.open("w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(
+                    f,
+                    fieldnames=[
+                        "layer_name",
+                        "module_type",
+                        "feature_dim",
+                        "mean_consecutive_cosine",
+                        "norm_std",
+                        "within_var",
+                        "between_var",
+                        "separability",
+                    ],
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "layer_name": "A",
+                        "module_type": "Conv",
+                        "feature_dim": 32,
+                        "mean_consecutive_cosine": 0.9,
+                        "norm_std": 0.1,
+                        "within_var": 0.1,
+                        "between_var": 1.0,
+                        "separability": 10.0,
+                    }
+                )
+            with self.assertRaises(ValueError):
+                ag._read_csvs([path])
+
     def test_build_rows_and_candidates_rank_by_mean_separability_then_cosine(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -53,6 +89,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                         "within_var": 1.0,
                         "between_var": 3.0,
                         "separability": 3.0,
+                        "track_id_coverage": 0.9,
                     },
                     {
                         "layer_name": "B",
@@ -63,6 +100,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                         "within_var": 1.0,
                         "between_var": 2.0,
                         "separability": 2.0,
+                        "track_id_coverage": 0.4,
                     },
                 ],
             )
@@ -78,6 +116,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                         "within_var": 1.0,
                         "between_var": 5.0,
                         "separability": 5.0,
+                        "track_id_coverage": 0.8,
                     },
                     {
                         "layer_name": "B",
@@ -88,6 +127,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                         "within_var": 1.0,
                         "between_var": 1.5,
                         "separability": 1.5,
+                        "track_id_coverage": 0.3,
                     },
                 ],
             )
@@ -101,6 +141,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
             self.assertEqual(ranked[0]["rank"], 1)
             self.assertEqual(ranked[0]["videos_present"], 2)
             self.assertGreater(float(ranked[0]["mean_separability"]), float(ranked[1]["mean_separability"]))
+            self.assertAlmostEqual(float(ranked[0]["mean_track_id_coverage"]), 0.85, places=6)
 
     def test_candidates_drop_low_dim_and_conv_duplicates(self) -> None:
         rows = [
@@ -114,6 +155,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                 "mean_within_var": 0.01,
                 "mean_mean_consecutive_cosine": 0.9,
                 "mean_norm_std": 0.1,
+                "mean_track_id_coverage": 0.1,
             },
             {
                 "layer_name": "2.cv1",
@@ -125,6 +167,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                 "mean_within_var": 0.1,
                 "mean_mean_consecutive_cosine": 0.9,
                 "mean_norm_std": 0.1,
+                "mean_track_id_coverage": 0.9,
             },
             {
                 "layer_name": "2.cv1.conv",
@@ -136,6 +179,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                 "mean_within_var": 0.1,
                 "mean_mean_consecutive_cosine": 0.9,
                 "mean_norm_std": 0.1,
+                "mean_track_id_coverage": 0.9,
             },
             {
                 "layer_name": "22.cv3.0",
@@ -147,6 +191,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                 "mean_within_var": 0.1,
                 "mean_mean_consecutive_cosine": 0.95,
                 "mean_norm_std": 0.2,
+                "mean_track_id_coverage": 0.2,
             },
             {
                 "layer_name": "seq_parent",
@@ -158,6 +203,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                 "mean_within_var": 0.1,
                 "mean_mean_consecutive_cosine": 0.90,
                 "mean_norm_std": 0.2,
+                "mean_track_id_coverage": 0.7,
             },
             {
                 "layer_name": "seq_parent.conv",
@@ -169,6 +215,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                 "mean_within_var": 0.1,
                 "mean_mean_consecutive_cosine": 0.90,
                 "mean_norm_std": 0.2,
+                "mean_track_id_coverage": 0.7,
             },
         ]
         candidates = ag._winner_candidates(rows, min_feature_dim=32)
@@ -194,6 +241,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                         "within_var": 0.20,
                         "between_var": 1.00,
                         "separability": 5.0,
+                        "track_id_coverage": 0.45,
                     }
                 ],
             )
@@ -209,6 +257,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                         "within_var": 0.30,
                         "between_var": 1.20,
                         "separability": 4.0,
+                        "track_id_coverage": 0.40,
                     }
                 ],
             )
@@ -225,10 +274,12 @@ class AggregateLayerSweepsTests(unittest.TestCase):
                 "--winner-min-feature-dim",
                 "32",
             ]
-            with mock.patch.object(sys, "argv", argv):
+            stderr = io.StringIO()
+            with mock.patch.object(sys, "argv", argv), redirect_stderr(stderr):
                 rc = ag.main()
             self.assertEqual(rc, 0)
             self.assertTrue(output_csv.exists())
+            self.assertIn("mean_track_id_coverage < 0.5", stderr.getvalue())
 
             with output_csv.open("r", newline="", encoding="utf-8") as f:
                 rows = list(csv.DictReader(f))
@@ -236,6 +287,7 @@ class AggregateLayerSweepsTests(unittest.TestCase):
             self.assertEqual(rows[0]["rank"], "1")
             self.assertEqual(rows[0]["layer_name"], "winner")
             self.assertEqual(rows[0]["videos_present"], "2")
+            self.assertIn("mean_track_id_coverage", rows[0])
 
 
 if __name__ == "__main__":

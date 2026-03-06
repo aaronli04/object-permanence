@@ -70,6 +70,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=64,
         help="Keep first K activation dims and L2-renormalize before linking (default: 64).",
     )
+    parser.add_argument(
+        "--max-centroid-distance",
+        type=float,
+        default=0.40,
+        help=(
+            "Maximum normalized centroid distance allowed for frame-to-frame matches, as a fraction "
+            "of frame diagonal (default: 0.40)."
+        ),
+    )
 
     parser.add_argument(
         "--relink-threshold",
@@ -133,6 +142,7 @@ def _build_config(args: argparse.Namespace) -> TemporalLinkingConfig:
         match_within_class=bool(args.match_within_class),
         filter_short_tracks_in_summary=bool(args.filter_short_tracks_in_summary),
         activation_topk=args.activation_topk,
+        max_centroid_distance=args.max_centroid_distance,
         relink_threshold=args.relink_threshold,
         relink_max_gap_frames=args.relink_max_gap_frames,
         relink_min_track_hits=args.relink_min_track_hits,

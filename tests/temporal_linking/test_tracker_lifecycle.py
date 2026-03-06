@@ -38,7 +38,7 @@ def _make_det(frame_num: int, det_index: int, vec: np.ndarray) -> Detection:
             "class_name": "sports ball",
             "bbox": [10.0, 10.0, 20.0, 20.0],
             "confidence": 0.9,
-            "activation": {"vector": vec_n.tolist(), "dim": 256, "small_crop_flag": False},
+            "activation": {"vector": vec_n.tolist(), "dim": int(vec_n.shape[0]), "small_crop_flag": False},
         },
     )
 

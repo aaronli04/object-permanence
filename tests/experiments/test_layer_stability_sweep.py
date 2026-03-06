@@ -80,6 +80,8 @@ class LayerStabilitySweepTests(unittest.TestCase):
     def test_layer_rows_sort_by_separability_before_cosine(self) -> None:
         high_sep = lss.LayerAccum(module_type="X", feature_dim=2)
         high_sep.norms = [1.0, 1.1]
+        high_sep.grouped_total = 2
+        high_sep.grouped_with_track_id = 2
         high_sep.vectors_by_frame = {
             0: [np.asarray([1.0, 0.0], dtype=np.float32)],
             1: [np.asarray([0.0, 1.0], dtype=np.float32)],
@@ -97,6 +99,8 @@ class LayerStabilitySweepTests(unittest.TestCase):
 
         high_cos_low_sep = lss.LayerAccum(module_type="Y", feature_dim=2)
         high_cos_low_sep.norms = [1.0, 1.2]
+        high_cos_low_sep.grouped_total = 2
+        high_cos_low_sep.grouped_with_track_id = 2
         high_cos_low_sep.vectors_by_frame = {
             0: [np.asarray([1.0, 0.0], dtype=np.float32)],
             1: [np.asarray([1.0, 0.0], dtype=np.float32)],
@@ -114,6 +118,8 @@ class LayerStabilitySweepTests(unittest.TestCase):
     def test_layer_rows_warns_on_single_group(self) -> None:
         accum = lss.LayerAccum(module_type="X", feature_dim=2)
         accum.norms = [1.0, 1.2]
+        accum.grouped_total = 2
+        accum.grouped_with_track_id = 2
         accum.vectors_by_frame = {
             0: [np.asarray([1.0, 0.0], dtype=np.float32)],
             1: [np.asarray([1.0, 0.0], dtype=np.float32)],
@@ -126,6 +132,32 @@ class LayerStabilitySweepTests(unittest.TestCase):
             rows = lss._layer_rows(layer_data={"single": accum}, sampled_frames=[0, 1])
         self.assertEqual(rows[0]["separability"], 0.0)
         self.assertIn("WARNING:", err.getvalue())
+
+    def test_layer_rows_warns_when_track_id_coverage_low(self) -> None:
+        accum = lss.LayerAccum(module_type="X", feature_dim=2)
+        accum.norms = [1.0, 1.1]
+        accum.grouped_total = 10
+        accum.grouped_with_track_id = 2
+        accum.grouped_with_class_fallback = 8
+        accum.vectors_by_frame = {
+            0: [np.asarray([1.0, 0.0], dtype=np.float32)],
+            1: [np.asarray([0.0, 1.0], dtype=np.float32)],
+        }
+        accum.vectors_by_group = {
+            1: [
+                np.asarray([0.0, 0.0], dtype=np.float32),
+                np.asarray([0.1, -0.1], dtype=np.float32),
+            ],
+            2: [
+                np.asarray([8.0, 8.0], dtype=np.float32),
+                np.asarray([8.1, 7.9], dtype=np.float32),
+            ],
+        }
+        err = io.StringIO()
+        with redirect_stderr(err):
+            rows = lss._layer_rows(layer_data={"low_cov": accum}, sampled_frames=[0, 1])
+        self.assertAlmostEqual(float(rows[0]["track_id_coverage"]), 0.2, places=6)
+        self.assertIn("track_id coverage is low", err.getvalue())
 
     def test_iter_target_detections_supports_all_classes_and_track_fallback(self) -> None:
         result = _FakeResult(
@@ -145,6 +177,11 @@ class LayerStabilitySweepTests(unittest.TestCase):
         class_rows = lss._iter_target_detections(result, class_id=32, min_confidence=0.25)
         self.assertEqual(len(class_rows), 1)
         self.assertEqual(class_rows[0][2], 32)
+
+    def test_resolve_group_key_honors_require_track_id(self) -> None:
+        self.assertEqual(lss._resolve_group_key(track_id=101, class_id=32, require_track_id=True), 101)
+        self.assertIsNone(lss._resolve_group_key(track_id=None, class_id=32, require_track_id=True))
+        self.assertEqual(lss._resolve_group_key(track_id=None, class_id=32, require_track_id=False), 32)
 
 
 if __name__ == "__main__":

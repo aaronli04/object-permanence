@@ -38,6 +38,9 @@ class LayerAccum:
     norms: list[float] = field(default_factory=list)
     vectors_by_frame: dict[int, list[np.ndarray]] = field(default_factory=dict)
     vectors_by_group: dict[int, list[np.ndarray]] = field(default_factory=dict)
+    grouped_total: int = 0
+    grouped_with_track_id: int = 0
+    grouped_with_class_fallback: int = 0
 
 
 class HookBank:
@@ -155,6 +158,14 @@ def _iter_target_detections(
     return rows
 
 
+def _resolve_group_key(*, track_id: int | None, class_id: int, require_track_id: bool) -> int | None:
+    if track_id is not None:
+        return int(track_id)
+    if require_track_id:
+        return None
+    return int(class_id)
+
+
 def _compute_separability(
     vectors_by_group: dict[int, list[np.ndarray]],
 ) -> tuple[float, float, float, int]:
@@ -205,9 +216,18 @@ def _layer_rows(
         norms = np.asarray(accum.norms, dtype=np.float64)
         norm_std = float(np.std(norms)) if norms.size > 0 else float("nan")
         within_var, between_var, separability, group_count = _compute_separability(accum.vectors_by_group)
+        track_id_coverage = (
+            float(accum.grouped_with_track_id) / float(accum.grouped_total) if accum.grouped_total > 0 else 0.0
+        )
         if group_count < 2:
             print(
                 f"WARNING: layer '{layer_name}' has only {group_count} distinct groups; separability set to 0.0",
+                file=sys.stderr,
+            )
+        if track_id_coverage < 0.30:
+            print(
+                f"WARNING: layer '{layer_name}' track_id coverage is low ({track_id_coverage:.1%}); "
+                "separability may be dominated by class-level signal.",
                 file=sys.stderr,
             )
         rows.append(
@@ -220,6 +240,7 @@ def _layer_rows(
                 "within_var": within_var,
                 "between_var": between_var,
                 "separability": separability,
+                "track_id_coverage": track_id_coverage,
             }
         )
     rows.sort(
@@ -248,6 +269,7 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
                 "within_var",
                 "between_var",
                 "separability",
+                "track_id_coverage",
             ],
         )
         writer.writeheader()
@@ -263,6 +285,11 @@ def main() -> int:
     parser.add_argument("--max-sampled-frames", type=int, default=20, help="Max sampled frames to process.")
     parser.add_argument("--class-id", type=int, default=-1, help="Target class id (-1 includes all classes).")
     parser.add_argument("--min-confidence", type=float, default=0.25, help="Minimum detection confidence.")
+    parser.add_argument(
+        "--require-track-id",
+        action="store_true",
+        help="When set, only use detections with finite track_id for grouping; do not fallback to class_id.",
+    )
     parser.add_argument(
         "--output-csv",
         default="experiments/results/layer_selection/per_video/layer_stability_sweep.csv",
@@ -283,6 +310,8 @@ def main() -> int:
 
     sampled_frames: list[int] = []
     target_detection_count = 0
+    target_detection_with_track_id_count = 0
+    target_detection_class_fallback_count = 0
 
     with HookBank(module_map) as hooks:
         for frame_num, frame in FrameSampler(args.video, args.sample_rate):
@@ -310,6 +339,17 @@ def main() -> int:
 
             for bbox_xyxy, _confidence, cls_value, track_id in target_detections:
                 target_detection_count += 1
+                if track_id is not None:
+                    target_detection_with_track_id_count += 1
+                else:
+                    target_detection_class_fallback_count += 1
+                group_key = _resolve_group_key(
+                    track_id=track_id,
+                    class_id=int(cls_value),
+                    require_track_id=bool(args.require_track_id),
+                )
+                if group_key is None:
+                    continue
                 for layer_name, output in hooks.outputs.items():
                     if not isinstance(output, torch.Tensor):
                         continue
@@ -353,7 +393,11 @@ def main() -> int:
                     )
                     if accum.feature_dim is None:
                         accum.feature_dim = int(vec.shape[0])
-                    group_key = int(track_id) if track_id is not None else int(cls_value)
+                    accum.grouped_total += 1
+                    if track_id is not None:
+                        accum.grouped_with_track_id += 1
+                    else:
+                        accum.grouped_with_class_fallback += 1
                     accum.norms.append(norm)
                     accum.vectors_by_frame.setdefault(int(frame_num), []).append(vec)
                     accum.vectors_by_group.setdefault(group_key, []).append(vec)
@@ -364,6 +408,8 @@ def main() -> int:
 
     print(f"sampled_frames={len(sampled_frames)}")
     print(f"target_detections={target_detection_count}")
+    print(f"target_detections_with_valid_track_id={target_detection_with_track_id_count}")
+    print(f"target_detections_class_fallback={target_detection_class_fallback_count}")
     print(f"named_modules_scanned={len(module_map)}")
     print(f"eligible_layers={len(rows)}")
     print(f"csv_saved={output_csv}")

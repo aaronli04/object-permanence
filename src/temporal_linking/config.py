@@ -35,6 +35,7 @@ class TemporalLinkingConfig:
     match_within_class: bool = True
     filter_short_tracks_in_summary: bool = True
     activation_topk: int | None = 64
+    max_centroid_distance: float = 0.40
 
     # Post-hoc relinking controls (always evaluated in sweep 2).
     relink_threshold: float = 0.55
@@ -82,3 +83,5 @@ class TemporalLinkingConfig:
             raise ValueError("w_last + w_ema + w_hist must be > 0.0")
         if self.activation_topk is not None and self.activation_topk <= 0:
             raise ValueError("activation_topk must be > 0 when provided")
+        if not 0.0 <= self.max_centroid_distance <= 1.0:
+            raise ValueError("max_centroid_distance must be in [0.0, 1.0]")

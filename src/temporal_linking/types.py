@@ -28,6 +28,8 @@ class Detection:
     activation_vec: np.ndarray
     small_crop_flag: bool
     raw_payload: dict[str, Any]
+    frame_width: float | None = None
+    frame_height: float | None = None
 
 
 @dataclass(frozen=True)
@@ -50,8 +52,8 @@ class Track:
     max_miss_streak: int = 0
 
     last_bbox_xyxy: np.ndarray = field(default_factory=lambda: np.zeros((4,), dtype=np.float32))
-    last_vec: np.ndarray = field(default_factory=lambda: np.zeros((256,), dtype=np.float32))
-    ema_vec: np.ndarray = field(default_factory=lambda: np.zeros((256,), dtype=np.float32))
+    last_vec: np.ndarray = field(default_factory=lambda: np.zeros((0,), dtype=np.float32))
+    ema_vec: np.ndarray = field(default_factory=lambda: np.zeros((0,), dtype=np.float32))
     vec_history: deque[np.ndarray] = field(default_factory=lambda: deque(maxlen=5))
     sim_history: deque[float] = field(default_factory=lambda: deque(maxlen=5))
 
@@ -62,6 +64,8 @@ class Track:
     events: list[dict[str, Any]] = field(default_factory=list)
     obs_vecs: list[np.ndarray] = field(default_factory=list)
     obs_positions: list[tuple[float, float, int]] = field(default_factory=list)
+    frame_width: float | None = None
+    frame_height: float | None = None
 
 
 @dataclass(frozen=True)

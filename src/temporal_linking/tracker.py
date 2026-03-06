@@ -50,6 +50,8 @@ class TrackManager:
             last_bbox_xyxy=det.bbox_xyxy.copy(),
             last_vec=det.activation_vec.copy(),
             ema_vec=det.activation_vec.copy(),
+            frame_width=det.frame_width,
+            frame_height=det.frame_height,
         )
         track.vec_history = deque([det.activation_vec.copy()], maxlen=self.cfg.history_size)
         track.sim_history = deque(maxlen=self.cfg.history_size)
@@ -85,6 +87,8 @@ class TrackManager:
         track.ema_vec = l2_normalize(
             (self.cfg.ema_alpha * det.activation_vec) + ((1.0 - self.cfg.ema_alpha) * track.ema_vec)
         )
+        track.frame_width = det.frame_width
+        track.frame_height = det.frame_height
 
         if track.vec_history.maxlen != self.cfg.history_size:
             track.vec_history = deque(track.vec_history, maxlen=self.cfg.history_size)
