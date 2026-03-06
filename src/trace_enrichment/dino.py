@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import os
 import socket
 import threading
 from dataclasses import dataclass
@@ -53,6 +54,21 @@ def _resolve_device(preferred_device: str | None) -> "torch.device":
     if torch.cuda.is_available():
         return torch.device("cuda")
     return torch.device("cpu")
+
+
+def _ensure_torch_home() -> str:
+    configured = os.environ.get("TORCH_HOME")
+    if configured:
+        return configured
+
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    local_cache = os.path.join(project_root, ".torch_cache")
+    try:
+        os.makedirs(local_cache, exist_ok=True)
+        os.environ["TORCH_HOME"] = local_cache
+        return local_cache
+    except Exception:
+        return os.path.expanduser("~/.cache/torch")
 
 
 def _padded_crop_box(
@@ -174,6 +190,7 @@ def load_dino_embedder(
     crop_padding_ratio: float = 0.05,
 ) -> DinoEmbedder:
     ensure_dino_runtime_dependencies()
+    torch_home = _ensure_torch_home()
     device = _resolve_device(preferred_device)
     cache_key = (hub_repo, model_name, str(device))
     with _CACHE_LOCK:
@@ -189,6 +206,7 @@ def load_dino_embedder(
         raise DinoUnavailableError(
             "Failed to load DINO model via torch.hub "
             f"(repo={hub_repo}, model={model_name}, device={device}). "
+            f"TORCH_HOME={torch_home!r}. "
             f"This can happen when internet is unavailable and weights are not cached. Error: {exc}"
         ) from exc
     finally:
