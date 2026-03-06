@@ -227,7 +227,17 @@ def build_relink_manifest(
     if not isinstance(raw_stats, dict):
         raw_stats = {}
 
-    stats = {str(key): int(value) for key, value in raw_stats.items()}
+    stats: dict[str, Any] = {}
+    for key, value in raw_stats.items():
+        key_s = str(key)
+        if key_s == "relink_dino_coverage":
+            stats[key_s] = float(value)
+        elif isinstance(value, bool):
+            stats[key_s] = int(value)
+        elif isinstance(value, (int, float)):
+            stats[key_s] = int(value)
+        else:
+            stats[key_s] = value
     accepted_edges = relink_result.get("accepted_edges", [])
     if not isinstance(accepted_edges, list):
         accepted_edges = []
@@ -238,6 +248,9 @@ def build_relink_manifest(
         "relink_min_track_hits": int(cfg.relink_min_track_hits),
         "relink_max_pixels_per_frame": float(cfg.relink_max_pixels_per_frame),
         "relink_fallback_threshold": float(cfg.relink_fallback_threshold),
+        "relink_use_dino": bool(cfg.relink_use_dino),
+        "relink_dino_threshold": float(cfg.relink_dino_threshold),
+        "relink_dino_min_detections": int(cfg.relink_dino_min_detections),
     }
     manifest = RelinkManifest(
         schema_version=SCHEMA_VERSION_RELINK_MANIFEST,

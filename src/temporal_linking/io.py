@@ -18,6 +18,8 @@ except ImportError:  # pragma: no cover - import-path compatibility
 
 from .types import Detection, FrameDetections, TemporalLinkArtifacts
 
+_DINO_VECTOR_DIM = 384
+
 
 _FRAME_DIMENSION_KEY_PAIRS: tuple[tuple[str, str], ...] = (
     ("frame_width", "frame_height"),
@@ -87,6 +89,9 @@ def load_enriched_frames(path: str, *, activation_topk: int | None = None) -> li
     fallback_width, fallback_height = _infer_global_bbox_dims(raw)
     warned_inferred_dims = False
     warned_missing_dims = False
+    warned_invalid_dino = False
+    valid_dino_vectors = 0
+    total_detections = 0
 
     frames: list[FrameDetections] = []
     for frame_item in raw:
@@ -132,6 +137,47 @@ def load_enriched_frames(path: str, *, activation_topk: int | None = None) -> li
             if activation_topk is not None:
                 activation_vec = topk_l2_renorm(activation_vec, topk=int(activation_topk))
 
+            dino_vec: np.ndarray | None = None
+            dino_raw = activation.get("dino_vector")
+            dino_available_raw = activation.get("dino_available")
+            dino_available = (
+                bool(dino_available_raw)
+                if dino_available_raw is not None
+                else (dino_raw is not None)
+            )
+            if dino_available:
+                if isinstance(dino_raw, list):
+                    dino_arr = np.asarray(dino_raw, dtype=np.float32)
+                    if (
+                        dino_arr.ndim == 1
+                        and int(dino_arr.shape[0]) == _DINO_VECTOR_DIM
+                        and bool(np.isfinite(dino_arr).all())
+                    ):
+                        dino_norm = float(np.linalg.norm(dino_arr))
+                        if dino_norm > 0.0:
+                            dino_vec = (dino_arr / dino_norm).astype(np.float32, copy=False)
+                        elif not warned_invalid_dino:
+                            print(
+                                "WARNING: Encountered zero-norm dino_vector in enriched detections; "
+                                "treating those entries as unavailable.",
+                                file=sys.stderr,
+                            )
+                            warned_invalid_dino = True
+                    elif not warned_invalid_dino:
+                        print(
+                            "WARNING: Encountered invalid dino_vector shape/content in enriched detections; "
+                            "treating those entries as unavailable.",
+                            file=sys.stderr,
+                        )
+                        warned_invalid_dino = True
+                elif not warned_invalid_dino:
+                    print(
+                        "WARNING: Encountered non-list dino_vector in enriched detections; "
+                        "treating those entries as unavailable.",
+                        file=sys.stderr,
+                    )
+                    warned_invalid_dino = True
+
             bbox = det.get("bbox")
             if not isinstance(bbox, list) or len(bbox) != 4:
                 raise ValueError(f"Detection at frame {frame_num} index {det_index} bbox must be list[4]")
@@ -170,12 +216,24 @@ def load_enriched_frames(path: str, *, activation_topk: int | None = None) -> li
                     raw_payload=copy.deepcopy(det),
                     frame_width=frame_width,
                     frame_height=frame_height,
+                    dino_vector=dino_vec,
                 )
             )
+            total_detections += 1
+            if dino_vec is not None:
+                valid_dino_vectors += 1
 
         frames.append(FrameDetections(frame_num=frame_num, detections=detections))
 
     frames.sort(key=lambda item: item.frame_num)
+    coverage = (
+        (float(valid_dino_vectors) / float(total_detections)) if total_detections > 0 else 0.0
+    )
+    print(
+        "INFO: DINO sidecar coverage "
+        f"{valid_dino_vectors}/{total_detections} detections ({coverage:.1%}).",
+        file=sys.stderr,
+    )
     return frames
 
 

@@ -7,7 +7,7 @@ import os
 POOL_SIZE = (1, 1)
 POOL_STRATEGY = "adaptive_avg_1x1"
 ACTIVATION_LAYER_ALIASES = ["2.cv1"]
-# PCA compresses the raw embedding (default 592-D with DINO enabled) to this target dimension.
+# PCA compresses the raw YOLO embedding (default 208-D) to this target dimension.
 OUTPUT_VECTOR_DIM = 128
 DEFAULT_BATCH_SIZE = 8
 # Selected from multi-video separability calibration with winner constraints
@@ -23,9 +23,6 @@ EMBEDDING_LAYERS = [
     ("15", 0.351),
     ("22.cv3.0", 0.100),
 ]
-# DINO tier candidates (name, provisional separability-derived weight).
-# Weight is provisional and should be recalibrated with --dino sweeps.
-DINO_LAYERS = [("dino_cls", 0.400)]
 DINO_EMBEDDING_DIM = 384
 DINO_MODEL_REPO = "facebookresearch/dino:main"
 DINO_MODEL_NAME = "dino_vits8"

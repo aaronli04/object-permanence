@@ -17,6 +17,7 @@ from temporal_linking.relink import (
     resolve_chains,
     score_centroid,
     score_fallback,
+    score_identity,
 )
 from temporal_linking.types import RelinkEdge, Track, TrackFragment, TrackStatus
 
@@ -125,6 +126,7 @@ class RelinkUnitTests(unittest.TestCase):
 
         centroid_score = score_centroid([(a, b)])[0].score
         self.assertGreater(centroid_score, 0.9)
+        self.assertEqual(score_centroid([(a, b)])[0].method, "yolo")
 
     def test_spatial_fallback_perfect_prediction_scores_one(self) -> None:
         pred = _make_fragment(
@@ -207,17 +209,18 @@ class RelinkUnitTests(unittest.TestCase):
         self.assertLess(fallback_edge.score, 0.0)
 
         accepted = greedy_assign(
-            centroid_edges=[],
+            identity_edges=[],
             fallback_edges=[fallback_edge],
-            relink_threshold=0.55,
+            yolo_threshold=0.55,
+            dino_threshold=0.55,
             fallback_threshold=0.40,
         )
         self.assertEqual(accepted, [])
 
-    def test_greedy_assign_prioritizes_centroid_then_spatial(self) -> None:
-        centroid_edges = [
-            RelinkEdge(predecessor_id=1, successor_id=2, score=0.82, method="centroid"),
-            RelinkEdge(predecessor_id=1, successor_id=3, score=0.78, method="centroid"),
+    def test_greedy_assign_prioritizes_identity_then_spatial(self) -> None:
+        identity_edges = [
+            RelinkEdge(predecessor_id=1, successor_id=2, score=0.82, method="yolo"),
+            RelinkEdge(predecessor_id=1, successor_id=3, score=0.78, method="yolo"),
         ]
         fallback_edges = [
             RelinkEdge(predecessor_id=1, successor_id=3, score=0.99, method="spatial"),
@@ -225,16 +228,49 @@ class RelinkUnitTests(unittest.TestCase):
         ]
 
         accepted = greedy_assign(
-            centroid_edges=centroid_edges,
+            identity_edges=identity_edges,
             fallback_edges=fallback_edges,
-            relink_threshold=0.8,
+            yolo_threshold=0.8,
+            dino_threshold=0.8,
             fallback_threshold=0.4,
         )
         got = {(edge.predecessor_id, edge.successor_id, edge.method) for edge in accepted}
 
-        self.assertIn((1, 2, "centroid"), got)
+        self.assertIn((1, 2, "yolo"), got)
         self.assertNotIn((1, 3, "spatial"), got)
         self.assertIn((4, 5, "spatial"), got)
+
+    def test_score_identity_uses_dino_when_available(self) -> None:
+        base = _normalize(np.asarray([1.0, 0.0, 0.0], dtype=np.float32))
+        alt = _normalize(np.asarray([0.9, 0.1, 0.0], dtype=np.float32))
+        pred = TrackFragment(
+            track_id=1,
+            class_id=32,
+            first_frame=0,
+            last_frame=5,
+            hits=2,
+            centroid=base,
+            frame_vecs=np.stack([base], axis=0),
+            last_positions=[(0.0, 0.0, 0), (5.0, 5.0, 5)],
+            first_position=(0.0, 0.0, 0),
+            dino_vector=base,
+        )
+        succ = TrackFragment(
+            track_id=2,
+            class_id=32,
+            first_frame=10,
+            last_frame=15,
+            hits=2,
+            centroid=alt,
+            frame_vecs=np.stack([alt], axis=0),
+            last_positions=[(10.0, 10.0, 10), (15.0, 15.0, 15)],
+            first_position=(10.0, 10.0, 10),
+            dino_vector=alt,
+        )
+        edges, coverage = score_identity([(pred, succ)], relink_use_dino=True)
+        self.assertEqual(edges[0].method, "dino")
+        self.assertGreater(edges[0].score, 0.9)
+        self.assertAlmostEqual(coverage, 1.0)
 
     def test_resolve_chains_is_deterministic(self) -> None:
         fragments = [
@@ -273,8 +309,8 @@ class RelinkUnitTests(unittest.TestCase):
             ),
         ]
         accepted = [
-            RelinkEdge(predecessor_id=10, successor_id=2, score=0.9, method="centroid"),
-            RelinkEdge(predecessor_id=2, successor_id=7, score=0.9, method="centroid"),
+            RelinkEdge(predecessor_id=10, successor_id=2, score=0.9, method="yolo"),
+            RelinkEdge(predecessor_id=2, successor_id=7, score=0.9, method="yolo"),
         ]
 
         merge_map = resolve_chains(accepted, fragments)

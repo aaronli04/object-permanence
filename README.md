@@ -1,6 +1,6 @@
 # Object Permanence
 
-An offline two-stage pipeline for identity-preserving object tracking using YOLOv8. The system builds rich multi-layer identity embeddings from YOLO's internal feature representations and links detections across frames, including through occlusions, using cosine similarity and constrained assignment.
+An offline two-stage pipeline for identity-preserving object tracking using YOLOv8. The system builds multi-layer YOLO identity embeddings for frame-to-frame linking and uses DINO CLS vectors as relink-only sidecar evidence to verify identity across occlusion gaps.
 
 ---
 
@@ -20,43 +20,56 @@ Links detections across sampled frames using cosine similarity on normalized emb
 
 ## Multi-Layer Identity Embedding
 
-Each detection's identity vector is built from a YOLO multi-layer composite plus an optional DINO CLS tier for instance discrimination. Layer/tier weights are calibration-driven (see [Layer Calibration](#layer-calibration)).
+Frame-to-frame linking uses a YOLO-only multi-layer composite embedding. Layer weights are calibration-driven (see [Layer Calibration](#layer-calibration)).
 
 | Layer | Tier | Raw Dim | Sweep Separability | Weight |
 |---|---|---:|---:|---:|
 | `4.cv1` | Appearance | 64 | 15.495 | 0.549 |
 | `15` | Semantic | 64 | 9.926 | 0.351 |
 | `22.cv3.0` | Class-level | 80 | 13.902 | 0.100 |
-| `dino_cls` | Instance identity | 384 | TBD (recalibrate with `--dino`) | 0.400 (provisional) |
 
-**Why these tiers?**
+**Why these YOLO tiers?**
 - **Appearance (4.cv1):** Early backbone activations encode texture and color patterns, a strong signal for distinguishing objects that look different.
 - **Semantic (15):** Mid-network neck activations encode spatial context and object structure, which stays stable across viewpoint changes and partial occlusion.
 - **Class-level (22.cv3.0):** Detection-head activations encode class probability space. It is retained as a class-consistency gate but weighted conservatively because same-class instances are often near-identical in this space.
-- **Instance identity (dino_cls):** DINO's self-supervised ViT CLS embedding is added to improve same-class instance separation (re-identification).
 
-**Embedding construction per detection:**
+### DINO Methodology (Relink-Only Re-identification)
+
+DINO is intentionally not used for frame-to-frame assignment. Consecutive-frame linking benefits from **stability** under small pose/lighting jitter, while relinking fragmented tracks needs **discriminability** to avoid false identity merges.
+
+The implementation therefore treats DINO CLS as relink-only evidence:
+- Extract DINO per detection during enrichment and store it as sidecar metadata.
+- Aggregate sidecar vectors at track close time into a track-level DINO representative.
+- Use DINO cosine only in relink candidate scoring when both fragments have valid DINO representatives.
+- Fall back to YOLO relink scoring when DINO is missing, and keep spatial fallback as a third pass.
+
+### Implementation Details
+
+**Embedding construction per detection (enrichment):**
 1. Register forward hooks on configured YOLO embedding layers.
 2. Run YOLO forward pass and map each detection ROI onto each hooked feature map.
-3. Adaptive-average pool each YOLO layer ROI, L2-normalize per-layer vectors, apply YOLO layer weights, concatenate, then L2-normalize to a YOLO composite vector.
-4. Crop the detection box from the original frame (with padding), resize to `224x224`, ImageNet-normalize, and extract DINO CLS (`384-D`).
-5. Tier-blend without re-weighting individual YOLO layers again: `concat(yolo_composite * (1 - dino_weight), dino_vec * dino_weight)`, then final L2 normalization.
-6. Default raw dim is `592` (`208 + 384`) when DINO is active; fallback/raw dims can be smaller when DINO is disabled/unavailable.
-7. Fit PCA on run detections and reduce raw embeddings to a 128-D target projection (or lower effective dim when detections are fewer than 128). PCA is used for compression, not expansion.
+3. Adaptive-average pool each YOLO layer ROI, L2-normalize per-layer vectors, apply YOLO layer weights, concatenate, then L2-normalize to a YOLO composite vector (`208-D`).
+4. Fit PCA on run detections and reduce raw YOLO embeddings to a `128-D` target projection (or lower effective dim when detections are fewer than 128). PCA is used for compression, not expansion.
+5. Separately extract DINO CLS (`384-D`, L2-normalized) from padded detection crops and store as sidecar:
+   - `activation.dino_vector` (`list[float]` or `null`)
+   - `activation.dino_available` (`bool`)
+6. `projection_manifest.json` records DINO sidecar role and runtime state:
+   - `dino_role = "relink_sidecar"`
+   - `dino_enabled`, `dino_model`, `dino_load_error`
 
 **Resilience:**
 - Hooks are registered and removed atomically around each forward pass to prevent memory leaks in long-running sessions.
-- If a layer is unavailable in a model variant, remaining layer weights are renormalized to sum to 1.
+- If a YOLO layer is unavailable in a model variant, remaining layer weights are renormalized to sum to 1.
 - If fewer than 2 embedding layers are available, enrichment raises a clear error rather than silently degrading.
 - Single-layer fallback is available via `TRACE_DISABLE_MULTI_LAYER_EMBEDDING=1`.
 - DINO can be disabled via `TRACE_DISABLE_DINO=1`.
-- If DINO load fails (e.g., offline and uncached), enrichment logs a loud warning and falls back to YOLO-only embeddings for that run.
-- Tiny/invalid DINO crops use zero-vector fallback and warning-once behavior.
+- If DINO load fails (e.g., offline and uncached), enrichment logs a warning and marks DINO sidecars unavailable while preserving YOLO enrichment outputs.
+- Tiny/invalid DINO crops are treated as unavailable sidecars (`dino_vector = null`, `dino_available = false`).
 - `projection_manifest.json` records both actual `projection_dim` and requested `projection_dim_requested`.
 
 Embedding configuration lives in `src/trace_enrichment/constants.py`:
 - `EMBEDDING_LAYERS`: YOLO per-layer weights.
-- `DINO_LAYERS`: DINO tier weight(s), provisional until recalibration.
+- `DINO_EMBEDDING_DIM`: sidecar DINO vector dimension (`384`).
 
 ---
 
@@ -79,9 +92,12 @@ Reference descriptors blend last, EMA, and history vectors for stability against
 **Relink pass:**
 After the primary linking run, a second pass evaluates pairs of closed track fragments to recover identities split by occlusion:
 - Enforces class consistency and temporal ordering constraints.
-- Accepts high-confidence fragment pairs by centroid-cosine score.
-- Falls back to spatial proximity when cosine score is below threshold.
+- Scores identity by method:
+  - `dino`: cosine on track-level DINO representatives when both are available and `relink_use_dino=true` (gate: `relink_dino_threshold`).
+  - `yolo`: cosine on YOLO fragment centroids when DINO is unavailable or disabled (gate: `relink_threshold`).
+- Falls back to spatial plausibility (`spatial`) as a third pass for unresolved pairs (gate: `relink_fallback_threshold`).
 - Merges accepted chains into canonical track IDs.
+- Records DINO contribution metrics in `relink_manifest.json`: `relink_dino_coverage`, `relink_dino_accepted`, `relink_yolo_accepted`.
 
 ---
 
@@ -141,7 +157,7 @@ Default: `--activation-topk 64`.
 
 ### End-to-End Scenario Results
 
-Configuration below reflects the baseline pre-DINO run: embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.351/0.100`, raw dim `208`, PCA target `128` (effective dim may be lower on small runs), `activation_topk=64`, `similarity_threshold=0.70`, `max_centroid_distance=0.40`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
+Configuration below reflects the DINO relink-sidecar run (`R4`): embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.351/0.100`, raw YOLO dim `208`, PCA target `128` (effective dim may be lower on small runs), DINO sidecar dim `384`, `activation_topk=64`, `similarity_threshold=0.70`, `max_centroid_distance=0.40`, `relink_use_dino=true`, `relink_dino_threshold=0.55`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
 
 | Scenario | Frames | Detections | Ball Tracks | Total Tracks | Valid Tracks | Relink Edges |
 |---|---:|---:|---:|---:|---:|---:|
@@ -150,21 +166,26 @@ Configuration below reflects the baseline pre-DINO run: embedding layers `4.cv1 
 | Exit_frame_while_occluded | 53 | 72 | 1 | 5 | 4 | 0 |
 | Left_bounce_back | 64 | 105 | 1 | 5 | 4 | 2 |
 | Left_to_right | 25 | 52 | 1 | 6 | 5 | 1 |
-| No_occlusion_ball_removed | 34 | 37 | 1 | 10 | 5 | 0 |
+| No_occlusion_ball_removed | 34 | 37 | 1 | 9 | 4 | 1 |
 | Occlusion_ball_removed | 48 | 114 | 1 | 14 | 8 | 2 |
 | Right_to_left | 21 | 40 | 1 | 4 | 3 | 1 |
-| **Totals** | **427** | **657** | **8** | **56** | **39** | **8** |
+| **Totals** | **427** | **657** | **8** | **55** | **38** | **9** |
 
-### Similarity Threshold Sweep (totals)
+### DINO Relink Threshold Sweep (totals)
 
-All runs used the same configuration as above except `similarity_threshold`.
+All runs used the same configuration as above except `relink_use_dino` / `relink_dino_threshold`.
 
-| similarity_threshold | Total Tracks | Valid Tracks | Recoveries | Ball Tracks | Relink Edges |
-|---:|---:|---:|---:|---:|---:|
-| 0.65 | 56 | 39 | 13 | 8 | 8 |
-| 0.70 | 56 | 39 | 13 | 8 | 8 |
-| 0.75 | 59 | 39 | 13 | 9 | 8 |
-| 0.80 | 62 | 39 | 12 | 9 | 8 |
+| Run | relink_use_dino | relink_dino_threshold | Total Tracks | Valid Tracks | Relink Edges | relink_dino_coverage |
+|---|---:|---:|---:|---:|---:|---:|
+| R0 | false | — | 56 | 39 | 8 | 0.000 |
+| R1 | true | 0.40 | 55 | 38 | 9 | 1.000 |
+| R2 | true | 0.45 | 55 | 38 | 9 | 1.000 |
+| R3 | true | 0.50 | 55 | 38 | 9 | 1.000 |
+| R4 | true | 0.55 | 55 | 38 | 9 | 1.000 |
+| R5 | true | 0.60 | 56 | 39 | 8 | 1.000 |
+| R6 | true | 0.65 | 56 | 39 | 8 | 1.000 |
+
+Winner under constraint (`total_tracks <= R0`) is `R1`; `R1` through `R4` tie on aggregate metrics.
 
 ---
 
@@ -213,7 +234,7 @@ for v in data/raw_videos/*.mp4; do
     --output-csv "experiments/results/layer_selection/per_video/layer_stability_sweep_${stem}.csv"
 done
 ```
-Add `--require-track-id` when source detections include stable track IDs. For DINO weight recalibration, use both `--dino` and `--require-track-id`.
+Add `--require-track-id` when source detections include stable track IDs. For DINO separability diagnostics, use both `--dino` and `--require-track-id`.
 
 ### 2. Aggregate layer sweeps
 ```bash
@@ -232,7 +253,7 @@ python3 src/run_pipeline.py \
   --sample-rate 5 \
   --model yolov8n.pt
 ```
-Set `TRACE_DISABLE_DINO=1` to force YOLO-only enrichment. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and falls back to YOLO-only for that run.
+Set `TRACE_DISABLE_DINO=1` to disable DINO sidecar extraction. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and marks DINO sidecars unavailable for that run while preserving YOLO enrichment.
 
 ### 4. Temporal linking (batch)
 ```bash
@@ -243,10 +264,22 @@ for f in experiments/results/activation_enrichment/*/enriched_detections.json; d
     --similarity-threshold 0.70 \
     --max-centroid-distance 0.40 \
     --relink-threshold 0.55 \
+    --relink-dino-threshold 0.55 \
     --relink-max-gap-frames -1 \
     --relink-fallback-threshold 0.40
 done
 ```
+Add `--no-relink-dino` to force YOLO relink scoring.
+
+### 5. DINO relink threshold sweep (R0..R6)
+```bash
+python3 experiments/run_dino_param_search.py \
+  --enrichment-root experiments/results/activation_enrichment \
+  --output-root experiments/results/param_search
+```
+Outputs:
+- `summary.csv` with `run_id,relink_dino_threshold,relink_use_dino,total_tracks,valid_tracks,relink_edges,relink_dino_accepted,relink_yolo_accepted,relink_dino_coverage,fragmentation_ratio,delta_valid_vs_baseline`
+- Per-run scenario artifacts under `param_search/R0` ... `param_search/R6`
 
 ---
 
@@ -270,4 +303,13 @@ experiments/results/
       tracks.json
       linking_manifest.json
       relink_manifest.json
+  param_search/
+    summary.csv
+    R0/
+      <scenario>/...
+    R1/
+      <scenario>/...
+    ...
+    R6/
+      <scenario>/...
 ```

@@ -12,12 +12,18 @@ PROJECT_SRC = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."
 if PROJECT_SRC not in sys.path:
     sys.path.insert(0, PROJECT_SRC)
 
-from trace_enrichment.pipeline import run_trace_enrichment
 from trace_enrichment.dino import DinoUnavailableError
+from trace_enrichment.pipeline import run_trace_enrichment
 from trace_enrichment.types import CollectedDetection, CollectedFrame, CollectionStats, HookConfig
 
 
-def _build_frames(raw_dim: int) -> tuple[list[CollectedFrame], CollectionStats]:
+def _unit_dino_vec() -> np.ndarray:
+    vec = np.ones((384,), dtype=np.float32)
+    return (vec / np.linalg.norm(vec)).astype(np.float32)
+
+
+def _build_frames(*, raw_dim: int, dino_available: bool) -> tuple[list[CollectedFrame], CollectionStats]:
+    dino_vec = _unit_dino_vec() if dino_available else None
     frames = [
         CollectedFrame(
             frame_num=0,
@@ -29,6 +35,8 @@ def _build_frames(raw_dim: int) -> tuple[list[CollectedFrame], CollectionStats]:
                     confidence=0.9,
                     raw_vector=np.ones((raw_dim,), dtype=np.float32),
                     projected_vector=np.asarray([1.0, 0.0], dtype=np.float32),
+                    dino_vector=dino_vec,
+                    dino_available=dino_available,
                 )
             ],
         )
@@ -37,17 +45,18 @@ def _build_frames(raw_dim: int) -> tuple[list[CollectedFrame], CollectionStats]:
     return frames, stats
 
 
-class PipelineDinoIntegrationTests(unittest.TestCase):
+class PipelineDinoSidecarTests(unittest.TestCase):
     def _run_with_mocks(
         self,
         *,
-        raw_dim: int,
+        frames: list[CollectedFrame],
+        stats: CollectionStats,
         hook_config: HookConfig,
         dino_loader_side_effect=None,
         env: dict[str, str] | None = None,
-    ) -> dict[str, object]:
-        frames, stats = _build_frames(raw_dim)
+    ) -> tuple[dict[str, object], list[dict[str, object]]]:
         manifests: list[dict[str, object]] = []
+        enriched_payloads: list[dict[str, object]] = []
         video_fd, video_path = tempfile.mkstemp(suffix=".mp4")
         os.close(video_fd)
         with open(video_path, "wb") as f:
@@ -60,9 +69,11 @@ class PipelineDinoIntegrationTests(unittest.TestCase):
             self.assertGreaterEqual(int(pca_dim), 2)
             return object(), 2
 
-        def _capture_write(_path, payload):
-            if isinstance(payload, dict) and "schema_version" in payload:
+        def _capture_write(path, payload):
+            if path.endswith("projection_manifest.json") and isinstance(payload, dict):
                 manifests.append(payload)
+            elif path.endswith("enriched_detections.json") and isinstance(payload, list):
+                enriched_payloads.extend(payload)
 
         patchers = [
             mock.patch("trace_enrichment.pipeline.load_yolo", return_value=object()),
@@ -89,9 +100,10 @@ class PipelineDinoIntegrationTests(unittest.TestCase):
                     )
         os.remove(video_path)
         self.assertTrue(manifests)
-        return manifests[-1]
+        self.assertTrue(enriched_payloads)
+        return manifests[-1], enriched_payloads
 
-    def test_manifest_raw_dim_is_592_when_dino_enabled(self) -> None:
+    def test_dino_sidecar_present_and_excluded_from_pca_input(self) -> None:
         hook = HookConfig(
             layer="4.cv1",
             stride=8,
@@ -100,31 +112,25 @@ class PipelineDinoIntegrationTests(unittest.TestCase):
             layer_weights=(0.549, 0.351, 0.100),
             multi_layer_enabled=True,
         )
-        manifest = self._run_with_mocks(raw_dim=592, hook_config=hook, dino_loader_side_effect=lambda **_: object())
-        self.assertEqual(int(manifest["raw_embedding_dim"]), 592)
-        self.assertEqual(int(manifest["raw_activation_dim"]), 592)
-        self.assertTrue(bool(manifest["dino_enabled"]))
-        self.assertLessEqual(int(manifest["projection_dim"]), 128)
-
-    def test_manifest_records_dino_load_error_and_falls_back(self) -> None:
-        hook = HookConfig(
-            layer="4.cv1",
-            stride=8,
-            requested_layer="multi_layer_embedding",
-            layers=("4.cv1", "15", "22.cv3.0"),
-            layer_weights=(0.549, 0.351, 0.100),
-            multi_layer_enabled=True,
-        )
-        manifest = self._run_with_mocks(
-            raw_dim=208,
+        frames, stats = _build_frames(raw_dim=208, dino_available=True)
+        manifest, enriched_payload = self._run_with_mocks(
+            frames=frames,
+            stats=stats,
             hook_config=hook,
-            dino_loader_side_effect=DinoUnavailableError("hub unavailable"),
+            dino_loader_side_effect=lambda **_: object(),
         )
-        self.assertEqual(int(manifest["raw_embedding_dim"]), 208)
-        self.assertFalse(bool(manifest["dino_enabled"]))
-        self.assertIn("hub unavailable", str(manifest["dino_load_error"]))
 
-    def test_trace_disable_dino_forces_yolo_only_raw_dim(self) -> None:
+        self.assertEqual(int(manifest["raw_embedding_dim"]), 208)
+        self.assertEqual(str(manifest["dino_role"]), "relink_sidecar")
+        self.assertTrue(bool(manifest["dino_enabled"]))
+        self.assertNotIn("dino_weight", manifest)
+        self.assertNotIn("dino_feature_dim", manifest)
+
+        activation = enriched_payload[0]["detections"][0]["activation"]
+        self.assertTrue(bool(activation["dino_available"]))
+        self.assertEqual(len(activation["dino_vector"]), 384)
+
+    def test_dino_disabled_stores_null_sidecar_and_runs(self) -> None:
         hook = HookConfig(
             layer="4.cv1",
             stride=8,
@@ -133,28 +139,47 @@ class PipelineDinoIntegrationTests(unittest.TestCase):
             layer_weights=(0.549, 0.351, 0.100),
             multi_layer_enabled=True,
         )
-        manifest = self._run_with_mocks(
-            raw_dim=208,
+        frames, stats = _build_frames(raw_dim=208, dino_available=False)
+        manifest, enriched_payload = self._run_with_mocks(
+            frames=frames,
+            stats=stats,
             hook_config=hook,
             dino_loader_side_effect=lambda **_: object(),
             env={"TRACE_DISABLE_DINO": "1"},
         )
+
         self.assertEqual(int(manifest["raw_embedding_dim"]), 208)
         self.assertFalse(bool(manifest["dino_enabled"]))
-        self.assertEqual(str(manifest["dino_load_error"]), "")
+        self.assertIsNone(manifest["dino_model"])
+        self.assertIsNone(manifest["dino_load_error"])
 
-    def test_single_layer_with_dino_has_single_plus_384_dim(self) -> None:
+        activation = enriched_payload[0]["detections"][0]["activation"]
+        self.assertFalse(bool(activation["dino_available"]))
+        self.assertIsNone(activation["dino_vector"])
+
+    def test_dino_load_error_recorded_with_null_sidecar(self) -> None:
         hook = HookConfig(
-            layer="7",
+            layer="4.cv1",
             stride=8,
-            requested_layer="7",
-            layers=("7",),
-            layer_weights=(1.0,),
-            multi_layer_enabled=False,
+            requested_layer="multi_layer_embedding",
+            layers=("4.cv1", "15", "22.cv3.0"),
+            layer_weights=(0.549, 0.351, 0.100),
+            multi_layer_enabled=True,
         )
-        manifest = self._run_with_mocks(raw_dim=416, hook_config=hook, dino_loader_side_effect=lambda **_: object())
-        self.assertEqual(int(manifest["raw_embedding_dim"]), 416)
-        self.assertTrue(bool(manifest["dino_enabled"]))
+        frames, stats = _build_frames(raw_dim=208, dino_available=False)
+        manifest, enriched_payload = self._run_with_mocks(
+            frames=frames,
+            stats=stats,
+            hook_config=hook,
+            dino_loader_side_effect=DinoUnavailableError("hub unavailable"),
+        )
+
+        self.assertFalse(bool(manifest["dino_enabled"]))
+        self.assertIn("hub unavailable", str(manifest["dino_load_error"]))
+        self.assertIsNotNone(manifest["dino_model"])
+        activation = enriched_payload[0]["detections"][0]["activation"]
+        self.assertFalse(bool(activation["dino_available"]))
+        self.assertIsNone(activation["dino_vector"])
 
 
 if __name__ == "__main__":

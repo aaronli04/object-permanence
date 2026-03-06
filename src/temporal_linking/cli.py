@@ -84,7 +84,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--relink-threshold",
         type=float,
         default=0.55,
-        help="Centroid similarity gate used in post-hoc relinking.",
+        help="YOLO centroid similarity gate used in post-hoc relinking.",
     )
     parser.add_argument(
         "--relink-max-gap-frames",
@@ -109,6 +109,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.40,
         help="Fallback score threshold used after centroid-based relinking.",
+    )
+    parser.add_argument(
+        "--relink-dino-threshold",
+        type=float,
+        default=0.55,
+        help="DINO similarity gate used when both relink fragments have DINO representatives.",
+    )
+    parser.add_argument(
+        "--no-relink-dino",
+        action="store_true",
+        help="Disable DINO relink scoring and force YOLO centroid relink path.",
     )
     return parser
 
@@ -148,6 +159,8 @@ def _build_config(args: argparse.Namespace) -> TemporalLinkingConfig:
         relink_min_track_hits=args.relink_min_track_hits,
         relink_max_pixels_per_frame=args.relink_max_pixels_per_frame,
         relink_fallback_threshold=args.relink_fallback_threshold,
+        relink_use_dino=not bool(args.no_relink_dino),
+        relink_dino_threshold=args.relink_dino_threshold,
     )
 
 

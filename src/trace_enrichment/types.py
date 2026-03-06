@@ -42,6 +42,8 @@ class CollectedDetection:
     small_crop_flag: bool = False
     raw_vector: Any | None = None
     projected_vector: Any | None = None
+    dino_vector: Any | None = None
+    dino_available: bool = False
 
 
 @dataclass

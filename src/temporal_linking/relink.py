@@ -31,6 +31,11 @@ def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
         frame_vecs = np.stack([l2_normalize(v) for v in track.obs_vecs], axis=0).astype(np.float32, copy=False)
         centroid = l2_normalize(np.mean(frame_vecs, axis=0))
         positions = list(track.obs_positions)
+        dino_vec = None
+        if track.dino_vector is not None:
+            dino_vec = l2_normalize(np.asarray(track.dino_vector, dtype=np.float32))
+            if float(np.linalg.norm(dino_vec)) <= 0.0:
+                dino_vec = None
         fragments.append(
             TrackFragment(
                 track_id=int(track.track_id),
@@ -42,6 +47,7 @@ def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
                 frame_vecs=frame_vecs,
                 last_positions=positions[-3:],
                 first_position=positions[0],
+                dino_vector=dino_vec,
             )
         )
 
@@ -72,7 +78,7 @@ def build_candidates(
 
 
 def score_centroid(candidates: list[tuple[TrackFragment, TrackFragment]]) -> list[RelinkEdge]:
-    """Centroid cosine score for each candidate pair."""
+    """YOLO centroid cosine score for each candidate pair."""
     edges: list[RelinkEdge] = []
     for pred, succ in candidates:
         score = float(np.dot(pred.centroid, succ.centroid))
@@ -81,10 +87,45 @@ def score_centroid(candidates: list[tuple[TrackFragment, TrackFragment]]) -> lis
                 predecessor_id=pred.track_id,
                 successor_id=succ.track_id,
                 score=score,
-                method="centroid",
+                method="yolo",
             )
         )
     return edges
+
+
+def score_identity(
+    candidates: list[tuple[TrackFragment, TrackFragment]],
+    *,
+    relink_use_dino: bool,
+) -> tuple[list[RelinkEdge], float]:
+    """Score each candidate using DINO when available, else YOLO centroid."""
+    edges: list[RelinkEdge] = []
+    dino_scored = 0
+
+    for pred, succ in candidates:
+        use_dino = bool(
+            relink_use_dino
+            and pred.dino_vector is not None
+            and succ.dino_vector is not None
+        )
+        if use_dino:
+            score = float(np.dot(pred.dino_vector, succ.dino_vector))
+            method: str = "dino"
+            dino_scored += 1
+        else:
+            score = float(np.dot(pred.centroid, succ.centroid))
+            method = "yolo"
+        edges.append(
+            RelinkEdge(
+                predecessor_id=pred.track_id,
+                successor_id=succ.track_id,
+                score=score,
+                method=method,
+            )
+        )
+
+    coverage = (float(dino_scored) / float(len(candidates))) if candidates else 0.0
+    return edges, coverage
 
 
 def score_fallback(
@@ -134,22 +175,24 @@ def _spatial_plausibility_score(
 
 
 def greedy_assign(
-    centroid_edges: list[RelinkEdge],
+    identity_edges: list[RelinkEdge],
     fallback_edges: list[RelinkEdge],
-    relink_threshold: float,
+    yolo_threshold: float,
+    dino_threshold: float,
     fallback_threshold: float,
 ) -> list[RelinkEdge]:
-    """Accept one-to-one edges: centroid first, then fallback for unresolved nodes."""
+    """Accept one-to-one edges: identity pass first, then fallback for unresolved nodes."""
     accepted: list[RelinkEdge] = []
     used_as_predecessor: set[int] = set()
     used_as_successor: set[int] = set()
 
-    sorted_centroid = sorted(
-        centroid_edges,
+    sorted_identity = sorted(
+        identity_edges,
         key=lambda edge: (-edge.score, edge.predecessor_id, edge.successor_id),
     )
-    for edge in sorted_centroid:
-        if edge.score < relink_threshold:
+    for edge in sorted_identity:
+        threshold = dino_threshold if edge.method == "dino" else yolo_threshold
+        if edge.score < threshold:
             continue
         if edge.predecessor_id in used_as_predecessor:
             continue
@@ -235,39 +278,61 @@ def run_relink(
     fragments = build_fragments(tracks, cfg.relink_min_track_hits)
     candidates = build_candidates(fragments, cfg.relink_max_gap_frames)
 
-    centroid_edges = score_centroid(candidates)
+    identity_edges, dino_coverage = score_identity(
+        candidates,
+        relink_use_dino=bool(cfg.relink_use_dino),
+    )
     fallback_edges = score_fallback(candidates, cfg.relink_max_pixels_per_frame)
-    # Treat 1.0 as an explicit no-merge setting for each pass.
-    centroid_threshold = float(cfg.relink_threshold)
+
+    yolo_threshold = float(cfg.relink_threshold)
+    dino_threshold = float(cfg.relink_dino_threshold)
     fallback_threshold = float(cfg.relink_fallback_threshold)
-    if centroid_threshold >= 1.0:
-        centroid_threshold = float(np.nextafter(np.float32(1.0), np.float32(2.0)))
+    # Treat 1.0 as an explicit no-merge setting for each pass.
+    if yolo_threshold >= 1.0:
+        yolo_threshold = float(np.nextafter(np.float32(1.0), np.float32(2.0)))
+    if dino_threshold >= 1.0:
+        dino_threshold = float(np.nextafter(np.float32(1.0), np.float32(2.0)))
     if fallback_threshold >= 1.0:
         fallback_threshold = float(np.nextafter(np.float32(1.0), np.float32(2.0)))
 
     accepted_edges = greedy_assign(
-        centroid_edges=centroid_edges,
+        identity_edges=identity_edges,
         fallback_edges=fallback_edges,
-        relink_threshold=centroid_threshold,
+        yolo_threshold=yolo_threshold,
+        dino_threshold=dino_threshold,
         fallback_threshold=fallback_threshold,
     )
     merge_map = resolve_chains(accepted_edges, fragments)
 
-    centroid_edges_above = sum(1 for edge in centroid_edges if edge.score >= centroid_threshold)
+    yolo_edges_above = sum(
+        1 for edge in identity_edges if edge.method == "yolo" and edge.score >= yolo_threshold
+    )
+    dino_edges_above = sum(
+        1 for edge in identity_edges if edge.method == "dino" and edge.score >= dino_threshold
+    )
     fallback_edges_above = sum(1 for edge in fallback_edges if edge.score >= fallback_threshold)
-    accepted_centroid = sum(1 for edge in accepted_edges if edge.method == "centroid")
+
+    accepted_dino = sum(1 for edge in accepted_edges if edge.method == "dino")
+    accepted_yolo = sum(1 for edge in accepted_edges if edge.method == "yolo")
     accepted_fallback = sum(1 for edge in accepted_edges if edge.method == "spatial")
 
-    stats = {
+    stats: dict[str, int | float] = {
         "num_closed_tracks": int(num_closed_tracks),
         "num_fragments": int(len(fragments)),
         "num_candidates": int(len(candidates)),
-        "num_centroid_edges_above_threshold": int(centroid_edges_above),
+        "num_yolo_edges_above_threshold": int(yolo_edges_above),
+        "num_dino_edges_above_threshold": int(dino_edges_above),
         "num_fallback_edges_above_threshold": int(fallback_edges_above),
         "num_accepted_edges": int(len(accepted_edges)),
-        "num_accepted_centroid": int(accepted_centroid),
+        "num_accepted_yolo": int(accepted_yolo),
+        "num_accepted_dino": int(accepted_dino),
         "num_accepted_fallback": int(accepted_fallback),
+        # Backward-compat aliases for existing dashboards.
+        "num_accepted_centroid": int(accepted_yolo),
         "num_absorbed_tracks": int(len(merge_map)),
+        "relink_dino_coverage": float(dino_coverage),
+        "relink_dino_accepted": int(accepted_dino),
+        "relink_yolo_accepted": int(accepted_yolo),
     }
 
     accepted_payload = [

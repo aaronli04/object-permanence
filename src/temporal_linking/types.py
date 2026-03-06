@@ -30,6 +30,7 @@ class Detection:
     raw_payload: dict[str, Any]
     frame_width: float | None = None
     frame_height: float | None = None
+    dino_vector: np.ndarray | None = None
 
 
 @dataclass(frozen=True)
@@ -63,9 +64,11 @@ class Track:
     observations: list[dict[str, Any]] = field(default_factory=list)
     events: list[dict[str, Any]] = field(default_factory=list)
     obs_vecs: list[np.ndarray] = field(default_factory=list)
+    obs_dino_vecs: list[np.ndarray] = field(default_factory=list)
     obs_positions: list[tuple[float, float, int]] = field(default_factory=list)
     frame_width: float | None = None
     frame_height: float | None = None
+    dino_vector: np.ndarray | None = None
 
 
 @dataclass(frozen=True)
@@ -79,6 +82,7 @@ class TrackFragment:
     frame_vecs: np.ndarray
     last_positions: list[tuple[float, float, int]]
     first_position: tuple[float, float, int]
+    dino_vector: np.ndarray | None = None
 
 
 @dataclass(frozen=True)
@@ -86,14 +90,14 @@ class RelinkEdge:
     predecessor_id: int
     successor_id: int
     score: float
-    method: Literal["centroid", "spatial"]
+    method: Literal["dino", "yolo", "spatial"]
 
 
 @dataclass(frozen=True)
 class RelinkManifest:
     schema_version: str
     config: dict[str, Any]
-    stats: dict[str, int]
+    stats: dict[str, Any]
     accepted_edges: list[dict[str, Any]]
     merge_map: dict[str, int]
 

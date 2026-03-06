@@ -39,7 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
             "Single-layer hook target for fallback mode. Accepts exact module names (e.g. '15'), "
             "model-style paths (e.g. 'model.model[15]'), or aliases 'neck.C2f.15' / 'neck.C2f.mid'. "
             "Default run uses EMBEDDING_LAYERS unless TRACE_DISABLE_MULTI_LAYER_EMBEDDING=1. "
-            "DINO tier is additive by default unless TRACE_DISABLE_DINO=1."
+            "DINO sidecar extraction is enabled by default unless TRACE_DISABLE_DINO=1."
         ),
     )
     parser.add_argument(

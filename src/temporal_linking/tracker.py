@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+import numpy as np
 
 try:
     from common.numeric import l2_normalize
@@ -67,6 +68,7 @@ class TrackManager:
             }
         )
         track.obs_vecs.append(det.activation_vec.copy())
+        self._append_dino_observation(track, det)
         cx = (float(det.bbox_xyxy[0]) + float(det.bbox_xyxy[2])) * 0.5
         cy = (float(det.bbox_xyxy[1]) + float(det.bbox_xyxy[3])) * 0.5
         track.obs_positions.append((cx, cy, int(frame_num)))
@@ -110,6 +112,7 @@ class TrackManager:
             }
         )
         track.obs_vecs.append(det.activation_vec.copy())
+        self._append_dino_observation(track, det)
         cx = (float(det.bbox_xyxy[0]) + float(det.bbox_xyxy[2])) * 0.5
         cy = (float(det.bbox_xyxy[1]) + float(det.bbox_xyxy[3])) * 0.5
         track.obs_positions.append((cx, cy, int(frame_num)))
@@ -147,6 +150,7 @@ class TrackManager:
         if track.status == TrackStatus.CLOSED:
             return
 
+        track.dino_vector = self._build_track_dino_vector(track)
         track.status = TrackStatus.CLOSED
         track.events.append({"frame_num": int(end_frame), "type": "closed"})
         self._remove_open(track.track_id)
@@ -176,3 +180,26 @@ class TrackManager:
     def _set_lost(self, track: Track) -> None:
         self._remove_open(track.track_id)
         self.state.lost[track.track_id] = track
+
+    def _append_dino_observation(self, track: Track, det: Detection) -> None:
+        if det.dino_vector is None:
+            return
+        vec = np.asarray(det.dino_vector, dtype=np.float32)
+        if vec.ndim != 1 or int(vec.shape[0]) <= 0:
+            return
+        if not bool(np.isfinite(vec).all()):
+            return
+        norm = float(np.linalg.norm(vec))
+        if norm <= 0.0:
+            return
+        track.obs_dino_vecs.append((vec / norm).astype(np.float32, copy=False))
+
+    def _build_track_dino_vector(self, track: Track) -> np.ndarray | None:
+        if len(track.obs_dino_vecs) < int(self.cfg.relink_dino_min_detections):
+            return None
+        stacked = np.stack(track.obs_dino_vecs, axis=0)
+        mean_vec = np.mean(stacked, axis=0).astype(np.float32, copy=False)
+        mean_vec = l2_normalize(mean_vec)
+        if float(np.linalg.norm(mean_vec)) <= 0.0:
+            return None
+        return mean_vec
