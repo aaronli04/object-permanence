@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Run per-layer temporal stability sweep on YOLOv8 module outputs."""
 
+# NOTE: If this sweep is re-run and rankings materially change, update
+# src/trace_enrichment/constants.py EMBEDDING_LAYERS weights/layers accordingly.
+
 from __future__ import annotations
 
 import argparse
@@ -34,6 +37,7 @@ class LayerAccum:
     feature_dim: int | None = None
     norms: list[float] = field(default_factory=list)
     vectors_by_frame: dict[int, list[np.ndarray]] = field(default_factory=dict)
+    vectors_by_group: dict[int, list[np.ndarray]] = field(default_factory=dict)
 
 
 class HookBank:
@@ -101,20 +105,79 @@ def _bbox_to_feature_roi(
     return fx1, fy1, fx2, fy2
 
 
-def _iter_target_detections(result: Any, *, class_id: int, min_confidence: float) -> list[tuple[tuple[float, float, float, float], float]]:
+def _extract_optional_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        if isinstance(value, torch.Tensor):
+            if int(value.numel()) <= 0:
+                return None
+            scalar = float(value.reshape(-1)[0].item())
+        elif hasattr(value, "item"):
+            scalar = float(value.item())
+        else:
+            arr = np.asarray(value, dtype=np.float64).reshape(-1)
+            if arr.size <= 0:
+                return None
+            scalar = float(arr[0])
+    except Exception:
+        return None
+    if not math.isfinite(scalar):
+        return None
+    return int(scalar)
+
+
+def _iter_target_detections(
+    result: Any, *, class_id: int, min_confidence: float
+) -> list[tuple[tuple[float, float, float, float], float, int, int | None]]:
     boxes = getattr(result, "boxes", None)
     if boxes is None:
         return []
 
-    rows: list[tuple[tuple[float, float, float, float], float]] = []
+    rows: list[tuple[tuple[float, float, float, float], float, int, int | None]] = []
     for box in boxes:
         cls_value = int(box.cls.item()) if getattr(box, "cls", None) is not None else -1
         conf_value = float(box.conf.item()) if getattr(box, "conf", None) is not None else 0.0
-        if cls_value != class_id or conf_value <= min_confidence:
+        if conf_value <= min_confidence:
+            continue
+        if class_id >= 0 and cls_value != class_id:
             continue
         xyxy = box.xyxy[0].tolist() if getattr(box, "xyxy", None) is not None else [0.0, 0.0, 0.0, 0.0]
-        rows.append(((float(xyxy[0]), float(xyxy[1]), float(xyxy[2]), float(xyxy[3])), conf_value))
+        track_value = _extract_optional_int(getattr(box, "id", None))
+        rows.append(
+            (
+                (float(xyxy[0]), float(xyxy[1]), float(xyxy[2]), float(xyxy[3])),
+                conf_value,
+                cls_value,
+                track_value,
+            )
+        )
     return rows
+
+
+def _compute_separability(
+    vectors_by_group: dict[int, list[np.ndarray]],
+) -> tuple[float, float, float, int]:
+    group_vectors = [vecs for vecs in vectors_by_group.values() if vecs]
+    group_count = len(group_vectors)
+    if group_count < 2:
+        return 0.0, 0.0, 0.0, group_count
+
+    group_within_vars: list[float] = []
+    group_mean_vectors: list[np.ndarray] = []
+    for vecs in group_vectors:
+        mat = np.stack(vecs, axis=0).astype(np.float64, copy=False)
+        per_dim_var = np.var(mat, axis=0, dtype=np.float64)
+        group_within_vars.append(float(np.mean(per_dim_var)))
+        group_mean_vectors.append(np.mean(mat, axis=0, dtype=np.float64))
+
+    within_var = float(np.mean(np.asarray(group_within_vars, dtype=np.float64))) if group_within_vars else 0.0
+    group_means = np.stack(group_mean_vectors, axis=0).astype(np.float64, copy=False)
+    between_var = float(np.mean(np.var(group_means, axis=0, dtype=np.float64)))
+    separability = float(between_var / (within_var + 1e-8))
+    if not math.isfinite(separability):
+        separability = 0.0
+    return within_var, between_var, separability, group_count
 
 
 def _layer_rows(
@@ -141,6 +204,12 @@ def _layer_rows(
 
         norms = np.asarray(accum.norms, dtype=np.float64)
         norm_std = float(np.std(norms)) if norms.size > 0 else float("nan")
+        within_var, between_var, separability, group_count = _compute_separability(accum.vectors_by_group)
+        if group_count < 2:
+            print(
+                f"WARNING: layer '{layer_name}' has only {group_count} distinct groups; separability set to 0.0",
+                file=sys.stderr,
+            )
         rows.append(
             {
                 "layer_name": layer_name,
@@ -148,12 +217,18 @@ def _layer_rows(
                 "feature_dim": int(accum.feature_dim),
                 "mean_consecutive_cosine": float(np.mean(np.asarray(pair_scores, dtype=np.float64))),
                 "norm_std": norm_std,
+                "within_var": within_var,
+                "between_var": between_var,
+                "separability": separability,
             }
         )
     rows.sort(
         key=lambda row: (
+            1 if not math.isfinite(row["separability"]) else 0,
+            -row["separability"] if math.isfinite(row["separability"]) else 0.0,
             1 if not math.isfinite(row["mean_consecutive_cosine"]) else 0,
             -row["mean_consecutive_cosine"] if math.isfinite(row["mean_consecutive_cosine"]) else 0.0,
+            row["layer_name"],
         )
     )
     return rows
@@ -170,6 +245,9 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
                 "feature_dim",
                 "mean_consecutive_cosine",
                 "norm_std",
+                "within_var",
+                "between_var",
+                "separability",
             ],
         )
         writer.writeheader()
@@ -183,11 +261,11 @@ def main() -> int:
     parser.add_argument("--model", default="yolov8n.pt", help="YOLO model weights path or identifier.")
     parser.add_argument("--sample-rate", type=int, default=5, help="Sample every N frames.")
     parser.add_argument("--max-sampled-frames", type=int, default=20, help="Max sampled frames to process.")
-    parser.add_argument("--class-id", type=int, default=32, help="Target class id (default: sports ball=32).")
+    parser.add_argument("--class-id", type=int, default=-1, help="Target class id (-1 includes all classes).")
     parser.add_argument("--min-confidence", type=float, default=0.25, help="Minimum detection confidence.")
     parser.add_argument(
         "--output-csv",
-        default="experiments/results/layer_stability_sweep.csv",
+        default="experiments/results/layer_selection/per_video/layer_stability_sweep.csv",
         help="CSV output path.",
     )
     parser.add_argument("--top-n", type=int, default=10, help="Number of top rows to print.")
@@ -230,7 +308,7 @@ def main() -> int:
             if not target_detections:
                 continue
 
-            for bbox_xyxy, _confidence in target_detections:
+            for bbox_xyxy, _confidence, cls_value, track_id in target_detections:
                 target_detection_count += 1
                 for layer_name, output in hooks.outputs.items():
                     if not isinstance(output, torch.Tensor):
@@ -275,8 +353,10 @@ def main() -> int:
                     )
                     if accum.feature_dim is None:
                         accum.feature_dim = int(vec.shape[0])
+                    group_key = int(track_id) if track_id is not None else int(cls_value)
                     accum.norms.append(norm)
                     accum.vectors_by_frame.setdefault(int(frame_num), []).append(vec)
+                    accum.vectors_by_group.setdefault(group_key, []).append(vec)
 
     rows = _layer_rows(layer_data=layer_data, sampled_frames=sampled_frames)
     output_csv = Path(args.output_csv)
@@ -288,12 +368,15 @@ def main() -> int:
     print(f"eligible_layers={len(rows)}")
     print(f"csv_saved={output_csv}")
     print("")
-    print(f"Top {args.top_n} layers by mean_consecutive_cosine:")
+    print(f"Top {args.top_n} layers by separability (tie-break: mean_consecutive_cosine):")
     for idx, row in enumerate(rows[: args.top_n], start=1):
         print(
             f"{idx:>2}. {row['layer_name']:<28} "
             f"type={row['module_type']:<14} "
             f"dim={row['feature_dim']:<4} "
+            f"separability={row['separability']:.6f} "
+            f"between_var={row['between_var']:.6f} "
+            f"within_var={row['within_var']:.6f} "
             f"mean_cos={row['mean_consecutive_cosine']:.6f} "
             f"norm_std={row['norm_std']:.6f}"
         )

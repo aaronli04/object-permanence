@@ -23,11 +23,17 @@ High-level data flow:
 ### Vectors
 
 When a detection is produced, the pipeline also extracts an internal appearance descriptor from YOLO features.  
-For the default hook (`neck.C2f.15`), the raw pooled descriptor is 64 values (`raw_activation_dim = 64`), which acts like a compact fingerprint of appearance.
+By default, enrichment uses a multi-layer weighted embedding built from three tiers:
+- `4.cv1` (appearance tier, 64 dims)
+- `15` (semantic tier, 64 dims)
+- `22.cv3.0` (class tier, 80 dims)
+
+Each layer vector is pooled, L2-normalized, weighted by separability-derived weight, concatenated, and L2-normalized again.  
+Raw combined descriptor dim is `208` (`64 + 64 + 80`).
 
 At enrichment time:
 - Raw vectors are projected with PCA and stored in a fixed 256-D schema.
-- For this hook layer, effective signal is still capped by the fitted PCA components (at most 64, often lower on short clips).
+- Effective signal is capped by fitted PCA components (at most 208, often lower on short clips).
 
 At linking time (default):
 - `--activation-topk 64` keeps the first 64 projected dims.
@@ -96,7 +102,8 @@ Input:
 - Raw video frames from `data/raw_videos/*.mp4`
 
 Core mechanics:
-- Hook target defaults to `--head-layer neck.C2f.15` (resolved to the neck C2f block).
+- Default embedding layers and weights are defined in `src/trace_enrichment/constants.py` (`EMBEDDING_LAYERS`).
+- Single-layer fallback remains available via `--head-layer` when multi-layer embedding is disabled.
 - For each detection bbox `[x1, y1, x2, y2]` on a frame `(frame_w, frame_h)`, map to feature-map ROI `(fmap_w, fmap_h)`:
   - `fx1 = floor((x1 / frame_w) * fmap_w)`
   - `fy1 = floor((y1 / frame_h) * fmap_h)`
@@ -239,31 +246,45 @@ Entrypoint:
 
 ### Layer Selection Evidence
 
-A layer-stability sweep was run on `Right_to_left` (`sample_rate=5`, first 20 sampled frames, sports ball class only, conf > 0.25).
+A separability-first layer sweep is now used for layer selection.
 
-Observed:
-- Sampled frames: `20`
-- Sports-ball detections used: `10`
-- Named modules scanned: `224`
-- Eligible layers: `154`
+Each layer reports:
+- `within_var`: mean per-group variance across feature dimensions.
+- `between_var`: variance of group mean vectors, averaged across dimensions.
+- `separability = between_var / (within_var + 1e-8)`.
 
-Top layers by temporal stability (`mean_consecutive_cosine`):
+Grouping key:
+- `track_id` when available.
+- fallback to class label otherwise.
 
-| Rank | Layer | Type | Feature Dim | Mean Consecutive Cosine | Norm Std |
+Calibration setup:
+- Videos: all `data/raw_videos/*.mp4` (8 scenarios)
+- Sweep config: `sample_rate=5`, first `20` sampled frames, `class-id=-1`, `conf > 0.25`
+- Winner constraints: `feature_dim >= 32` and drop `.conv` layers when parent Conv layer exists
+- Per-video outputs: `experiments/results/layer_selection/per_video/layer_stability_sweep_<video>.csv`
+- Aggregate artifact: `experiments/results/layer_selection/aggregate/aggregate_separability.csv`
+- Ranking: descending `separability`, tie-break by `mean_consecutive_cosine`
+
+Top aggregate layers:
+
+| Rank | Layer | Type | Feature Dim | Mean Separability | Mean Consecutive Cosine |
 |---|---|---|---:|---:|---:|
-| 1 | `22.dfl.conv` | `Conv2d` | 1 | 1.000000 | 0.321435 |
-| 2 | `22.cv3.0` | `Sequential` | 80 | 0.999654 | 4.387048 |
-| 3 | `22.cv3.0.2` | `Conv2d` | 80 | 0.999654 | 4.387048 |
-| 4 | `0` | `Conv` | 16 | 0.999556 | 0.201582 |
-| 5 | `0.conv` | `Conv2d` | 16 | 0.999556 | 0.201582 |
+| 1 | `2.cv1` | `Conv` | 32 | 15.911515 | 0.977638 |
+| 2 | `1` | `Conv` | 32 | 15.674581 | 0.944006 |
+| 3 | `4.cv1` | `Conv` | 64 | 15.495382 | 0.967329 |
+| 4 | `22.cv3.0` | `Sequential` | 80 | 13.901690 | 0.998128 |
+| 5 | `22.cv3.0.2` | `Conv2d` | 80 | 13.901690 | 0.998128 |
 
-Selected default layer:
-- `--head-layer neck.C2f.15` (resolved to `model.model[15]` on `yolov8n`)
-- Stability result: mean cosine `0.995373`, norm std `0.042314`, feature dim `64` (typically ranked in the 30s/154 on this sweep; exact rank shifts with tied scores)
+Default multi-layer embedding (stored as `EMBEDDING_LAYERS` in `src/trace_enrichment/constants.py`):
+- `4.cv1` (appearance): separability `15.495` -> weight `0.398`
+- `15` (semantic): separability `9.926` -> weight `0.255`
+- `22.cv3.0` (class): separability `13.902` -> weight `0.357`
+- Weights are re-normalized at runtime to sum to `1.0` after any layer-availability fallback.
 
 Selection rationale:
-- Not the absolute max cosine layer, but a better trade-off between descriptor dimensionality and stability than very compressed heads (for example dim `1`).
-- Produced strong downstream linking behavior across scenarios.
+- Separability directly captures between-object discriminability versus within-object compactness.
+- Layer tiers contribute complementary information (texture/appearance, semantic structure, class-level cues).
+- If calibration rankings materially change, update `EMBEDDING_LAYERS` from the aggregate sweep artifact.
 
 ### Top-K Selection Evidence
 
@@ -283,12 +304,11 @@ Right_to_left linking outcomes for each `k`:
 | k | within_early | within_late | cross | ball_tracks | total_tracks | valid_tracks | Notes |
 |---:|---:|---:|---:|---:|---:|---:|---|
 | 12 | 0.837967 | 0.788560 | 0.714120 | 1 | 5 | 3 | Best `cross` among `k >= 12` |
-| 64 | 0.828755 | 0.771111 | 0.704412 | 1 | 5 | 3 | Uses all raw dims available from `neck.C2f.15` |
+| 64 | 0.828755 | 0.771111 | 0.704412 | 1 | 5 | 3 | Legacy single-layer calibration reference (`neck.C2f.15`) |
 
-Dimension-cap validation for `neck.C2f.15`:
-- `raw_activation_dim = 64` in all current scenario manifests.
-- `fitted_pca_components <= 64` (for example `40` in `Right_to_left`, `37` in `No_occlusion_ball_removed`).
-- Therefore, `k > 64` cannot add new information for this hook layer in the current pipeline.
+Current dimension cap with default multi-layer embedding:
+- `raw_activation_dim = 208` (`64 + 64 + 80`) when all embedding layers are available.
+- Effective information is capped by fitted PCA components per run.
 
 Cross-scenario linking behavior (`k=64` vs prior `k=12` outputs):
 - Ball-track count changed in `2/8` scenarios:
@@ -301,47 +321,38 @@ Chosen default:
 
 ### Reproduce Calibration Commands
 
-Layer stability sweep (all named modules, sports ball only, first 20 sampled frames):
+Per-video separability sweeps (all classes):
 
 ```bash
-python3 experiments/layer_stability_sweep.py \
-  --video data/raw_videos/Right_to_left.mp4 \
-  --model yolov8n.pt \
-  --sample-rate 5 \
-  --max-sampled-frames 20 \
-  --class-id 32 \
-  --min-confidence 0.25 \
-  --output-csv experiments/results/layer_stability_sweep_right_to_left.csv
+for v in data/raw_videos/*.mp4; do
+  stem="$(basename "$v" .mp4)"
+  python3 experiments/layer_stability_sweep.py \
+    --video "$v" \
+    --model yolov8n.pt \
+    --sample-rate 5 \
+    --max-sampled-frames 20 \
+    --class-id -1 \
+    --min-confidence 0.25 \
+    --output-csv "experiments/results/layer_selection/per_video/layer_stability_sweep_${stem}.csv"
+done
 ```
 
-Top-k sweep input extraction (class-filtered layer 15 vectors):
+Aggregate all per-video sweep CSVs and persist calibration record:
 
 ```bash
-python3 experiments/extract_object_vectors.py \
-  --enriched-json experiments/results/activation_enrichment/Right_to_left/enriched_detections.json \
-  --output-json experiments/results/activation_enrichment/Right_to_left/object_vectors_layer15.json \
-  --class-id 32 \
-  --min-confidence 0.25
+python3 experiments/aggregate_layer_sweeps.py \
+  --input-glob "experiments/results/layer_selection/per_video/layer_stability_sweep_*.csv" \
+  --output-csv experiments/results/layer_selection/aggregate/aggregate_separability.csv \
+  --winner-min-feature-dim 32 \
+  --top-n 20
 ```
 
-Top-k cosine sweep CSV (`k=2..256`, step 2):
-
-```bash
-python3 experiments/analyze_topk_dims.py \
-  --input-json experiments/results/activation_enrichment/Right_to_left/object_vectors_layer15.json \
-  --output-csv experiments/results/topk_similarity_sweep_layer15_k256.csv \
-  --skip-plot \
-  --min-k 2 \
-  --max-k 256 \
-  --step-k 2 \
-  --early-frames 0,5,10,15 \
-  --late-frames 70,75,80,85,90,95,100
-```
+After re-running calibration, update `EMBEDDING_LAYERS` in `src/trace_enrichment/constants.py`.
 
 ### Scenario Outcomes with Current Baseline
 
 Current baseline:
-- Enrichment: `head-layer=neck.C2f.15`, `head-stride=8`, pool `1x1`
+- Enrichment: `embedding_layers=[4.cv1,15,22.cv3.0]` with separability weights `[0.398,0.255,0.357]`, pool `1x1`
 - Linking: `activation_topk=64`, `similarity_threshold=0.65`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`
 
 ### Caveats and Guardrails
@@ -399,7 +410,7 @@ Results across scenarios:
 ### Lifecycle and Assignment Controls
 
 - `--activation-topk`:
-  - Activation descriptor truncation dimension used for linking (default `64` for `neck.C2f.15`).
+  - Activation descriptor truncation dimension used for linking (default `64`; effectively capped by raw descriptor dim, currently `208` for the default multi-layer embedding).
 - `--max-lost-frames`: close track after this many missed sampled frames.
 - `--min-hits-to-activate`: tentative -> active promotion threshold.
 - `--min-track-length`: validity threshold in summary reporting.
@@ -427,7 +438,7 @@ python3 src/run_pipeline.py \
   --video data/raw_videos/3sec_Left_to_Right.mp4 \
   --sample-rate 5 \
   --model yolov8n.pt \
-  --head-layer neck.C2f.15 \
+  --head-layer 2.cv1 \
   --head-stride 8
 ```
 
@@ -439,7 +450,19 @@ python3 src/run_pipeline.py \
   --pattern "*.mp4" \
   --sample-rate 5 \
   --model yolov8n.pt \
-  --head-layer neck.C2f.15 \
+  --head-layer 2.cv1 \
+  --head-stride 8
+```
+
+### Activation Enrichment (Force Single-Layer Fallback)
+
+```bash
+TRACE_DISABLE_MULTI_LAYER_EMBEDDING=1 \
+python3 src/run_pipeline.py \
+  --video data/raw_videos/3sec_Left_to_Right.mp4 \
+  --sample-rate 5 \
+  --model yolov8n.pt \
+  --head-layer 2.cv1 \
   --head-stride 8
 ```
 
@@ -477,7 +500,7 @@ python3 src/run_pipeline.py \
   --pattern "*.mp4" \
   --sample-rate 5 \
   --model yolov8n.pt \
-  --head-layer neck.C2f.15 \
+  --head-layer 2.cv1 \
   --head-stride 8
 
 for f in experiments/results/activation_enrichment/*/enriched_detections.json; do
@@ -525,6 +548,9 @@ python3 -m src.temporal_linking.validate \
 
 ```text
 experiments/results/
+  layer_selection/
+    per_video/layer_stability_sweep_<scenario>.csv
+    aggregate/aggregate_separability.csv
   activation_enrichment/<scenario>/
     enriched_detections.json
     pca_projection.pkl
@@ -549,7 +575,7 @@ Enriched detection payload (core fields):
   "activation": {
     "vector": [0.013, -0.224],
     "dim": 256,
-    "layers": ["neck.C2f.15"],
+    "layers": ["4.cv1", "15", "22.cv3.0"],
     "pool": "adaptive_avg_1x1",
     "projection": "pca_256",
     "small_crop_flag": false

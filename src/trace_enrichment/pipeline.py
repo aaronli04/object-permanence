@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import os
+import sys
 from typing import Any, Iterable, Optional
 
 try:
@@ -13,9 +14,11 @@ except ImportError:  # pragma: no cover - import-path compatibility
 
 from .constants import (
     ACTIVATION_LAYER_ALIASES,
+    DISABLE_MULTI_LAYER_EMBEDDING_ENV,
     DEFAULT_BATCH_SIZE,
     DEFAULT_HEAD_LAYER,
     DEFAULT_HEAD_STRIDE,
+    EMBEDDING_LAYERS,
     OUTPUT_VECTOR_DIM,
     POOL_SIZE,
     POOL_STRATEGY,
@@ -34,15 +37,15 @@ from .model import (
 from .sampler import FrameSampler
 from .types import CollectedDetection, CollectedFrame, CollectionStats, HookConfig, RunConfig
 
+import numpy as np
+
 try:
     import joblib
-    import numpy as np
     from sklearn.decomposition import PCA
 
     _PIPELINE_IMPORT_ERROR: Optional[BaseException] = None
 except Exception as exc:
     joblib = None  # type: ignore[assignment]
-    np = None  # type: ignore[assignment]
     PCA = None  # type: ignore[assignment]
     _PIPELINE_IMPORT_ERROR = exc
 
@@ -63,13 +66,184 @@ def _iter_detections(frames: list[CollectedFrame]) -> Iterable[CollectedDetectio
             yield det
 
 
+def _is_truthy_env(value: str | None) -> bool:
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _multi_layer_embedding_disabled() -> bool:
+    return _is_truthy_env(os.environ.get(DISABLE_MULTI_LAYER_EMBEDDING_ENV))
+
+
+def _normalize_weights(items: list[tuple[str, float]]) -> list[tuple[str, float]]:
+    if not items:
+        return []
+    total = float(sum(weight for _, weight in items))
+    if total <= 0.0:
+        raise ValueError("Embedding layer weights must sum to > 0")
+    return [(name, float(weight / total)) for name, weight in items]
+
+
+def _resolve_multi_layer_hook_config(yolo: Any, stride: int) -> HookConfig:
+    resolved_weight_by_layer: dict[str, float] = {}
+    resolved_order: list[str] = []
+    missing_layers: list[str] = []
+    for configured_name, configured_weight in EMBEDDING_LAYERS:
+        try:
+            resolved_name = resolve_hook_layer_name(yolo, str(configured_name))
+        except KeyError:
+            missing_layers.append(str(configured_name))
+            continue
+        if resolved_name not in resolved_weight_by_layer:
+            resolved_order.append(resolved_name)
+            resolved_weight_by_layer[resolved_name] = 0.0
+        resolved_weight_by_layer[resolved_name] += float(configured_weight)
+
+    if missing_layers:
+        print(
+            "WARNING: multi-layer embedding missing configured layers: "
+            + ", ".join(missing_layers)
+            + ". Falling back to available layers.",
+            file=sys.stderr,
+        )
+
+    normalized = _normalize_weights([(name, resolved_weight_by_layer[name]) for name in resolved_order])
+    if len(normalized) < 2:
+        raise RuntimeError(
+            "Multi-layer embedding requires at least 2 available layers after resolution. "
+            f"Configured={len(EMBEDDING_LAYERS)} available={len(normalized)}"
+        )
+
+    layers = tuple(name for name, _ in normalized)
+    weights = tuple(float(weight) for _, weight in normalized)
+    return HookConfig(
+        layer=layers[0],
+        stride=stride,
+        requested_layer="multi_layer_embedding",
+        layers=layers,
+        layer_weights=weights,
+        multi_layer_enabled=True,
+    )
+
+
+def _build_weighted_embedding(
+    *,
+    layer_outputs: dict[str, Any],
+    layer_names: tuple[str, ...],
+    layer_weights: tuple[float, ...],
+    batch_index: int,
+    bbox_xyxy: list[float],
+    pool: "torch.nn.Module",
+    frame_h: int,
+    frame_w: int,
+    warn_once: set[str],
+) -> tuple["np.ndarray", bool]:
+    available_vectors: list["np.ndarray"] = []
+    available_weights: list[float] = []
+    small_flags: list[bool] = []
+
+    for layer_name, layer_weight in zip(layer_names, layer_weights):
+        output = layer_outputs.get(layer_name)
+        if output is None:
+            warn_key = f"missing_output:{layer_name}"
+            if warn_key not in warn_once:
+                print(
+                    f"WARNING: layer '{layer_name}' did not produce hook output; skipping this layer for embedding.",
+                    file=sys.stderr,
+                )
+                warn_once.add(warn_key)
+            continue
+        if not hasattr(output, "ndim") or int(output.ndim) != 4:
+            warn_key = f"invalid_ndim:{layer_name}"
+            if warn_key not in warn_once:
+                shape = tuple(output.shape) if hasattr(output, "shape") else "(unknown)"
+                print(
+                    f"WARNING: layer '{layer_name}' output shape {shape} is not [B,C,H,W]; skipping this layer.",
+                    file=sys.stderr,
+                )
+                warn_once.add(warn_key)
+            continue
+        if int(output.shape[0]) <= int(batch_index):
+            warn_key = f"short_batch:{layer_name}"
+            if warn_key not in warn_once:
+                print(
+                    f"WARNING: layer '{layer_name}' output batch ({int(output.shape[0])}) is smaller than "
+                    f"requested index {batch_index}; skipping this layer.",
+                    file=sys.stderr,
+                )
+                warn_once.add(warn_key)
+            continue
+
+        try:
+            raw_vec, small_crop = build_raw_activation_vector(
+                fmap=output[batch_index],
+                bbox_xyxy=bbox_xyxy,
+                pool=pool,
+                frame_h=frame_h,
+                frame_w=frame_w,
+            )
+        except Exception as exc:
+            warn_key = f"extract_fail:{layer_name}"
+            if warn_key not in warn_once:
+                print(
+                    f"WARNING: failed to extract pooled vector for layer '{layer_name}': {exc}",
+                    file=sys.stderr,
+                )
+                warn_once.add(warn_key)
+            continue
+
+        vec_n = l2_normalize(raw_vec)
+        if float(np.linalg.norm(vec_n)) <= 0.0:
+            warn_key = f"zero_norm:{layer_name}"
+            if warn_key not in warn_once:
+                print(
+                    f"WARNING: layer '{layer_name}' produced zero-norm pooled vector; skipping this layer.",
+                    file=sys.stderr,
+                )
+                warn_once.add(warn_key)
+            continue
+
+        available_vectors.append(vec_n.astype(np.float32, copy=False))
+        available_weights.append(float(layer_weight))
+        small_flags.append(bool(small_crop))
+
+    if len(available_vectors) < 2:
+        raise RuntimeError(
+            "Multi-layer embedding requires at least 2 valid layer vectors per detection. "
+            f"Got {len(available_vectors)} from configured {len(layer_names)} layers."
+        )
+
+    weight_sum = float(sum(available_weights))
+    if weight_sum <= 0.0:
+        raise RuntimeError("Multi-layer embedding weights collapsed to zero after per-detection fallback.")
+
+    scaled_parts = [
+        vec * float(weight / weight_sum) for vec, weight in zip(available_vectors, available_weights)
+    ]
+    combined = np.concatenate(scaled_parts, axis=0).astype(np.float32, copy=False)
+    return l2_normalize(combined), any(small_flags)
+
+
 def _layer_manifest_section(cfg: HookConfig) -> dict[str, Any]:
+    resolved_layers = list(cfg.layers) if cfg.layers else [cfg.layer]
+    layer_weights = list(cfg.layer_weights) if cfg.layer_weights else [1.0]
+    embedding_layers_payload = [
+        {"layer": layer_name, "weight": float(weight)}
+        for layer_name, weight in zip(resolved_layers, layer_weights)
+    ]
     return {
         "aliases": list(ACTIVATION_LAYER_ALIASES),
         "requested": cfg.requested_layer,
         "resolved": cfg.layer,
-        "actual": {"resolved_hook_layer": cfg.layer},
+        "actual": {"resolved_hook_layer": cfg.layer, "resolved_hook_layers": resolved_layers},
         "strides": {"resolved_hook_layer": cfg.stride},
+        "embedding": {
+            "enabled": bool(cfg.multi_layer_enabled),
+            "resolved_layers": resolved_layers,
+            "layer_weights": layer_weights,
+            "layers": embedding_layers_payload,
+        },
     }
 
 
@@ -107,51 +281,86 @@ def collect_single_pass_trace(
     pool = torch.nn.AdaptiveAvgPool2d(POOL_SIZE)
     frames: list[CollectedFrame] = []
     stats = CollectionStats()
+    layer_names = tuple(hook_config.layers) if hook_config.layers else (hook_config.layer,)
+    layer_weights = tuple(hook_config.layer_weights) if hook_config.layer_weights else (1.0,)
+    is_multi = bool(hook_config.multi_layer_enabled and len(layer_names) > 1)
+    warn_once: set[str] = set()
 
-    def process_batch(batch_items: list[tuple[int, Any]], hooks: FeatureHookCollector) -> None:
+    def process_batch(batch_items: list[tuple[int, Any]]) -> None:
         if not batch_items:
             return
 
-        hooks.clear()
-        batch_images = [frame for _, frame in batch_items]
-        results = yolo(batch_images, verbose=False)
-        if len(results) != len(batch_items):
-            raise RuntimeError("YOLO result count does not match inference batch size")
-        if hook_config.layer not in hooks.outputs:
-            raise RuntimeError("Expected hook outputs were not captured during YOLO forward pass")
+        # Register and remove all hooks around each forward pass to avoid stale handles in long runs.
+        with FeatureHookCollector(module_map=module_map, layer_names=list(layer_names)) as hooks:
+            hooks.clear()
+            batch_images = [frame for _, frame in batch_items]
+            results = yolo(batch_images, verbose=False)
+            if len(results) != len(batch_items):
+                raise RuntimeError("YOLO result count does not match inference batch size")
 
-        head_batch = hooks.outputs[hook_config.layer].detach().cpu()
-        if head_batch.shape[0] != len(batch_items):
-            raise RuntimeError("Hook output batch size does not match inference batch size")
+            for layer_name in layer_names:
+                if layer_name not in hooks.outputs:
+                    raise RuntimeError(f"Expected hook output for layer '{layer_name}' was not captured.")
 
-        for index, (frame_num, _frame) in enumerate(batch_items):
-            detections = extract_detections_from_result(results[index], sort_by_confidence=True)
-            for det in detections:
-                raw_vec, small_crop_flag = build_raw_activation_vector(
-                    fmap=head_batch[index],
-                    bbox_xyxy=det.bbox,
-                    pool=pool,
-                    frame_h=int(_frame.shape[0]),
-                    frame_w=int(_frame.shape[1]),
-                )
-                det.raw_vector = raw_vec
-                det.small_crop_flag = bool(small_crop_flag)
+            layer_outputs: dict[str, Any] = {}
+            for layer_name in layer_names:
+                output = hooks.outputs.get(layer_name)
+                if output is None:
+                    layer_outputs[layer_name] = None
+                    continue
+                if hasattr(output, "detach"):
+                    output = output.detach()
+                if hasattr(output, "cpu"):
+                    output = output.cpu()
+                layer_outputs[layer_name] = output
 
-            frames.append(CollectedFrame(frame_num=int(frame_num), detections=detections))
-            stats.total_sampled_frames += 1
-            if detections:
-                stats.frames_with_detections += 1
-            stats.total_detections += len(detections)
+            for index, (frame_num, _frame) in enumerate(batch_items):
+                detections = extract_detections_from_result(results[index], sort_by_confidence=True)
+                for det in detections:
+                    if is_multi:
+                        combined_vec, small_crop_flag = _build_weighted_embedding(
+                            layer_outputs=layer_outputs,
+                            layer_names=layer_names,
+                            layer_weights=layer_weights,
+                            batch_index=index,
+                            bbox_xyxy=det.bbox,
+                            pool=pool,
+                            frame_h=int(_frame.shape[0]),
+                            frame_w=int(_frame.shape[1]),
+                            warn_once=warn_once,
+                        )
+                        det.raw_vector = combined_vec
+                        det.small_crop_flag = bool(small_crop_flag)
+                    else:
+                        single_output = layer_outputs.get(hook_config.layer)
+                        if single_output is None:
+                            raise RuntimeError(
+                                f"Expected hook output for single layer '{hook_config.layer}' is missing."
+                            )
+                        raw_vec, small_crop_flag = build_raw_activation_vector(
+                            fmap=single_output[index],
+                            bbox_xyxy=det.bbox,
+                            pool=pool,
+                            frame_h=int(_frame.shape[0]),
+                            frame_w=int(_frame.shape[1]),
+                        )
+                        det.raw_vector = raw_vec
+                        det.small_crop_flag = bool(small_crop_flag)
+
+                frames.append(CollectedFrame(frame_num=int(frame_num), detections=detections))
+                stats.total_sampled_frames += 1
+                if detections:
+                    stats.frames_with_detections += 1
+                stats.total_detections += len(detections)
 
     pending: list[tuple[int, Any]] = []
-    with FeatureHookCollector(module_map=module_map, layer_names=[hook_config.layer]) as hooks:
-        for frame_num, frame in FrameSampler(video_path, sample_rate):
-            pending.append((int(frame_num), frame))
-            if len(pending) >= batch_size:
-                process_batch(pending, hooks)
-                pending = []
-        if pending:
-            process_batch(pending, hooks)
+    for frame_num, frame in FrameSampler(video_path, sample_rate):
+        pending.append((int(frame_num), frame))
+        if len(pending) >= batch_size:
+            process_batch(pending)
+            pending = []
+    if pending:
+        process_batch(pending)
 
     return frames, stats
 
@@ -180,7 +389,8 @@ def fit_pca_and_project(frames: list[CollectedFrame], pca_dim: int):
     return pca, int(effective_pca_dim)
 
 
-def build_enriched_payload(frames: list[CollectedFrame], pca_dim: int) -> list[dict[str, Any]]:
+def build_enriched_payload(frames: list[CollectedFrame], pca_dim: int, hook_config: HookConfig) -> list[dict[str, Any]]:
+    activation_layers = list(hook_config.layers) if hook_config.layers else [hook_config.layer]
     payload: list[dict[str, Any]] = []
     for frame in frames:
         detections_payload: list[dict[str, Any]] = []
@@ -196,7 +406,7 @@ def build_enriched_payload(frames: list[CollectedFrame], pca_dim: int) -> list[d
                     "activation": {
                         "vector": [float(v) for v in det.projected_vector.tolist()],
                         "dim": int(pca_dim),
-                        "layers": list(ACTIVATION_LAYER_ALIASES),
+                        "layers": activation_layers,
                         "pool": POOL_STRATEGY,
                         "projection": f"pca_{pca_dim}",
                         "small_crop_flag": bool(det.small_crop_flag),
@@ -251,6 +461,26 @@ def build_manifest(
     }
 
 
+def _build_hook_config(yolo: Any, *, layer_name: str, stride: int) -> HookConfig:
+    use_multi = bool(
+        EMBEDDING_LAYERS
+        and not _multi_layer_embedding_disabled()
+        and str(layer_name).strip() == str(DEFAULT_HEAD_LAYER)
+    )
+    if use_multi:
+        return _resolve_multi_layer_hook_config(yolo, stride)
+
+    resolved_layer = resolve_hook_layer_name(yolo, layer_name)
+    return HookConfig(
+        layer=resolved_layer,
+        stride=stride,
+        requested_layer=layer_name,
+        layers=(resolved_layer,),
+        layer_weights=(1.0,),
+        multi_layer_enabled=False,
+    )
+
+
 def run_trace_enrichment(
     *,
     video_path: str,
@@ -282,12 +512,7 @@ def run_trace_enrichment(
     artifacts = build_output_artifacts(output_dir)
 
     yolo = load_yolo(model_name)
-    resolved_layer = resolve_hook_layer_name(yolo, layer_name)
-    hook_config = HookConfig(
-        layer=resolved_layer,
-        stride=stride,
-        requested_layer=layer_name,
-    )
+    hook_config = _build_hook_config(yolo, layer_name=layer_name, stride=stride)
     frames, stats = collect_single_pass_trace(
         yolo=yolo,
         video_path=video_path,
@@ -302,7 +527,7 @@ def run_trace_enrichment(
         )
 
     pca, effective_pca_dim = fit_pca_and_project(frames, pca_dim)
-    enriched_payload = build_enriched_payload(frames, pca_dim)
+    enriched_payload = build_enriched_payload(frames, pca_dim, hook_config)
     manifest = build_manifest(
         run_config=run_config,
         hook_config=hook_config,

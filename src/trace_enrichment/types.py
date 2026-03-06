@@ -11,6 +11,9 @@ class HookConfig:
     layer: str
     stride: int
     requested_layer: str
+    layers: tuple[str, ...] = ()
+    layer_weights: tuple[float, ...] = ()
+    multi_layer_enabled: bool = False
 
 
 @dataclass(frozen=True)
