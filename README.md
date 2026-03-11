@@ -18,6 +18,22 @@ Links detections across sampled frames using cosine similarity on normalized emb
 
 ---
 
+## Known Limitations
+
+This pipeline is built on top of YOLOv8, which means its correctness is fundamentally bounded by what YOLO chooses to detect and how it classifies those detections. Several failure modes follow directly from this dependency.
+
+**YOLO class confusion introduces spurious tracks.** If YOLO misclassifies an object — for example, detecting a logo or graphic on a surface as a real-world object (a common failure mode with logos that resemble animals or everyday items) — that spurious detection enters the pipeline as a legitimate candidate. It will receive an embedding, be assigned a track ID, and may fragment nearby valid tracks if its centroid overlaps with a real object. The relink pass cannot distinguish a spurious detection from a valid one that happens to have a low DINO score.
+
+**Occlusion-induced track fragmentation is only partially recoverable.** When an object is heavily occluded, the composite embedding can drift below `similarity_threshold`, causing a track split. The DINO relink pass recovers many of these cases, but it cannot recover splits where the occluder itself generates a spurious detection at approximately the same centroid — a scenario where the spatial fallback may merge the wrong fragments.
+
+**All thresholds were tuned on a specific scenario set.** The values `similarity_threshold=0.70`, `relink_dino_threshold=0.55`, and `relink_fallback_threshold=0.40` were selected from a sweep over eight controlled scenarios. Performance on videos with different object densities, faster motion, heavier occlusion, or different YOLO class distributions may require re-tuning these parameters.
+
+**The PCA projection is fit per-run, not per-object.** The 128-D subspace is derived from all detections in a single enrichment run. In scenes with heterogeneous object types, the projection basis will be dominated by the most common object category. Rare objects or objects that appear only late in the video may be projected into a subspace that does not preserve their discriminative features well.
+
+**Layer calibration is currently class-level, not instance-level.** The separability scores used to select and weight embedding layers were computed without stable `track_id` labels (`track_id_coverage = 0.0` across all layers in the current sweep). This means the calibration measures how well layers separate object *classes*, not individual *instances* of the same class — which is the harder and more relevant problem for re-identification. Results may degrade in scenes with multiple instances of the same class (e.g., several people or several balls).
+
+---
+
 ## Multi-Layer Identity Embedding
 
 Frame-to-frame linking uses a YOLO-only multi-layer composite embedding. Layer weights are calibration-driven (see [Layer Calibration](#layer-calibration)).
@@ -257,7 +273,7 @@ python3 src/run_pipeline.py \
   --sample-rate 5 \
   --model yolov8n.pt
 ```
-Set `TRACE_DISABLE_DINO=1` to disable DINO sidecar extraction. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and marks DINO sidecars unavailable for that run while preserving YOLO enrichment.
+Set `TRACE_DISABLE_DINO=1` to disable DINO sidecar extraction. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and marks DINO sidecars unavailable for that run while preserving YOLO enrichment outputs.
 
 ### 4. Temporal linking (batch)
 ```bash
