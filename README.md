@@ -242,7 +242,7 @@ find .torch_cache/hub/checkpoints -name "dino_deitsmall8_pretrain.pth"
 python3 src/run_pipeline.py \
   --video data/raw_videos/Right_to_left.mp4 \
   --model yolov8n.pt \
-  --sample-rate 1
+  --sample-rate 5
 
 python3 src/run_temporal_linking.py \
   --enriched-json experiments/results/activation_enrichment/Right_to_left/enriched_detections.json \
@@ -263,12 +263,12 @@ When `--render-trace-proofs` is enabled, temporal linking resolves the source vi
 bash scripts/run_full_pipeline.sh
 ```
 
-Defaults to `data/raw_videos/*.mp4`, `yolov8n.pt`, `sample-rate=1`, `activation-topk=64`, `similarity-threshold=0.70`, `max-centroid-distance=0.40`, `relink-threshold=0.55`, `relink-dino-threshold=0.55`, `relink-max-gap-frames=-1`, and `relink-fallback-threshold=0.40`. Override via environment variables:
+Defaults to `data/raw_videos/*.mp4`, `yolov8n.pt`, `sample-rate=5`, `activation-topk=64`, `similarity-threshold=0.70`, `max-centroid-distance=0.40`, `relink-threshold=0.55`, `relink-dino-threshold=0.55`, `relink-max-gap-frames=-1`, and `relink-fallback-threshold=0.40`. Override via environment variables:
 
 ```bash
 MODEL=yolov8n.pt \
 VIDEO_GLOB="data/raw_videos/Right_to_left.mp4" \
-SAMPLE_RATE=1 \
+SAMPLE_RATE=5 \
 ACTIVATION_TOPK=64 \
 SIMILARITY_THRESHOLD=0.70 \
 MAX_CENTROID_DISTANCE=0.40 \
@@ -322,7 +322,7 @@ Outputs `summary.csv` with `run_id,relink_dino_threshold,relink_use_dino,total_t
 python3 src/run_pipeline.py \
   --video-dir data/raw_videos \
   --pattern "*.mp4" \
-  --sample-rate 1 \
+  --sample-rate 5 \
   --model yolov8n.pt
 ```
 Set `TRACE_DISABLE_DINO=1` to disable DINO sidecar extraction. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and marks DINO sidecars unavailable for that run while preserving YOLO enrichment outputs.
