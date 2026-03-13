@@ -239,17 +239,13 @@ find .torch_cache/hub/checkpoints -name "dino_deitsmall8_pretrain.pth"
 
 ### 1. End-to-end single video with trace proofs
 ```bash
-VIDEO="data/raw_videos/Right_to_left.mp4"
-MODEL="yolov8n.pt"
-SCENARIO="$(basename "$VIDEO" .mp4)"
-
 python3 src/run_pipeline.py \
-  --video "$VIDEO" \
-  --model "$MODEL" \
+  --video data/raw_videos/Right_to_left.mp4 \
+  --model yolov8n.pt \
   --sample-rate 1
 
 python3 src/run_temporal_linking.py \
-  --enriched-json "experiments/results/activation_enrichment/${SCENARIO}/enriched_detections.json" \
+  --enriched-json experiments/results/activation_enrichment/Right_to_left/enriched_detections.json \
   --activation-topk 64 \
   --similarity-threshold 0.70 \
   --max-centroid-distance 0.40 \
@@ -259,9 +255,53 @@ python3 src/run_temporal_linking.py \
   --relink-fallback-threshold 0.40 \
   --render-trace-proofs
 ```
-When `--render-trace-proofs` is enabled, temporal linking resolves the source video from `projection_manifest.json` by default. Add `--video "$VIDEO"` if the enrichment artifacts were moved or the stored video path is stale.
+When `--render-trace-proofs` is enabled, temporal linking resolves the source video from the sibling `projection_manifest.json` by default. Add `--video data/raw_videos/Right_to_left.mp4` if the enrichment artifacts were moved or the stored path is stale.
 
-### 2. Per-video layer sweeps
+### 2. Run full pipeline (batch loop with trace proofs)
+```bash
+for video in data/raw_videos/*.mp4; do
+  scenario="$(basename "$video" .mp4)"
+
+  python3 src/run_pipeline.py \
+    --video "$video" \
+    --model yolov8n.pt \
+    --sample-rate 1
+
+  python3 src/run_temporal_linking.py \
+    --enriched-json "experiments/results/activation_enrichment/${scenario}/enriched_detections.json" \
+    --activation-topk 64 \
+    --similarity-threshold 0.70 \
+    --max-centroid-distance 0.40 \
+    --relink-threshold 0.55 \
+    --relink-dino-threshold 0.55 \
+    --relink-max-gap-frames -1 \
+    --relink-fallback-threshold 0.40 \
+    --render-trace-proofs
+done
+```
+
+### 3. Run full pipeline script with trace proofs
+```bash
+bash scripts/run_full_pipeline.sh
+```
+The script defaults to `data/raw_videos/*.mp4`, `yolov8n.pt`, `sample-rate=1`, `activation-topk=64`, `similarity-threshold=0.70`, `max-centroid-distance=0.40`, `relink-threshold=0.55`, `relink-dino-threshold=0.55`, `relink-max-gap-frames=-1`, and `relink-fallback-threshold=0.40`.
+
+Override defaults through environment variables when needed:
+```bash
+MODEL=yolov8n.pt \
+VIDEO_GLOB="data/raw_videos/Right_to_left.mp4" \
+SAMPLE_RATE=1 \
+ACTIVATION_TOPK=64 \
+SIMILARITY_THRESHOLD=0.70 \
+MAX_CENTROID_DISTANCE=0.40 \
+RELINK_THRESHOLD=0.55 \
+RELINK_DINO_THRESHOLD=0.55 \
+RELINK_MAX_GAP_FRAMES=-1 \
+RELINK_FALLBACK_THRESHOLD=0.40 \
+bash scripts/run_full_pipeline.sh
+```
+
+### 4. Per-video layer sweeps
 Instance-level sweep (recommended when detections include stable `track_id`):
 ```bash
 for v in data/raw_videos/*.mp4; do
@@ -280,7 +320,7 @@ done
 ```
 Class-level fallback sweep (when `track_id` is unavailable) is the same command without `--require-track-id`.
 
-### 3. Aggregate layer sweeps
+### 5. Aggregate layer sweeps
 ```bash
 python3 experiments/aggregate_layer_sweeps.py \
   --input-glob "experiments/results/layer_selection/per_video/layer_stability_sweep_*.csv" \
@@ -289,7 +329,7 @@ python3 experiments/aggregate_layer_sweeps.py \
   --top-n 20
 ```
 
-### 4. Activation enrichment (batch)
+### 6. Activation enrichment (batch)
 ```bash
 python3 src/run_pipeline.py \
   --video-dir data/raw_videos \
@@ -299,7 +339,7 @@ python3 src/run_pipeline.py \
 ```
 Set `TRACE_DISABLE_DINO=1` to disable DINO sidecar extraction. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and marks DINO sidecars unavailable for that run while preserving YOLO enrichment outputs.
 
-### 5. Temporal linking (batch)
+### 7. Temporal linking (batch)
 ```bash
 for f in experiments/results/activation_enrichment/*/enriched_detections.json; do
   python3 src/run_temporal_linking.py \
@@ -316,7 +356,7 @@ done
 ```
 Add `--no-relink-dino` to force YOLO relink scoring. Add `--video /path/to/input.mp4` only when the source video cannot be resolved from the sibling `projection_manifest.json`.
 
-### 6. DINO relink threshold sweep (R0..R6)
+### 8. DINO relink threshold sweep (R0..R6)
 ```bash
 python3 experiments/run_dino_param_search.py \
   --enrichment-root experiments/results/activation_enrichment \
