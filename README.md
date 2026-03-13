@@ -1,404 +1,160 @@
 # Object Permanence
 
-An offline two-stage pipeline for identity-preserving object tracking using YOLOv8. The system builds multi-layer YOLO identity embeddings for frame-to-frame linking and uses DINO CLS vectors as relink-only sidecar evidence to verify identity across occlusion gaps.
+**Identity-preserving object tracking on top of YOLOv8 — fully offline.**
+
+Most detectors treat each frame in isolation. Object Permanence adds a temporal identity layer: every detection gets a stable ID that persists across frames, survives occlusion, and relinks after a track is lost — no cloud, no fine-tuning required.
 
 ---
 
-## Overview
-
-Most object detectors treat each frame independently. This pipeline adds a temporal identity layer on top of YOLOv8: every detection is assigned a stable identity that persists across frames, survives occlusion, and can be relinked after a track is lost.
+## How it works
 
 The pipeline runs in two offline stages:
 
-**Stage 1 - Trace Enrichment** (`src/run_pipeline.py`)
-Samples frames from video, runs YOLOv8, extracts multi-layer feature embeddings per detection, and projects all embeddings to a 128-D target embedding via PCA (actual per-run output dim can be lower when sample count is small).
+**Stage 1 — Enrichment** &nbsp;`src/run_pipeline.py`
+Runs YOLOv8 on sampled frames, extracts multi-layer feature embeddings per detection, and compresses them to a 128-D identity vector via PCA.
 
-**Stage 2 - Temporal Linking** (`src/run_temporal_linking.py`)
-Links detections across sampled frames using cosine similarity on normalized embeddings. Enforces one-to-one assignment via the Hungarian algorithm and runs a relink pass to recover fragmented tracks after occlusions.
+**Stage 2 — Linking** &nbsp;`src/run_temporal_linking.py`
+Links detections across frames using cosine similarity + the Hungarian algorithm for one-to-one assignment, then runs a relink pass to recover tracks fragmented by occlusion.
 
----
+### Identity embedding
 
-## Known Limitations
+Frame-to-frame matching uses a weighted composite of three YOLO layers, each chosen for a different role:
 
-This pipeline is built on top of YOLOv8, which means its correctness is fundamentally bounded by what YOLO chooses to detect and how it classifies those detections. Several failure modes follow directly from this dependency.
+| Layer | Role | Why |
+|---|---|---|
+| `4.cv1` | Appearance | Early backbone — texture, color |
+| `15` | Structure | Mid-neck — spatial context, pose stability |
+| `22.cv3.0` | Class gate | Detection head — consistency check |
 
-**YOLO class confusion introduces spurious tracks.** If YOLO misclassifies an object — for example, detecting a logo or graphic on a surface as a real-world object (a common failure mode with logos that resemble animals or everyday items) — that spurious detection enters the pipeline as a legitimate candidate. It will receive an embedding, be assigned a track ID, and may fragment nearby valid tracks if its centroid overlaps with a real object. The relink pass cannot distinguish a spurious detection from a valid one that happens to have a low DINO score.
-
-**Occlusion-induced track fragmentation is only partially recoverable.** When an object is heavily occluded, the composite embedding can drift below `similarity_threshold`, causing a track split. The DINO relink pass recovers many of these cases, but it cannot recover splits where the occluder itself generates a spurious detection at approximately the same centroid — a scenario where the spatial fallback may merge the wrong fragments.
-
-**All thresholds were tuned on a specific scenario set.** The values `similarity_threshold=0.70`, `relink_dino_threshold=0.55`, and `relink_fallback_threshold=0.40` were selected from a sweep over eight controlled scenarios. Performance on videos with different object densities, faster motion, heavier occlusion, or different YOLO class distributions may require re-tuning these parameters.
-
-**The PCA projection is fit per-run, not per-object.** The 128-D subspace is derived from all detections in a single enrichment run. In scenes with heterogeneous object types, the projection basis will be dominated by the most common object category. Rare objects or objects that appear only late in the video may be projected into a subspace that does not preserve their discriminative features well.
-
-**Layer calibration is currently class-level, not instance-level.** The separability scores used to select and weight embedding layers were computed without stable `track_id` labels (`track_id_coverage = 0.0` across all layers in the current sweep). This means the calibration measures how well layers separate object *classes*, not individual *instances* of the same class — which is the harder and more relevant problem for re-identification. Results may degrade in scenes with multiple instances of the same class (e.g., several people or several balls).
+[DINO](https://github.com/facebookresearch/dino) `ViT-S/8` CLS vectors are extracted as a **relink-only sidecar** — not used for frame-to-frame matching (where stability matters) but brought in during the relink pass (where discriminability matters most).
 
 ---
 
-## Multi-Layer Identity Embedding
-
-Frame-to-frame linking uses a YOLO-only multi-layer composite embedding. Layer weights are calibration-driven (see [Layer Calibration](#layer-calibration)).
-
-| Layer | Tier | Raw Dim | Sweep Separability | Weight |
-|---|---|---:|---:|---:|
-| `4.cv1` | Appearance | 64 | 15.495 | 0.549 |
-| `15` | Semantic | 64 | 9.926 | 0.351 |
-| `22.cv3.0` | Class-level | 80 | 13.902 | 0.100 |
-
-**Why these YOLO tiers?**
-- **Appearance (4.cv1):** Early backbone activations encode texture and color patterns, a strong signal for distinguishing objects that look different.
-- **Semantic (15):** Mid-network neck activations encode spatial context and object structure, which stays stable across viewpoint changes and partial occlusion.
-- **Class-level (22.cv3.0):** Detection-head activations encode class probability space. It is retained as a class-consistency gate but weighted conservatively because same-class instances are often near-identical in this space.
-
-### DINO Methodology (Relink-Only Re-identification)
-
-DINO is intentionally not used for frame-to-frame assignment. Consecutive-frame linking benefits from **stability** under small pose/lighting jitter, while relinking fragmented tracks needs **discriminability** to avoid false identity merges.
-
-The implementation therefore treats DINO CLS as relink-only evidence:
-- Extract DINO per detection during enrichment and store it as sidecar metadata.
-- Aggregate sidecar vectors at track close time into a track-level DINO representative.
-- Use DINO cosine only in relink candidate scoring when both fragments have valid DINO representatives.
-- Fall back to YOLO relink scoring when DINO is missing, and keep spatial fallback as a third pass.
-
-### Implementation Details
-
-**Embedding construction per detection (enrichment):**
-1. Register forward hooks on configured YOLO embedding layers.
-2. Run YOLO forward pass and map each detection ROI onto each hooked feature map.
-3. Adaptive-average pool each YOLO layer ROI, L2-normalize per-layer vectors, apply YOLO layer weights, concatenate, then L2-normalize to a YOLO composite vector (`208-D`).
-4. Fit PCA on run detections and reduce raw YOLO embeddings to a `128-D` target projection (or lower effective dim when detections are fewer than 128). PCA is used for compression, not expansion.
-5. Separately extract DINO CLS (`384-D`, L2-normalized) from padded detection crops and store as sidecar:
-   - `activation.dino_vector` (`list[float]` or `null`)
-   - `activation.dino_available` (`bool`)
-6. `projection_manifest.json` records DINO sidecar role and runtime state:
-   - `dino_role = "relink_sidecar"`
-   - `dino_enabled`, `dino_model`, `dino_load_error`
-
-**Resilience:**
-- Hooks are registered and removed atomically around each forward pass to prevent memory leaks in long-running sessions.
-- If a YOLO layer is unavailable in a model variant, remaining layer weights are renormalized to sum to 1.
-- If fewer than 2 embedding layers are available, enrichment raises a clear error rather than silently degrading.
-- Single-layer fallback is available via `TRACE_DISABLE_MULTI_LAYER_EMBEDDING=1`.
-- DINO can be disabled via `TRACE_DISABLE_DINO=1`.
-- If DINO load fails (e.g., offline and uncached), enrichment logs a warning and marks DINO sidecars unavailable while preserving YOLO enrichment outputs.
-- Tiny/invalid DINO crops are treated as unavailable sidecars (`dino_vector = null`, `dino_available = false`).
-- `projection_manifest.json` records both actual `projection_dim` and requested `projection_dim_requested`.
-
-Embedding configuration lives in `src/trace_enrichment/constants.py`:
-- `EMBEDDING_LAYERS`: YOLO per-layer weights.
-- `DINO_EMBEDDING_DIM`: sidecar DINO vector dimension (`384`).
-
----
-
-## Temporal Linking
-
-Frame-to-frame linking operates on cosine similarity between normalized projected embeddings.
-
-**Matching:**
-- Similarity gate: `visual_similarity >= similarity_threshold` (recommended `0.70`).
-- Spatial plausibility gate: centroid distance must be <= `max_centroid_distance` (default `0.40`, normalized by frame diagonal) before cosine scoring.
-- Assignment: Hungarian algorithm for globally consistent one-to-one matching per frame pair.
-
-**Track state machine:**
-```text
-TENTATIVE -> ACTIVE -> LOST -> CLOSED
-```
-
-Reference descriptors blend last, EMA, and history vectors for stability against appearance drift.
-
-**Relink pass:**
-After the primary linking run, a second pass evaluates pairs of closed track fragments to recover identities split by occlusion:
-- Enforces class consistency and temporal ordering constraints.
-- Scores identity by method:
-  - `dino`: cosine on track-level DINO representatives when both are available and `relink_use_dino=true` (gate: `relink_dino_threshold`).
-  - `yolo`: cosine on YOLO fragment centroids when DINO is unavailable or disabled (gate: `relink_threshold`).
-- Falls back to spatial plausibility (`spatial`) as a third pass for unresolved pairs (gate: `relink_fallback_threshold`).
-- Merges accepted chains into canonical track IDs.
-- Records DINO contribution metrics in `relink_manifest.json`: `relink_dino_coverage`, `relink_dino_accepted`, `relink_yolo_accepted`.
-
----
-
-## Layer Calibration
-
-Layer selection is driven by a separability metric, a Fisher-style ratio measuring how well each layer's activations separate different objects while remaining consistent within an object.
-When `--dino` is enabled in the sweep script, `dino_cls` is evaluated as an additional candidate alongside YOLO module layers.
-
-**Metrics computed per layer:**
-- `within_var`: mean per-group variance across feature dimensions.
-- `between_var`: variance of per-group mean vectors across dimensions.
-- `separability = between_var / (within_var + 1e-8)`.
-- `track_id_coverage`: fraction of grouped detections using `track_id` (vs class fallback).
-
-**Grouping policy:** use `track_id` when available on detections; fallback to `class_id` unless `--require-track-id` is set.
-Instance-level grouping is preferred for re-identification calibration. When `track_id_coverage` is low, separability mostly reflects class-level separation.
-
-**Current calibration context:** the aggregate leaderboard below was produced with class-level fallback (`track_id_coverage = 0.0` across layers). Treat it as class-separability guidance, not instance-level ID calibration.
-
-**Ranking policy:** descending `separability` -> descending `mean_consecutive_cosine` -> ascending `layer_name`.
-
-**Degenerate handling:** layers with fewer than 2 distinct groups receive `separability = 0.0` and emit a warning.
-Layers with `track_id_coverage < 0.30` emit warnings, and aggregate winner selection emits a warning if `mean_track_id_coverage < 0.50`.
-
-**Winner selection constraints:**
-- Exclude layers with `feature_dim < 32`.
-- Deduplicate `.conv` child entries when the parent `Conv` module is already present.
-
-**Current aggregate leaderboard (top 5, constrained):**
-
-| Rank | Layer | Type | Feature Dim | Mean Separability | Mean Cosine | Mean Track Coverage |
-|---|---|---:|---:|---:|---:|---:|
-| 1 | `2.cv1` | Conv | 32 | 15.911 | 0.9776 | 0.0000 |
-| 2 | `1` | Conv | 32 | 15.675 | 0.9440 | 0.0000 |
-| 3 | `4.cv1` | Conv | 64 | 15.495 | 0.9673 | 0.0000 |
-| 4 | `22.cv3.0` | Sequential | 80 | 13.902 | 0.9981 | 0.0000 |
-| 5 | `15` | C2f | 64 | 9.926 | 0.9809 | 0.0000 |
-
-If sweeps are run without tracking-enabled detections, `track_id_coverage` can be `0.0` across layers. In that case, separability rankings should be treated as class-level approximations until sweeps are rerun with stable track IDs (recommended: `--dino --require-track-id`).
-
-Calibration artifacts:
-```text
-experiments/results/layer_selection/per_video/layer_stability_sweep_<scenario>.csv
-experiments/results/layer_selection/aggregate/aggregate_separability.csv
-```
-
----
-
-## Experiment Results
-
-### Top-k Linking Evaluation (`Right_to_left`)
-
-| k | within_early | within_late | cross | ball_tracks | total_tracks | valid_tracks |
-|---:|---:|---:|---:|---:|---:|---:|
-| 12 | 0.8380 | 0.7886 | 0.7141 | 1 | 5 | 3 |
-| 64 | 0.8288 | 0.7711 | 0.7044 | 1 | 5 | 3 |
-
-Default: `--activation-topk 64`.
-
-### End-to-End Scenario Results
-
-Configuration below reflects the DINO relink-sidecar run (`R4`): embedding layers `4.cv1 + 15 + 22.cv3.0` with weights `0.549/0.351/0.100`, raw YOLO dim `208`, PCA target `128` (effective dim may be lower on small runs), DINO sidecar dim `384`, `activation_topk=64`, `similarity_threshold=0.70`, `max_centroid_distance=0.40`, `relink_use_dino=true`, `relink_dino_threshold=0.55`, `relink_threshold=0.55`, `relink_max_gap_frames=-1`, `relink_fallback_threshold=0.40`.
-
-| Scenario | Frames | Detections | Ball Tracks | Total Tracks | Valid Tracks | Relink Edges |
-|---|---:|---:|---:|---:|---:|---:|
-| 10sec_Left_to_Right | 133 | 160 | 1 | 6 | 5 | 1 |
-| 3sec_Left_to_Right | 49 | 77 | 1 | 6 | 5 | 1 |
-| Exit_frame_while_occluded | 53 | 72 | 1 | 5 | 4 | 0 |
-| Left_bounce_back | 64 | 105 | 1 | 5 | 4 | 2 |
-| Left_to_right | 25 | 52 | 1 | 6 | 5 | 1 |
-| No_occlusion_ball_removed | 34 | 37 | 1 | 9 | 4 | 1 |
-| Occlusion_ball_removed | 48 | 114 | 1 | 14 | 8 | 2 |
-| Right_to_left | 21 | 40 | 1 | 4 | 3 | 1 |
-| **Totals** | **427** | **657** | **8** | **55** | **38** | **9** |
-
-### DINO Relink Threshold Sweep (totals)
-
-All runs used the same configuration as above except `relink_use_dino` / `relink_dino_threshold`.
-
-| Run | relink_use_dino | relink_dino_threshold | Total Tracks | Valid Tracks | Relink Edges | relink_dino_coverage |
-|---|---:|---:|---:|---:|---:|---:|
-| R0 | false | — | 56 | 39 | 8 | 0.000 |
-| R1 | true | 0.40 | 55 | 38 | 9 | 1.000 |
-| R2 | true | 0.45 | 55 | 38 | 9 | 1.000 |
-| R3 | true | 0.50 | 55 | 38 | 9 | 1.000 |
-| R4 | true | 0.55 | 55 | 38 | 9 | 1.000 |
-| R5 | true | 0.60 | 56 | 39 | 8 | 1.000 |
-| R6 | true | 0.65 | 56 | 39 | 8 | 1.000 |
-
-Winner under constraint (`total_tracks <= R0`) is `R1`; `R1` through `R4` tie on aggregate metrics.
-
----
-
-## Setup
+## Quick start
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install --upgrade pip
-python3 -m pip install -r requirements.txt
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### DINO installation (one-time cache warmup)
-```bash
-export TORCH_HOME="$PWD/.torch_cache"
-export SSL_CERT_FILE="$(python3 -c 'import certifi; print(certifi.where())')"
-
-python3 - <<'PY'
-import torch
-_ = torch.hub.load("facebookresearch/dino:main", "dino_vits8")
-print("DINO cached in:", torch.hub.get_dir())
-PY
-```
-
-Verify weights exist:
-```bash
-find .torch_cache/hub/checkpoints -name "dino_deitsmall8_pretrain.pth"
-```
-
----
-
-## Run Commands
-
-### 1. End-to-end single video with trace proofs
+**Single video:**
 ```bash
 python3 src/run_pipeline.py \
-  --video data/raw_videos/Right_to_left.mp4 \
+  --video data/raw_videos/my_clip.mp4 \
   --model yolov8n.pt \
   --sample-rate 1
 
 python3 src/run_temporal_linking.py \
-  --enriched-json experiments/results/activation_enrichment/Right_to_left/enriched_detections.json \
-  --activation-topk 64 \
-  --similarity-threshold 0.70 \
-  --max-centroid-distance 0.40 \
-  --relink-threshold 0.55 \
-  --relink-dino-threshold 0.55 \
-  --relink-max-gap-frames -1 \
-  --relink-fallback-threshold 0.40 \
+  --enriched-json experiments/results/activation_enrichment/my_clip/enriched_detections.json \
   --render-trace-proofs
 ```
-When `--render-trace-proofs` is enabled, temporal linking resolves the source video from the sibling `projection_manifest.json` by default. Add `--video data/raw_videos/Right_to_left.mp4` if the enrichment artifacts were moved or the stored path is stale.
 
-### 2. Run full pipeline (batch loop with trace proofs)
-```bash
-for video in data/raw_videos/*.mp4; do
-  scenario="$(basename "$video" .mp4)"
-
-  python3 src/run_pipeline.py \
-    --video "$video" \
-    --model yolov8n.pt \
-    --sample-rate 1
-
-  python3 src/run_temporal_linking.py \
-    --enriched-json "experiments/results/activation_enrichment/${scenario}/enriched_detections.json" \
-    --activation-topk 64 \
-    --similarity-threshold 0.70 \
-    --max-centroid-distance 0.40 \
-    --relink-threshold 0.55 \
-    --relink-dino-threshold 0.55 \
-    --relink-max-gap-frames -1 \
-    --relink-fallback-threshold 0.40 \
-    --render-trace-proofs
-done
-```
-
-### 3. Run full pipeline script with trace proofs
+**All videos at once:**
 ```bash
 bash scripts/run_full_pipeline.sh
 ```
-The script defaults to `data/raw_videos/*.mp4`, `yolov8n.pt`, `sample-rate=1`, `activation-topk=64`, `similarity-threshold=0.70`, `max-centroid-distance=0.40`, `relink-threshold=0.55`, `relink-dino-threshold=0.55`, `relink-max-gap-frames=-1`, and `relink-fallback-threshold=0.40`.
 
-Override defaults through environment variables when needed:
-```bash
-MODEL=yolov8n.pt \
-VIDEO_GLOB="data/raw_videos/Right_to_left.mp4" \
-SAMPLE_RATE=1 \
-ACTIVATION_TOPK=64 \
-SIMILARITY_THRESHOLD=0.70 \
-MAX_CENTROID_DISTANCE=0.40 \
-RELINK_THRESHOLD=0.55 \
-RELINK_DINO_THRESHOLD=0.55 \
-RELINK_MAX_GAP_FRAMES=-1 \
-RELINK_FALLBACK_THRESHOLD=0.40 \
-bash scripts/run_full_pipeline.sh
+> **First run with DINO?** Warm the cache once before going offline:
+> ```bash
+> export TORCH_HOME="$PWD/.torch_cache"
+> python3 -c "import torch; torch.hub.load('facebookresearch/dino:main', 'dino_vits8')"
+> ```
+
+---
+
+## Results
+
+Evaluated across 8 scenarios (occlusion, removal, direction changes, bounce-back). Default config: `similarity_threshold=0.70`, `relink_dino_threshold=0.55`, `relink_fallback_threshold=0.40`.
+
+| Scenario | Frames | Detections | Ball Tracks | Valid Tracks | Relinks |
+|---|---:|---:|---:|---:|---:|
+| 10sec Left→Right | 133 | 160 | 1 | 5 | 1 |
+| 3sec Left→Right | 49 | 77 | 1 | 5 | 1 |
+| Exit while occluded | 53 | 72 | 1 | 4 | 0 |
+| Left bounce back | 64 | 105 | 1 | 4 | 2 |
+| Left→Right | 25 | 52 | 1 | 5 | 1 |
+| Ball removed (clear) | 34 | 37 | 1 | 4 | 1 |
+| Ball removed (occluded) | 48 | 114 | 1 | 8 | 2 |
+| Right→Left | 21 | 40 | 1 | 3 | 1 |
+| **Total** | **427** | **657** | **8** | **38** | **9** |
+
+DINO relinking (`R1`–`R4`) consistently adds one relink edge vs. the YOLO-only baseline (`R0`) without increasing total track count.
+
+---
+
+## Output
+
+```
+experiments/results/
+  activation_enrichment/<scenario>/
+    enriched_detections.json
+    pca_projection.pkl
+    projection_manifest.json          ← DINO sidecar role + runtime state
+  linking/<scenario>/
+    linked_detections.json
+    tracks.json
+    relink_manifest.json              ← DINO/YOLO relink coverage metrics
+    trace_proofs/                     ← visual proof images per relink
 ```
 
-### 4. Per-video layer sweeps
-Instance-level sweep (recommended when detections include stable `track_id`):
+---
+
+## Configuration
+
+All defaults live in `src/trace_enrichment/constants.py`. Key knobs:
+
+| Parameter | Default | What it controls |
+|---|---:|---|
+| `similarity_threshold` | `0.70` | Frame-to-frame match gate |
+| `max_centroid_distance` | `0.40` | Spatial plausibility gate (normalized) |
+| `relink_dino_threshold` | `0.55` | DINO relink acceptance |
+| `relink_threshold` | `0.55` | YOLO relink fallback |
+| `relink_fallback_threshold` | `0.40` | Spatial-only last resort |
+
+Disable DINO entirely: `TRACE_DISABLE_DINO=1`
+Force single-layer mode: `TRACE_DISABLE_MULTI_LAYER_EMBEDDING=1`
+
+---
+
+## Known limitations
+
+- **Spurious YOLO detections** (e.g. logos misclassified as objects) enter the pipeline as valid candidates and can fragment nearby real tracks. The relink pass has no way to distinguish them.
+- **Layer calibration is class-level, not instance-level.** The separability sweep ran without stable `track_id` labels, so weights reflect class separation — the easier problem. Scenes with multiple instances of the same class (several people, several balls) may need re-calibration with `--require-track-id`.
+- **Thresholds were tuned on 8 controlled scenarios.** Faster motion, denser scenes, or different class distributions may need a re-sweep.
+- **PCA basis is fit per run, not per object.** Rare objects or late-appearing objects may be projected into a subspace dominated by more common categories.
+
+---
+
+## Advanced usage
+
+<details>
+<summary>Re-run the layer calibration sweep</summary>
+
 ```bash
+# Per-video sweep
 for v in data/raw_videos/*.mp4; do
   stem="$(basename "$v" .mp4)"
   python3 experiments/layer_stability_sweep.py \
-    --video "$v" \
-    --model yolov8n.pt \
-    --sample-rate 1 \
-    --max-sampled-frames 20 \
-    --class-id -1 \
-    --min-confidence 0.25 \
-    --dino \
-    --require-track-id \
+    --video "$v" --model yolov8n.pt --sample-rate 1 \
+    --dino --require-track-id \
     --output-csv "experiments/results/layer_selection/per_video/layer_stability_sweep_${stem}.csv"
 done
-```
-Class-level fallback sweep (when `track_id` is unavailable) is the same command without `--require-track-id`.
 
-### 5. Aggregate layer sweeps
-```bash
+# Aggregate
 python3 experiments/aggregate_layer_sweeps.py \
-  --input-glob "experiments/results/layer_selection/per_video/layer_stability_sweep_*.csv" \
-  --output-csv experiments/results/layer_selection/aggregate/aggregate_separability.csv \
-  --winner-min-feature-dim 32 \
-  --top-n 20
+  --input-glob "experiments/results/layer_selection/per_video/*.csv" \
+  --output-csv experiments/results/layer_selection/aggregate/aggregate_separability.csv
 ```
+</details>
 
-### 6. Activation enrichment (batch)
-```bash
-python3 src/run_pipeline.py \
-  --video-dir data/raw_videos \
-  --pattern "*.mp4" \
-  --sample-rate 1 \
-  --model yolov8n.pt
-```
-Set `TRACE_DISABLE_DINO=1` to disable DINO sidecar extraction. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and marks DINO sidecars unavailable for that run while preserving YOLO enrichment outputs.
+<details>
+<summary>DINO relink threshold sweep (R0–R6)</summary>
 
-### 7. Temporal linking (batch)
-```bash
-for f in experiments/results/activation_enrichment/*/enriched_detections.json; do
-  python3 src/run_temporal_linking.py \
-    --enriched-json "$f" \
-    --activation-topk 64 \
-    --similarity-threshold 0.70 \
-    --max-centroid-distance 0.40 \
-    --relink-threshold 0.55 \
-    --relink-dino-threshold 0.55 \
-    --relink-max-gap-frames -1 \
-    --relink-fallback-threshold 0.40 \
-    --render-trace-proofs
-done
-```
-Add `--no-relink-dino` to force YOLO relink scoring. Add `--video /path/to/input.mp4` only when the source video cannot be resolved from the sibling `projection_manifest.json`.
-
-### 8. DINO relink threshold sweep (R0..R6)
 ```bash
 python3 experiments/run_dino_param_search.py \
   --enrichment-root experiments/results/activation_enrichment \
   --output-root experiments/results/param_search
 ```
-Outputs:
-- `summary.csv` with `run_id,relink_dino_threshold,relink_use_dino,total_tracks,valid_tracks,relink_edges,relink_dino_accepted,relink_yolo_accepted,relink_dino_coverage,fragmentation_ratio,delta_valid_vs_baseline`
-- Per-run scenario artifacts under `param_search/R0` ... `param_search/R6`
 
----
-
-## Output Layout
-
-```text
-experiments/results/
-  layer_selection/
-    per_video/
-      layer_stability_sweep_<scenario>.csv
-    aggregate/
-      aggregate_separability.csv
-  activation_enrichment/
-    <scenario>/
-      enriched_detections.json
-      pca_projection.pkl
-      projection_manifest.json
-  linking/
-    <scenario>/
-      linked_detections.json
-      tracks.json
-      linking_manifest.json
-      relink_manifest.json
-      trace_references.json
-      trace_proofs/
-        relink_<pred>_<succ>.jpg
-        recovery_<track>_<frame>.jpg
-  param_search/
-    summary.csv
-    R0/
-      <scenario>/...
-    R1/
-      <scenario>/...
-    ...
-    R6/
-      <scenario>/...
-```
+Outputs `summary.csv` plus per-run artifacts under `param_search/R0` … `param_search/R6`.
+</details>
