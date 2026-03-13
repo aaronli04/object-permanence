@@ -14,7 +14,7 @@ from temporal_linking.config import TemporalLinkingConfig
 from temporal_linking.relink import run_relink
 from temporal_linking.serialize import build_relink_manifest
 from temporal_linking.tracker import TrackManager
-from temporal_linking.types import Assignment, Detection, Track, TrackStatus
+from temporal_linking.types import Assignment, Detection, DinoObservationSample, Track, TrackStatus
 
 
 def _normalize(vec: np.ndarray) -> np.ndarray:
@@ -67,7 +67,7 @@ def _make_closed_track(
     frame_start: int,
     frame_end: int,
     yolo_vec: np.ndarray,
-    dino_vec: np.ndarray | None,
+    dino_vecs: list[np.ndarray] | None,
 ) -> Track:
     yolo_unit = _normalize(yolo_vec)
     track = Track(
@@ -84,7 +84,24 @@ def _make_closed_track(
         (10.0, 10.0, frame_start),
         (10.0, 10.0, frame_end),
     ]
-    track.dino_vector = _normalize(dino_vec) if dino_vec is not None else None
+    track.obs_dino_samples = []
+    if dino_vecs:
+        frame_nums = [frame_start, frame_end]
+        if len(dino_vecs) > len(frame_nums):
+            frame_nums.extend([frame_end] * (len(dino_vecs) - len(frame_nums)))
+        for frame_num, dino_vec in zip(frame_nums, dino_vecs):
+            unit = _normalize(dino_vec)
+            track.obs_dino_samples.append(
+                DinoObservationSample(
+                    frame_num=int(frame_num),
+                    confidence=0.95,
+                    vector=unit,
+                )
+            )
+        stacked = np.stack([sample.vector for sample in track.obs_dino_samples], axis=0)
+        track.dino_vector = _normalize(np.mean(stacked, axis=0).astype(np.float32))
+    else:
+        track.dino_vector = None
     return track
 
 
@@ -158,7 +175,7 @@ class RelinkDinoTests(unittest.TestCase):
 
         self.assertIsNone(track.dino_vector)
 
-    def test_relink_uses_dino_when_both_track_vectors_available(self) -> None:
+    def test_relink_uses_dino_when_both_track_galleries_available(self) -> None:
         cfg = TemporalLinkingConfig(
             similarity_threshold=0.7,
             relink_min_track_hits=1,
@@ -172,14 +189,20 @@ class RelinkDinoTests(unittest.TestCase):
             frame_start=0,
             frame_end=5,
             yolo_vec=np.asarray([1.0, 0.0], dtype=np.float32),
-            dino_vec=np.asarray([1.0, 0.0], dtype=np.float32),
+            dino_vecs=[
+                np.asarray([1.0, 0.0], dtype=np.float32),
+                np.asarray([0.95, 0.05], dtype=np.float32),
+            ],
         )
         succ = _make_closed_track(
             track_id=2,
             frame_start=10,
             frame_end=15,
             yolo_vec=np.asarray([-1.0, 0.0], dtype=np.float32),
-            dino_vec=np.asarray([0.95, 0.05], dtype=np.float32),
+            dino_vecs=[
+                np.asarray([0.95, 0.05], dtype=np.float32),
+                np.asarray([1.0, 0.0], dtype=np.float32),
+            ],
         )
         _merge_map, relink_result = run_relink([pred, succ], cfg)
         accepted = relink_result["accepted_edges"]
@@ -205,14 +228,54 @@ class RelinkDinoTests(unittest.TestCase):
             frame_start=0,
             frame_end=5,
             yolo_vec=np.asarray([1.0, 0.0], dtype=np.float32),
-            dino_vec=None,
+            dino_vecs=None,
         )
         succ = _make_closed_track(
             track_id=2,
             frame_start=10,
             frame_end=15,
             yolo_vec=np.asarray([0.95, 0.05], dtype=np.float32),
-            dino_vec=np.asarray([1.0, 0.0], dtype=np.float32),
+            dino_vecs=[
+                np.asarray([1.0, 0.0], dtype=np.float32),
+                np.asarray([0.95, 0.05], dtype=np.float32),
+            ],
+        )
+        _merge_map, relink_result = run_relink([pred, succ], cfg)
+        accepted = relink_result["accepted_edges"]
+        stats = relink_result["stats"]
+
+        self.assertEqual(len(accepted), 1)
+        self.assertEqual(accepted[0]["method"], "yolo")
+        self.assertEqual(int(stats["relink_dino_accepted"]), 0)
+        self.assertEqual(int(stats["relink_yolo_accepted"]), 1)
+        self.assertAlmostEqual(float(stats["relink_dino_coverage"]), 0.0, places=6)
+
+    def test_relink_falls_back_to_yolo_when_gallery_below_min_detections(self) -> None:
+        cfg = TemporalLinkingConfig(
+            similarity_threshold=0.7,
+            relink_min_track_hits=1,
+            relink_threshold=0.80,
+            relink_dino_threshold=0.95,
+            relink_fallback_threshold=1.0,
+            relink_use_dino=True,
+            relink_dino_min_detections=2,
+        )
+        pred = _make_closed_track(
+            track_id=1,
+            frame_start=0,
+            frame_end=5,
+            yolo_vec=np.asarray([1.0, 0.0], dtype=np.float32),
+            dino_vecs=[np.asarray([1.0, 0.0], dtype=np.float32)],
+        )
+        succ = _make_closed_track(
+            track_id=2,
+            frame_start=10,
+            frame_end=15,
+            yolo_vec=np.asarray([0.95, 0.05], dtype=np.float32),
+            dino_vecs=[
+                np.asarray([1.0, 0.0], dtype=np.float32),
+                np.asarray([0.95, 0.05], dtype=np.float32),
+            ],
         )
         _merge_map, relink_result = run_relink([pred, succ], cfg)
         accepted = relink_result["accepted_edges"]
@@ -238,14 +301,20 @@ class RelinkDinoTests(unittest.TestCase):
             frame_start=0,
             frame_end=5,
             yolo_vec=np.asarray([1.0, 0.0], dtype=np.float32),
-            dino_vec=np.asarray([1.0, 0.0], dtype=np.float32),
+            dino_vecs=[
+                np.asarray([1.0, 0.0], dtype=np.float32),
+                np.asarray([0.95, 0.05], dtype=np.float32),
+            ],
         )
         succ = _make_closed_track(
             track_id=2,
             frame_start=10,
             frame_end=15,
             yolo_vec=np.asarray([0.95, 0.05], dtype=np.float32),
-            dino_vec=np.asarray([1.0, 0.0], dtype=np.float32),
+            dino_vecs=[
+                np.asarray([1.0, 0.0], dtype=np.float32),
+                np.asarray([0.95, 0.05], dtype=np.float32),
+            ],
         )
         _merge_map, relink_result = run_relink([pred, succ], cfg)
         accepted = relink_result["accepted_edges"]
@@ -273,6 +342,8 @@ class RelinkDinoTests(unittest.TestCase):
         self.assertAlmostEqual(float(manifest["stats"]["relink_dino_coverage"]), 0.5, places=6)
         self.assertIn("relink_use_dino", manifest["config"])
         self.assertIn("relink_dino_threshold", manifest["config"])
+        self.assertIn("relink_dino_gallery_size", manifest["config"])
+        self.assertIn("relink_dino_gallery_topk", manifest["config"])
 
 
 if __name__ == "__main__":

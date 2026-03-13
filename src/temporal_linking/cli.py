@@ -176,6 +176,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Disable DINO relink scoring and force YOLO centroid relink path.",
     )
     parser.add_argument(
+        "--relink-dino-gallery-size",
+        type=int,
+        default=int(_CFG_DEFAULTS["relink_dino_gallery_size"]),
+        help="Maximum number of representative DINO samples kept per closed fragment for relink scoring.",
+    )
+    parser.add_argument(
+        "--relink-dino-gallery-topk",
+        type=int,
+        default=int(_CFG_DEFAULTS["relink_dino_gallery_topk"]),
+        help="Average the top-K DINO gallery pairwise cosine scores when scoring relink candidates.",
+    )
+    parser.add_argument(
         "--render-trace-summary",
         action=argparse.BooleanOptionalAction,
         default=False,

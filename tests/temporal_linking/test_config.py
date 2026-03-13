@@ -17,6 +17,8 @@ class TemporalLinkingConfigTests(unittest.TestCase):
         defaults = TemporalLinkingConfig.defaults()
         self.assertEqual(int(defaults["max_lost_frames"]), 6)
         self.assertEqual(float(defaults["ema_alpha"]), 0.35)
+        self.assertEqual(int(defaults["relink_dino_gallery_size"]), 20)
+        self.assertEqual(int(defaults["relink_dino_gallery_topk"]), 3)
         self.assertNotIn("similarity_threshold", defaults)
 
     def test_from_cli_namespace_maps_no_relink_dino_flag(self) -> None:

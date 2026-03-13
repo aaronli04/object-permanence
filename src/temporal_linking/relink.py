@@ -12,7 +12,53 @@ from .config import TemporalLinkingConfig
 from .types import RelinkEdge, Track, TrackFragment, TrackStatus
 
 
-def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
+def _empty_gallery() -> np.ndarray:
+    return np.zeros((0, 0), dtype=np.float32)
+
+
+def _build_dino_gallery(track: Track, gallery_size: int) -> np.ndarray:
+    if gallery_size <= 0:
+        return _empty_gallery()
+    if not track.obs_dino_samples:
+        return _empty_gallery()
+
+    ordered_samples = sorted(track.obs_dino_samples, key=lambda sample: (sample.frame_num, -sample.confidence))
+    if len(ordered_samples) <= gallery_size:
+        return np.stack([sample.vector for sample in ordered_samples], axis=0).astype(np.float32, copy=False)
+
+    chosen: list[np.ndarray] = []
+    sample_count = len(ordered_samples)
+    for idx in range(gallery_size):
+        start = int(np.floor((idx * sample_count) / gallery_size))
+        end = int(np.floor(((idx + 1) * sample_count) / gallery_size))
+        end = max(end, start + 1)
+        bucket = ordered_samples[start:end]
+        if not bucket:
+            continue
+        chosen_sample = max(bucket, key=lambda sample: (sample.confidence, -sample.frame_num))
+        chosen.append(chosen_sample.vector)
+
+    if not chosen:
+        return _empty_gallery()
+    return np.stack(chosen, axis=0).astype(np.float32, copy=False)
+
+
+def _gallery_similarity(gallery_a: np.ndarray, gallery_b: np.ndarray, *, topk: int) -> float:
+    if gallery_a.ndim != 2 or gallery_b.ndim != 2:
+        return 0.0
+    if int(gallery_a.shape[0]) <= 0 or int(gallery_b.shape[0]) <= 0:
+        return 0.0
+
+    pairwise = np.matmul(gallery_a, gallery_b.T).reshape(-1)
+    if int(pairwise.shape[0]) <= 0:
+        return 0.0
+
+    k = max(1, min(int(topk), int(pairwise.shape[0])))
+    top_scores = np.sort(pairwise)[-k:]
+    return float(np.mean(top_scores))
+
+
+def build_fragments(tracks: list[Track], min_hits: int, dino_gallery_size: int = 20) -> list[TrackFragment]:
     """Build relink-eligible fragments from closed tracks."""
     fragments: list[TrackFragment] = []
     for track in tracks:
@@ -28,6 +74,7 @@ def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
         frame_vecs = np.stack([l2_normalize(v) for v in track.obs_vecs], axis=0).astype(np.float32, copy=False)
         centroid = l2_normalize(np.mean(frame_vecs, axis=0))
         positions = list(track.obs_positions)
+        dino_gallery = _build_dino_gallery(track, dino_gallery_size)
         dino_vec = None
         if track.dino_vector is not None:
             dino_vec = l2_normalize(np.asarray(track.dino_vector, dtype=np.float32))
@@ -44,6 +91,7 @@ def build_fragments(tracks: list[Track], min_hits: int) -> list[TrackFragment]:
                 frame_vecs=frame_vecs,
                 last_positions=positions[-3:],
                 first_position=positions[0],
+                dino_gallery=dino_gallery,
                 dino_vector=dino_vec,
             )
         )
@@ -94,6 +142,8 @@ def score_identity(
     candidates: list[tuple[TrackFragment, TrackFragment]],
     *,
     relink_use_dino: bool,
+    relink_dino_min_detections: int = 2,
+    relink_dino_gallery_topk: int = 3,
 ) -> tuple[list[RelinkEdge], float]:
     """Score each candidate using DINO when available, else YOLO centroid."""
     edges: list[RelinkEdge] = []
@@ -102,11 +152,17 @@ def score_identity(
     for pred, succ in candidates:
         use_dino = bool(
             relink_use_dino
-            and pred.dino_vector is not None
-            and succ.dino_vector is not None
+            and pred.dino_gallery.ndim == 2
+            and succ.dino_gallery.ndim == 2
+            and int(pred.dino_gallery.shape[0]) >= int(relink_dino_min_detections)
+            and int(succ.dino_gallery.shape[0]) >= int(relink_dino_min_detections)
         )
         if use_dino:
-            score = float(np.dot(pred.dino_vector, succ.dino_vector))
+            score = _gallery_similarity(
+                pred.dino_gallery,
+                succ.dino_gallery,
+                topk=relink_dino_gallery_topk,
+            )
             method: str = "dino"
             dino_scored += 1
         else:
@@ -272,12 +328,18 @@ def run_relink(
 ) -> tuple[dict[int, int], dict[str, Any]]:
     """Execute full relink pass and return merge map + stats payload."""
     num_closed_tracks = sum(1 for track in tracks if track.status == TrackStatus.CLOSED)
-    fragments = build_fragments(tracks, cfg.relink_min_track_hits)
+    fragments = build_fragments(
+        tracks,
+        cfg.relink_min_track_hits,
+        dino_gallery_size=cfg.relink_dino_gallery_size,
+    )
     candidates = build_candidates(fragments, cfg.relink_max_gap_frames)
 
     identity_edges, dino_coverage = score_identity(
         candidates,
         relink_use_dino=bool(cfg.relink_use_dino),
+        relink_dino_min_detections=int(cfg.relink_dino_min_detections),
+        relink_dino_gallery_topk=int(cfg.relink_dino_gallery_topk),
     )
     fallback_edges = score_fallback(candidates, cfg.relink_max_pixels_per_frame)
 

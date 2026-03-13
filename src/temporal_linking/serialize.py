@@ -272,6 +272,8 @@ def build_relink_manifest(
         "relink_use_dino": bool(cfg.relink_use_dino),
         "relink_dino_threshold": float(cfg.relink_dino_threshold),
         "relink_dino_min_detections": int(cfg.relink_dino_min_detections),
+        "relink_dino_gallery_size": int(cfg.relink_dino_gallery_size),
+        "relink_dino_gallery_topk": int(cfg.relink_dino_gallery_topk),
     }
     manifest = RelinkManifest(
         schema_version=SCHEMA_VERSION_RELINK_MANIFEST,

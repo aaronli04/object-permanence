@@ -46,6 +46,8 @@ class TemporalLinkingConfig:
     relink_use_dino: bool = True
     relink_dino_threshold: float = 0.55
     relink_dino_min_detections: int = 2
+    relink_dino_gallery_size: int = 20
+    relink_dino_gallery_topk: int = 3
 
     @classmethod
     def defaults(cls) -> dict[str, Any]:
@@ -97,6 +99,10 @@ class TemporalLinkingConfig:
             raise ValueError("relink_dino_threshold must be in [-1.0, 1.0]")
         if self.relink_dino_min_detections <= 0:
             raise ValueError("relink_dino_min_detections must be > 0")
+        if self.relink_dino_gallery_size <= 0:
+            raise ValueError("relink_dino_gallery_size must be > 0")
+        if self.relink_dino_gallery_topk <= 0:
+            raise ValueError("relink_dino_gallery_topk must be > 0")
         if self.max_lost_frames < 0:
             raise ValueError("max_lost_frames must be >= 0")
         if self.min_hits_to_activate <= 0:

@@ -19,7 +19,7 @@ from temporal_linking.relink import (
     score_fallback,
     score_identity,
 )
-from temporal_linking.types import RelinkEdge, Track, TrackFragment, TrackStatus
+from temporal_linking.types import DinoObservationSample, RelinkEdge, Track, TrackFragment, TrackStatus
 
 
 def _normalize(vec: np.ndarray) -> np.ndarray:
@@ -66,6 +66,7 @@ def _make_fragment(
     last_frame: int,
     last_positions: list[tuple[float, float, int]],
     first_position: tuple[float, float, int],
+    dino_gallery: np.ndarray | None = None,
 ) -> TrackFragment:
     base = _normalize(np.asarray([1.0, 0.0, 0.0], dtype=np.float32))
     return TrackFragment(
@@ -78,7 +79,17 @@ def _make_fragment(
         frame_vecs=np.stack([base], axis=0),
         last_positions=last_positions,
         first_position=first_position,
+        dino_gallery=_normalize_gallery(dino_gallery),
     )
+
+
+def _normalize_gallery(gallery: np.ndarray | None) -> np.ndarray:
+    if gallery is None:
+        return np.zeros((0, 0), dtype=np.float32)
+    rows = [_normalize(np.asarray(row, dtype=np.float32)) for row in np.asarray(gallery, dtype=np.float32)]
+    if not rows:
+        return np.zeros((0, 0), dtype=np.float32)
+    return np.stack(rows, axis=0).astype(np.float32)
 
 
 class RelinkUnitTests(unittest.TestCase):
@@ -253,6 +264,7 @@ class RelinkUnitTests(unittest.TestCase):
             frame_vecs=np.stack([base], axis=0),
             last_positions=[(0.0, 0.0, 0), (5.0, 5.0, 5)],
             first_position=(0.0, 0.0, 0),
+            dino_gallery=np.stack([base, base], axis=0),
             dino_vector=base,
         )
         succ = TrackFragment(
@@ -265,12 +277,92 @@ class RelinkUnitTests(unittest.TestCase):
             frame_vecs=np.stack([alt], axis=0),
             last_positions=[(10.0, 10.0, 10), (15.0, 15.0, 15)],
             first_position=(10.0, 10.0, 10),
+            dino_gallery=np.stack([alt, alt], axis=0),
             dino_vector=alt,
         )
         edges, coverage = score_identity([(pred, succ)], relink_use_dino=True)
         self.assertEqual(edges[0].method, "dino")
         self.assertGreater(edges[0].score, 0.9)
         self.assertAlmostEqual(coverage, 1.0)
+
+    def test_build_fragments_builds_temporally_spread_high_confidence_gallery(self) -> None:
+        frames = list(range(10))
+        vec_dim = len(frames)
+        basis = [np.eye(vec_dim, dtype=np.float32)[idx] for idx in frames]
+        track = _make_closed_track(track_id=1, class_id=32, frames=frames, vecs=basis)
+        track.obs_dino_samples = [
+            DinoObservationSample(frame_num=frame_num, confidence=0.10, vector=_normalize(basis[frame_num]))
+            for frame_num in frames
+        ]
+        for preferred_frame in (1, 3, 5, 7, 9):
+            track.obs_dino_samples[preferred_frame] = DinoObservationSample(
+                frame_num=preferred_frame,
+                confidence=0.95,
+                vector=_normalize(basis[preferred_frame]),
+            )
+
+        fragments = build_fragments([track], min_hits=1, dino_gallery_size=5)
+
+        self.assertEqual(len(fragments), 1)
+        selected_frames = [int(np.argmax(row)) for row in fragments[0].dino_gallery]
+        self.assertEqual(selected_frames, [1, 3, 5, 7, 9])
+
+    def test_dino_topk_mean_rejects_single_spurious_pair(self) -> None:
+        pred_gallery = _normalize_gallery(
+            np.asarray(
+                [
+                    [1.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0],
+                    [0.0, 0.0, 1.0],
+                ],
+                dtype=np.float32,
+            )
+        )
+        succ_gallery = _normalize_gallery(
+            np.asarray(
+                [
+                    [1.0, 0.0, 0.0],
+                    [0.0, -1.0, 0.0],
+                    [0.0, 0.0, -1.0],
+                ],
+                dtype=np.float32,
+            )
+        )
+        pred = _make_fragment(
+            track_id=1,
+            first_frame=0,
+            last_frame=5,
+            last_positions=[(0.0, 0.0, 0), (5.0, 5.0, 5)],
+            first_position=(0.0, 0.0, 0),
+            dino_gallery=pred_gallery,
+        )
+        succ = _make_fragment(
+            track_id=2,
+            first_frame=10,
+            last_frame=15,
+            last_positions=[(10.0, 10.0, 10), (15.0, 15.0, 15)],
+            first_position=(10.0, 10.0, 10),
+            dino_gallery=succ_gallery,
+        )
+
+        edges, coverage = score_identity(
+            [(pred, succ)],
+            relink_use_dino=True,
+            relink_dino_min_detections=2,
+            relink_dino_gallery_topk=3,
+        )
+        self.assertEqual(edges[0].method, "dino")
+        self.assertAlmostEqual(edges[0].score, 1.0 / 3.0, places=6)
+        self.assertAlmostEqual(coverage, 1.0, places=6)
+
+        accepted = greedy_assign(
+            identity_edges=edges,
+            fallback_edges=[],
+            yolo_threshold=0.8,
+            dino_threshold=0.8,
+            fallback_threshold=1.0,
+        )
+        self.assertEqual(accepted, [])
 
     def test_resolve_chains_is_deterministic(self) -> None:
         fragments = [

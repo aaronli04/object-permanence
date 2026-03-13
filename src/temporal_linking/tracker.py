@@ -8,7 +8,7 @@ import numpy as np
 from common.numeric import l2_normalize
 
 from .config import TemporalLinkingConfig
-from .types import Assignment, Detection, SerializedTrackObservation, Track, TrackStatus, TrackerState
+from .types import Assignment, Detection, DinoObservationSample, SerializedTrackObservation, Track, TrackStatus, TrackerState
 
 
 class TrackManager:
@@ -66,7 +66,7 @@ class TrackManager:
             )
         )
         track.obs_vecs.append(det.activation_vec.copy())
-        self._append_dino_observation(track, det)
+        self._append_dino_observation(track, det, frame_num=frame_num)
         cx = (float(det.bbox_xyxy[0]) + float(det.bbox_xyxy[2])) * 0.5
         cy = (float(det.bbox_xyxy[1]) + float(det.bbox_xyxy[3])) * 0.5
         track.obs_positions.append((cx, cy, int(frame_num)))
@@ -111,7 +111,7 @@ class TrackManager:
             )
         )
         track.obs_vecs.append(det.activation_vec.copy())
-        self._append_dino_observation(track, det)
+        self._append_dino_observation(track, det, frame_num=frame_num)
         cx = (float(det.bbox_xyxy[0]) + float(det.bbox_xyxy[2])) * 0.5
         cy = (float(det.bbox_xyxy[1]) + float(det.bbox_xyxy[3])) * 0.5
         track.obs_positions.append((cx, cy, int(frame_num)))
@@ -180,7 +180,7 @@ class TrackManager:
         self._remove_open(track.track_id)
         self.state.lost[track.track_id] = track
 
-    def _append_dino_observation(self, track: Track, det: Detection) -> None:
+    def _append_dino_observation(self, track: Track, det: Detection, *, frame_num: int) -> None:
         if det.dino_vector is None:
             return
         vec = np.asarray(det.dino_vector, dtype=np.float32)
@@ -191,12 +191,18 @@ class TrackManager:
         norm = float(np.linalg.norm(vec))
         if norm <= 0.0:
             return
-        track.obs_dino_vecs.append((vec / norm).astype(np.float32, copy=False))
+        track.obs_dino_samples.append(
+            DinoObservationSample(
+                frame_num=int(frame_num),
+                confidence=float(det.confidence),
+                vector=(vec / norm).astype(np.float32, copy=False),
+            )
+        )
 
     def _build_track_dino_vector(self, track: Track) -> np.ndarray | None:
-        if len(track.obs_dino_vecs) < int(self.cfg.relink_dino_min_detections):
+        if len(track.obs_dino_samples) < int(self.cfg.relink_dino_min_detections):
             return None
-        stacked = np.stack(track.obs_dino_vecs, axis=0)
+        stacked = np.stack([sample.vector for sample in track.obs_dino_samples], axis=0)
         mean_vec = np.mean(stacked, axis=0).astype(np.float32, copy=False)
         mean_vec = l2_normalize(mean_vec)
         if float(np.linalg.norm(mean_vec)) <= 0.0:

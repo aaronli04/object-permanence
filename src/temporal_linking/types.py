@@ -154,6 +154,13 @@ class TraceSummaryPayload:
     items: list[TraceSummaryItem]
 
 
+@dataclass(frozen=True)
+class DinoObservationSample:
+    frame_num: int
+    confidence: float
+    vector: np.ndarray
+
+
 @dataclass
 class Track:
     track_id: int
@@ -179,7 +186,7 @@ class Track:
     observations: list[SerializedTrackObservation | dict[str, Any]] = field(default_factory=list)
     events: list[dict[str, Any]] = field(default_factory=list)
     obs_vecs: list[np.ndarray] = field(default_factory=list)
-    obs_dino_vecs: list[np.ndarray] = field(default_factory=list)
+    obs_dino_samples: list[DinoObservationSample] = field(default_factory=list)
     obs_positions: list[tuple[float, float, int]] = field(default_factory=list)
     frame_width: float | None = None
     frame_height: float | None = None
@@ -197,6 +204,7 @@ class TrackFragment:
     frame_vecs: np.ndarray
     last_positions: list[tuple[float, float, int]]
     first_position: tuple[float, float, int]
+    dino_gallery: np.ndarray = field(default_factory=lambda: np.zeros((0, 0), dtype=np.float32))
     dino_vector: np.ndarray | None = None
 
 
