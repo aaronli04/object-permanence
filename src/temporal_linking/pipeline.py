@@ -19,7 +19,7 @@ from .serialize import (
     serialize_manifest,
     serialize_tracks,
 )
-from .trace_proofs import build_trace_references, render_trace_proofs as render_trace_proof_sheets, resolve_video_path
+from .trace_summary import build_trace_summary, render_trace_summary, resolve_video_path
 from .tracker import TrackManager
 from .types import FrameDetections, TemporalLinkingOutputs, TemporalLinkingResult
 
@@ -76,16 +76,14 @@ def link_video_frames(
     closed_tracks = manager.finalize()
     merge_map, relink_result = run_relink(closed_tracks, cfg)
     effective_enriched_json = enriched_json_path or "enriched_detections.json"
-    trace_references_payload = build_trace_references(
-        closed_tracks=closed_tracks,
-        cfg=cfg,
-        enriched_json_path=effective_enriched_json,
-        relink_result=relink_result,
-        merge_map=merge_map,
-    )
     linked_frames = remap_linked_frames_track_ids(linked_frames, merge_map)
     tracks_payload = serialize_tracks(closed_tracks, cfg, merge_map=merge_map)
-    trace_items = trace_references_payload.get("items", [])
+    trace_summary_payload = build_trace_summary(
+        tracks_payload=tracks_payload,
+        cfg=cfg,
+        enriched_json_path=effective_enriched_json,
+    )
+    trace_items = trace_summary_payload.get("items", [])
     if not isinstance(trace_items, list):
         trace_items = []
     manifest_payload = serialize_manifest(
@@ -94,12 +92,12 @@ def link_video_frames(
         tracks_payload=tracks_payload,
         cfg=cfg,
         artifacts=build_manifest_artifacts(
-            trace_references_json="trace_references.json",
-            trace_proofs_dir="trace_proofs",
-            trace_proofs_requested=False,
-            trace_proofs_present=False,
-            trace_proofs_state="not_requested",
-            trace_proofs_num_items=len(trace_items),
+            trace_summary_json="trace_summary.json",
+            trace_summary_dir="trace_summary",
+            trace_summary_requested=False,
+            trace_summary_present=False,
+            trace_summary_state="not_requested",
+            trace_summary_num_items=len(trace_items),
         ),
     )
     relink_manifest_payload = build_relink_manifest(
@@ -113,7 +111,7 @@ def link_video_frames(
         tracks_payload=tracks_payload,
         manifest_payload=manifest_payload,
         relink_manifest_payload=relink_manifest_payload,
-        trace_references_payload=trace_references_payload,
+        trace_summary_payload=trace_summary_payload,
     )
 
 
@@ -122,60 +120,60 @@ def run_temporal_linking(
     enriched_json_path: str,
     output_dir: str,
     config: TemporalLinkingConfig,
-    render_trace_proofs: bool = False,
+    render_trace_summary_artifacts: bool = False,
     video_path: str | None = None,
 ) -> TemporalLinkingOutputs:
     frames = load_enriched_frames(enriched_json_path, activation_topk=config.activation_topk)
     result = link_video_frames(frames, config, enriched_json_path=enriched_json_path)
 
     artifacts = build_output_paths(output_dir)
-    trace_items = result.trace_references_payload.get("items", [])
+    trace_items = result.trace_summary_payload.get("items", [])
     if not isinstance(trace_items, list):
         trace_items = []
 
-    trace_proofs_state = "not_requested"
-    trace_proofs_present = False
-    rendered_proofs_dir: str | None = None
+    trace_summary_state = "not_requested"
+    trace_summary_present = False
+    rendered_summary_dir: str | None = None
 
-    if render_trace_proofs:
+    if render_trace_summary_artifacts:
         if not trace_items:
-            os.makedirs(artifacts.trace_proofs_dir, exist_ok=True)
-            trace_proofs_state = "empty"
-            trace_proofs_present = True
-            rendered_proofs_dir = artifacts.trace_proofs_dir
+            os.makedirs(artifacts.trace_summary_dir, exist_ok=True)
+            trace_summary_state = "empty"
+            trace_summary_present = True
+            rendered_summary_dir = artifacts.trace_summary_dir
         else:
             resolved_video_path = resolve_video_path(
                 enriched_json_path=enriched_json_path,
                 video_path_override=video_path,
             )
             if resolved_video_path is None:
-                trace_proofs_state = "skipped_missing_video"
+                trace_summary_state = "skipped_missing_video"
             else:
-                rendered_count = render_trace_proof_sheets(
-                    trace_references_payload=result.trace_references_payload,
+                rendered_count = render_trace_summary(
+                    trace_summary_payload=result.trace_summary_payload,
                     video_path=resolved_video_path,
-                    output_dir=artifacts.trace_proofs_dir,
+                    output_dir=artifacts.trace_summary_dir,
                 )
-                trace_proofs_present = os.path.isdir(artifacts.trace_proofs_dir)
-                trace_proofs_state = "rendered" if rendered_count > 0 else "empty"
-                if trace_proofs_present:
-                    rendered_proofs_dir = artifacts.trace_proofs_dir
+                trace_summary_present = os.path.isdir(artifacts.trace_summary_dir)
+                trace_summary_state = "rendered" if rendered_count > 0 else "empty"
+                if trace_summary_present:
+                    rendered_summary_dir = artifacts.trace_summary_dir
 
     manifest_payload = copy.deepcopy(result.manifest_payload)
     manifest_payload["artifacts"] = build_manifest_artifacts(
-        trace_references_json=os.path.basename(artifacts.trace_references_path),
-        trace_proofs_dir=os.path.basename(artifacts.trace_proofs_dir),
-        trace_proofs_requested=bool(render_trace_proofs),
-        trace_proofs_present=bool(trace_proofs_present),
-        trace_proofs_state=trace_proofs_state,
-        trace_proofs_num_items=len(trace_items),
+        trace_summary_json=os.path.basename(artifacts.trace_summary_path),
+        trace_summary_dir=os.path.basename(artifacts.trace_summary_dir),
+        trace_summary_requested=bool(render_trace_summary_artifacts),
+        trace_summary_present=bool(trace_summary_present),
+        trace_summary_state=trace_summary_state,
+        trace_summary_num_items=len(trace_items),
     )
     write_linking_outputs(
         artifacts=artifacts,
         linked_frames=result.linked_frames,
         tracks_payload=result.tracks_payload,
         manifest_payload=manifest_payload,
-        trace_references_payload=result.trace_references_payload,
+        trace_summary_payload=result.trace_summary_payload,
     )
     relink_manifest_path = os.path.join(output_dir, "relink_manifest.json")
     write_json(relink_manifest_path, result.relink_manifest_payload)
@@ -185,6 +183,6 @@ def run_temporal_linking(
         tracks=artifacts.tracks_path,
         linking_manifest=artifacts.manifest_path,
         relink_manifest=relink_manifest_path,
-        trace_references=artifacts.trace_references_path,
-        trace_proofs=rendered_proofs_dir,
+        trace_summary=artifacts.trace_summary_path,
+        trace_summary_dir=rendered_summary_dir,
     )

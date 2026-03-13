@@ -194,26 +194,26 @@ class PipelineIntegrationTests(unittest.TestCase):
             )
 
             self.assertTrue(os.path.exists(outputs.relink_manifest))
-            self.assertTrue(os.path.exists(outputs.trace_references))
-            self.assertIsNone(outputs.trace_proofs)
+            self.assertTrue(os.path.exists(outputs.trace_summary))
+            self.assertIsNone(outputs.trace_summary_dir)
 
             with open(outputs.relink_manifest, "r", encoding="utf-8") as f:
                 relink_manifest = json.load(f)
             self.assertEqual(relink_manifest["schema_version"], "temporal_linking_relink_manifest_v1")
             self.assertIn("stats", relink_manifest)
 
-            with open(outputs.trace_references, "r", encoding="utf-8") as f:
-                trace_references = json.load(f)
-            self.assertEqual(trace_references["schema_version"], "temporal_linking_trace_references_v1")
-            self.assertGreaterEqual(len(trace_references["items"]), 1)
+            with open(outputs.trace_summary, "r", encoding="utf-8") as f:
+                trace_summary = json.load(f)
+            self.assertEqual(trace_summary["schema_version"], "temporal_linking_trace_summary_v1")
+            self.assertGreaterEqual(len(trace_summary["items"]), 1)
 
             with open(outputs.linking_manifest, "r", encoding="utf-8") as f:
                 linking_manifest = json.load(f)
             self.assertIn("max_centroid_distance", linking_manifest["config"])
-            self.assertEqual(linking_manifest["artifacts"]["trace_proofs"]["state"], "not_requested")
-            self.assertEqual(linking_manifest["artifacts"]["trace_references_json"], "trace_references.json")
+            self.assertEqual(linking_manifest["artifacts"]["trace_summary"]["state"], "not_requested")
+            self.assertEqual(linking_manifest["artifacts"]["trace_summary_json"], "trace_summary.json")
 
-    def test_run_temporal_linking_renders_trace_proofs_when_video_available(self) -> None:
+    def test_run_temporal_linking_renders_one_summary_per_track_when_video_available(self) -> None:
         vec = np.zeros((128,), dtype=np.float32)
         vec[0] = 1.0
         enriched = _synthetic_enriched_payload(vec)
@@ -238,18 +238,20 @@ class PipelineIntegrationTests(unittest.TestCase):
                 enriched_json_path=enriched_path,
                 output_dir=tmpdir,
                 config=cfg,
-                render_trace_proofs=True,
+                render_trace_summary_artifacts=True,
             )
 
-            self.assertIsNotNone(outputs.trace_proofs)
-            assert outputs.trace_proofs is not None
-            self.assertTrue(os.path.isdir(outputs.trace_proofs))
-            self.assertTrue(any(name.endswith(".jpg") for name in os.listdir(outputs.trace_proofs)))
+            self.assertIsNotNone(outputs.trace_summary_dir)
+            assert outputs.trace_summary_dir is not None
+            self.assertTrue(os.path.isdir(outputs.trace_summary_dir))
+            summary_images = sorted(name for name in os.listdir(outputs.trace_summary_dir) if name.endswith(".jpg"))
+            self.assertEqual(summary_images, ["track_1.jpg"])
 
             with open(outputs.linking_manifest, "r", encoding="utf-8") as f:
                 linking_manifest = json.load(f)
-            self.assertEqual(linking_manifest["artifacts"]["trace_proofs"]["state"], "rendered")
-            self.assertTrue(bool(linking_manifest["artifacts"]["trace_proofs"]["present"]))
+            self.assertEqual(linking_manifest["artifacts"]["trace_summary"]["state"], "rendered")
+            self.assertTrue(bool(linking_manifest["artifacts"]["trace_summary"]["present"]))
+            self.assertEqual(int(linking_manifest["artifacts"]["trace_summary"]["num_items"]), 1)
 
     def test_run_temporal_linking_marks_missing_video_when_render_requested(self) -> None:
         vec = np.zeros((128,), dtype=np.float32)
@@ -271,63 +273,14 @@ class PipelineIntegrationTests(unittest.TestCase):
                 enriched_json_path=enriched_path,
                 output_dir=tmpdir,
                 config=cfg,
-                render_trace_proofs=True,
+                render_trace_summary_artifacts=True,
             )
 
-            self.assertIsNone(outputs.trace_proofs)
+            self.assertIsNone(outputs.trace_summary_dir)
             with open(outputs.linking_manifest, "r", encoding="utf-8") as f:
                 linking_manifest = json.load(f)
-            self.assertEqual(linking_manifest["artifacts"]["trace_proofs"]["state"], "skipped_missing_video")
-            self.assertFalse(bool(linking_manifest["artifacts"]["trace_proofs"]["present"]))
-
-    def test_run_temporal_linking_marks_empty_when_no_proof_items_exist(self) -> None:
-        vec = np.zeros((128,), dtype=np.float32)
-        vec[0] = 1.0
-        enriched = [
-            {
-                "frame_num": 0,
-                "detections": [
-                    {
-                        "class_id": 32,
-                        "class_name": "sports ball",
-                        "bbox": [10.0, 10.0, 20.0, 20.0],
-                        "confidence": 0.9,
-                        "activation": {"vector": vec.tolist(), "dim": int(vec.shape[0]), "small_crop_flag": False},
-                    }
-                ],
-            }
-        ]
-        cfg = TemporalLinkingConfig(
-            similarity_threshold=0.7,
-            max_lost_frames=1,
-            min_hits_to_activate=1,
-            relink_min_track_hits=2,
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            enriched_path = os.path.join(tmpdir, "enriched.json")
-            with open(enriched_path, "w", encoding="utf-8") as f:
-                json.dump(enriched, f)
-
-            outputs = run_temporal_linking(
-                enriched_json_path=enriched_path,
-                output_dir=tmpdir,
-                config=cfg,
-                render_trace_proofs=True,
-            )
-
-            self.assertIsNotNone(outputs.trace_proofs)
-            assert outputs.trace_proofs is not None
-            self.assertEqual(os.listdir(outputs.trace_proofs), [])
-
-            with open(outputs.trace_references, "r", encoding="utf-8") as f:
-                trace_references = json.load(f)
-            self.assertEqual(trace_references["items"], [])
-
-            with open(outputs.linking_manifest, "r", encoding="utf-8") as f:
-                linking_manifest = json.load(f)
-            self.assertEqual(linking_manifest["artifacts"]["trace_proofs"]["state"], "empty")
-            self.assertEqual(int(linking_manifest["artifacts"]["trace_proofs"]["num_items"]), 0)
+            self.assertEqual(linking_manifest["artifacts"]["trace_summary"]["state"], "skipped_missing_video")
+            self.assertFalse(bool(linking_manifest["artifacts"]["trace_summary"]["present"]))
 
 
 if __name__ == "__main__":

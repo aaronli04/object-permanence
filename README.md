@@ -253,10 +253,10 @@ python3 src/run_temporal_linking.py \
   --relink-dino-threshold 0.55 \
   --relink-max-gap-frames -1 \
   --relink-fallback-threshold 0.40 \
-  --render-trace-proofs
+  --render-trace-summary
 ```
 
-When `--render-trace-proofs` is enabled, temporal linking resolves the source video from the sibling `projection_manifest.json` by default. Add `--video data/raw_videos/Right_to_left.mp4` if the enrichment artifacts were moved or the stored path is stale.
+When `--render-trace-summary` is enabled, temporal linking resolves the source video from the sibling `projection_manifest.json` by default. Add `--video data/raw_videos/Right_to_left.mp4` if the enrichment artifacts were moved or the stored path is stale.
 
 ### Full pipeline (all videos)
 ```bash
@@ -339,7 +339,7 @@ for f in experiments/results/activation_enrichment/*/enriched_detections.json; d
     --relink-dino-threshold 0.55 \
     --relink-max-gap-frames -1 \
     --relink-fallback-threshold 0.40 \
-    --render-trace-proofs
+    --render-trace-summary
 done
 ```
 Add `--no-relink-dino` to force YOLO relink scoring. Add `--video /path/to/input.mp4` only when the source video cannot be resolved from the sibling `projection_manifest.json`.
@@ -368,10 +368,9 @@ experiments/results/
       tracks.json
       linking_manifest.json
       relink_manifest.json
-      trace_references.json
-      trace_proofs/
-        relink_<pred>_<succ>.jpg
-        recovery_<track>_<frame>.jpg
+      trace_summary.json
+      trace_summary/
+        track_<id>.jpg
   param_search/
     summary.csv
     R0/

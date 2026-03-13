@@ -13,7 +13,7 @@ from .types import (
     FrameDetections,
     RelinkManifest,
     SerializedTemporalLink,
-    TraceReferencesPayload,
+    TraceSummaryPayload,
     Track,
     serialize_observation,
     serialize_temporal_link,
@@ -22,7 +22,7 @@ from .types import (
 SCHEMA_VERSION_TRACKS = "temporal_linking_v1"
 SCHEMA_VERSION_MANIFEST = "temporal_linking_manifest_v1"
 SCHEMA_VERSION_RELINK_MANIFEST = "temporal_linking_relink_manifest_v1"
-SCHEMA_VERSION_TRACE_REFERENCES = "temporal_linking_trace_references_v1"
+SCHEMA_VERSION_TRACE_SUMMARY = "temporal_linking_trace_summary_v1"
 
 
 def match_link_meta(
@@ -319,24 +319,24 @@ def serialize_manifest(
 
 def build_manifest_artifacts(
     *,
-    trace_references_json: str,
-    trace_proofs_dir: str,
-    trace_proofs_requested: bool,
-    trace_proofs_present: bool,
-    trace_proofs_state: str,
-    trace_proofs_num_items: int,
+    trace_summary_json: str,
+    trace_summary_dir: str,
+    trace_summary_requested: bool,
+    trace_summary_present: bool,
+    trace_summary_state: str,
+    trace_summary_num_items: int,
 ) -> dict[str, Any]:
     return {
-        "trace_references_json": trace_references_json,
-        "trace_proofs": {
-            "requested": bool(trace_proofs_requested),
-            "present": bool(trace_proofs_present),
-            "state": str(trace_proofs_state),
-            "num_items": int(trace_proofs_num_items),
-            "dir": trace_proofs_dir,
+        "trace_summary_json": trace_summary_json,
+        "trace_summary": {
+            "requested": bool(trace_summary_requested),
+            "present": bool(trace_summary_present),
+            "state": str(trace_summary_state),
+            "num_items": int(trace_summary_num_items),
+            "dir": trace_summary_dir,
         },
     }
 
 
-def serialize_trace_references(payload: TraceReferencesPayload) -> dict[str, Any]:
+def serialize_trace_summary(payload: TraceSummaryPayload) -> dict[str, Any]:
     return asdict(payload)

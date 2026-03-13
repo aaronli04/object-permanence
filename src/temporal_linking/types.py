@@ -132,30 +132,26 @@ class TraceFrameReference:
 
 
 @dataclass(frozen=True)
-class TraceFrameGroup:
-    name: str
+class TraceSummaryItem:
+    track_id: int
+    class_id: int
+    class_name: str
+    start_frame: int
+    end_frame: int
+    hits: int
+    valid_track: bool
+    relinked_from: list[int]
+    had_recovery: bool
     frames: list[TraceFrameReference]
 
 
 @dataclass(frozen=True)
-class TraceProofItem:
-    kind: Literal["relink", "recovery"]
-    proof_id: str
-    canonical_track_id: int
-    fragment_track_ids: list[int]
-    frame_groups: list[TraceFrameGroup]
-    method: str | None = None
-    score: float | None = None
-    gap_frames: int | None = None
-
-
-@dataclass(frozen=True)
-class TraceReferencesPayload:
+class TraceSummaryPayload:
     schema_version: str
     generated_at_utc: str
     config_hash_sha256: str
     input_enriched_json: str
-    items: list[TraceProofItem]
+    items: list[TraceSummaryItem]
 
 
 @dataclass
@@ -253,8 +249,8 @@ class TemporalLinkArtifacts:
     linked_detections_path: str
     tracks_path: str
     manifest_path: str
-    trace_references_path: str
-    trace_proofs_dir: str
+    trace_summary_path: str
+    trace_summary_dir: str
 
 
 @dataclass(frozen=True)
@@ -263,7 +259,7 @@ class TemporalLinkingResult:
     tracks_payload: dict[str, Any]
     manifest_payload: dict[str, Any]
     relink_manifest_payload: dict[str, Any]
-    trace_references_payload: dict[str, Any]
+    trace_summary_payload: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -272,5 +268,5 @@ class TemporalLinkingOutputs:
     tracks: str
     linking_manifest: str
     relink_manifest: str
-    trace_references: str
-    trace_proofs: str | None = None
+    trace_summary: str
+    trace_summary_dir: str | None = None

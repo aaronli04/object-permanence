@@ -40,5 +40,5 @@ for video in "${videos[@]}"; do
     --relink-dino-threshold "${RELINK_DINO_THRESHOLD}" \
     --relink-max-gap-frames "${RELINK_MAX_GAP_FRAMES}" \
     --relink-fallback-threshold "${RELINK_FALLBACK_THRESHOLD}" \
-    --render-trace-proofs
+    --render-trace-summary
 done

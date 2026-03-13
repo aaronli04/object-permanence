@@ -176,15 +176,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Disable DINO relink scoring and force YOLO centroid relink path.",
     )
     parser.add_argument(
-        "--render-trace-proofs",
+        "--render-trace-summary",
         action=argparse.BooleanOptionalAction,
         default=False,
-        help="Render JPEG proof sheets for relink and recovery proof references (default: disabled).",
+        help="Render one JPEG summary sheet per final track (default: disabled).",
     )
     parser.add_argument(
         "--video",
         default=None,
-        help="Optional source video override used when rendering trace proofs.",
+        help="Optional source video override used when rendering trace summaries.",
     )
     return parser
 
@@ -214,7 +214,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             enriched_json_path=args.enriched_json,
             output_dir=output_dir,
             config=config,
-            render_trace_proofs=bool(args.render_trace_proofs),
+            render_trace_summary_artifacts=bool(args.render_trace_summary),
             video_path=args.video,
         )
     except Exception as exc:
@@ -225,9 +225,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"Saved tracks to {outputs.tracks}")
     print(f"Saved linking manifest to {outputs.linking_manifest}")
     print(f"Saved relink manifest to {outputs.relink_manifest}")
-    print(f"Saved trace references to {outputs.trace_references}")
-    if outputs.trace_proofs:
-        print(f"Saved trace proofs to {outputs.trace_proofs}")
+    print(f"Saved trace summary to {outputs.trace_summary}")
+    if outputs.trace_summary_dir:
+        print(f"Saved trace summary images to {outputs.trace_summary_dir}")
     return 0
 
 
