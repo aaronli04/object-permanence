@@ -62,11 +62,15 @@ class TrackManager:
                 det_index=int(det.det_index),
                 bbox=[float(v) for v in det.bbox_xyxy.tolist()],
                 visual_similarity=None,
+                confidence=float(det.confidence),
                 fragment_track_id=int(track_id),
+                class_id=int(det.class_id),
+                class_name=str(det.class_name),
             )
         )
         track.obs_vecs.append(det.activation_vec.copy())
         self._append_dino_observation(track, det, frame_num=frame_num)
+        self._record_class_vote(track, det)
         cx = (float(det.bbox_xyxy[0]) + float(det.bbox_xyxy[2])) * 0.5
         cy = (float(det.bbox_xyxy[1]) + float(det.bbox_xyxy[3])) * 0.5
         track.obs_positions.append((cx, cy, int(frame_num)))
@@ -107,11 +111,15 @@ class TrackManager:
                 det_index=int(det.det_index),
                 bbox=[float(v) for v in det.bbox_xyxy.tolist()],
                 visual_similarity=float(assignment.visual_similarity),
+                confidence=float(det.confidence),
                 fragment_track_id=int(track.track_id),
+                class_id=int(det.class_id),
+                class_name=str(det.class_name),
             )
         )
         track.obs_vecs.append(det.activation_vec.copy())
         self._append_dino_observation(track, det, frame_num=frame_num)
+        self._record_class_vote(track, det)
         cx = (float(det.bbox_xyxy[0]) + float(det.bbox_xyxy[2])) * 0.5
         cy = (float(det.bbox_xyxy[1]) + float(det.bbox_xyxy[3])) * 0.5
         track.obs_positions.append((cx, cy, int(frame_num)))
@@ -198,6 +206,29 @@ class TrackManager:
                 vector=(vec / norm).astype(np.float32, copy=False),
             )
         )
+
+    def _record_class_vote(self, track: Track, det: Detection) -> None:
+        class_id = int(det.class_id)
+        class_name = str(det.class_name)
+        weight = max(0.0, float(det.confidence))
+        previous_class_id = int(track.class_id)
+
+        track.class_confidence_sums[class_id] = track.class_confidence_sums.get(class_id, 0.0) + weight
+        if class_name:
+            track.class_name_by_id[class_id] = class_name
+
+        best_class_id = previous_class_id
+        best_weight = track.class_confidence_sums.get(previous_class_id, float("-inf"))
+        for candidate_class_id, candidate_weight in sorted(track.class_confidence_sums.items()):
+            if candidate_weight > best_weight:
+                best_class_id = int(candidate_class_id)
+                best_weight = float(candidate_weight)
+                continue
+            if candidate_weight == best_weight and int(candidate_class_id) == previous_class_id:
+                best_class_id = previous_class_id
+
+        track.class_id = int(best_class_id)
+        track.class_name = track.class_name_by_id.get(best_class_id, track.class_name)
 
     def _build_track_dino_vector(self, track: Track) -> np.ndarray | None:
         if len(track.obs_dino_samples) < int(self.cfg.relink_dino_min_detections):

@@ -25,22 +25,30 @@ def _normalize(vec: np.ndarray) -> np.ndarray:
     return (vec / norm).astype(np.float32)
 
 
-def _make_detection(frame_num: int, det_index: int, vec: np.ndarray) -> Detection:
+def _make_detection(
+    frame_num: int,
+    det_index: int,
+    vec: np.ndarray,
+    *,
+    class_id: int = 32,
+    class_name: str = "sports ball",
+    confidence: float = 0.95,
+) -> Detection:
     vec_n = _normalize(vec)
     return Detection(
         frame_num=frame_num,
         det_index=det_index,
-        class_id=32,
-        class_name="sports ball",
+        class_id=class_id,
+        class_name=class_name,
         bbox_xyxy=np.asarray([10.0, 10.0, 20.0, 20.0], dtype=np.float32),
-        confidence=0.95,
+        confidence=confidence,
         activation_vec=vec_n,
         small_crop_flag=False,
         raw_payload={
-            "class_id": 32,
-            "class_name": "sports ball",
+            "class_id": class_id,
+            "class_name": class_name,
             "bbox": [10.0, 10.0, 20.0, 20.0],
-            "confidence": 0.95,
+            "confidence": confidence,
             "activation": {"vector": vec_n.tolist(), "dim": int(vec_n.shape[0]), "small_crop_flag": False},
         },
         frame_width=100.0,
@@ -169,6 +177,38 @@ class PipelineIntegrationTests(unittest.TestCase):
         first_track_merge = result_merge.linked_frames[0]["detections"][0]["temporal_link"]["track_id"]
         later_track_merge = result_merge.linked_frames[3]["detections"][0]["temporal_link"]["track_id"]
         self.assertEqual(first_track_merge, later_track_merge)
+
+    def test_mislabeled_detection_keeps_track_and_track_class(self) -> None:
+        cfg = TemporalLinkingConfig(
+            similarity_threshold=0.9,
+            max_lost_frames=1,
+            min_hits_to_activate=1,
+            class_mismatch_penalty=0.20,
+        )
+        vec = np.asarray([1.0, 0.0, 0.0], dtype=np.float32)
+        frames = [
+            FrameDetections(
+                frame_num=0,
+                detections=[_make_detection(0, 0, vec, class_id=32, class_name="sports ball", confidence=0.95)],
+            ),
+            FrameDetections(
+                frame_num=1,
+                detections=[_make_detection(1, 0, vec, class_id=75, class_name="vase", confidence=0.31)],
+            ),
+        ]
+
+        result = link_video_frames(frames, cfg, enriched_json_path="synthetic.json")
+
+        first_track = result.linked_frames[0]["detections"][0]["temporal_link"]["track_id"]
+        second_track = result.linked_frames[1]["detections"][0]["temporal_link"]["track_id"]
+        self.assertEqual(first_track, second_track)
+
+        tracks = result.tracks_payload["tracks"]
+        self.assertEqual(len(tracks), 1)
+        self.assertEqual(tracks[0]["class_id"], 32)
+        self.assertEqual(tracks[0]["class_name"], "sports ball")
+        obs_classes = [obs.get("class_name") for obs in tracks[0]["observations"]]
+        self.assertEqual(obs_classes, ["sports ball", "vase"])
 
     def test_run_temporal_linking_writes_relink_manifest(self) -> None:
         vec = np.zeros((128,), dtype=np.float32)

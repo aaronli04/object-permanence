@@ -17,8 +17,10 @@ class TemporalLinkingConfigTests(unittest.TestCase):
         defaults = TemporalLinkingConfig.defaults()
         self.assertEqual(int(defaults["max_lost_frames"]), 6)
         self.assertEqual(float(defaults["ema_alpha"]), 0.35)
+        self.assertEqual(float(defaults["class_mismatch_penalty"]), 0.20)
         self.assertEqual(int(defaults["relink_dino_gallery_size"]), 20)
         self.assertEqual(int(defaults["relink_dino_gallery_topk"]), 3)
+        self.assertEqual(float(defaults["relink_class_mismatch_penalty"]), 0.10)
         self.assertNotIn("similarity_threshold", defaults)
 
     def test_from_cli_namespace_maps_no_relink_dino_flag(self) -> None:
@@ -37,6 +39,7 @@ class TemporalLinkingConfigTests(unittest.TestCase):
             w_age=0.05,
             assignment_method="hungarian",
             match_within_class=True,
+            class_mismatch_penalty=0.20,
             filter_short_tracks_in_summary=True,
             activation_topk=64,
             max_centroid_distance=0.40,
@@ -46,6 +49,7 @@ class TemporalLinkingConfigTests(unittest.TestCase):
             relink_max_pixels_per_frame=15.0,
             relink_fallback_threshold=0.40,
             relink_dino_threshold=0.55,
+            relink_class_mismatch_penalty=0.10,
             no_relink_dino=True,
         )
 

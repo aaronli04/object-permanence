@@ -107,7 +107,7 @@ class RelinkUnitTests(unittest.TestCase):
         pairs = {(a.track_id, b.track_id) for a, b in candidates}
 
         self.assertEqual({f.track_id for f in fragments}, {1, 2, 3})
-        self.assertEqual(pairs, {(1, 2)})
+        self.assertEqual(pairs, {(1, 2), (2, 3)})
 
     def test_centroid_scoring(self) -> None:
         e1 = _normalize(np.asarray([1.0, 0.0, 0.0], dtype=np.float32))
@@ -363,6 +363,45 @@ class RelinkUnitTests(unittest.TestCase):
             fallback_threshold=1.0,
         )
         self.assertEqual(accepted, [])
+
+    def test_score_identity_applies_cross_class_penalty(self) -> None:
+        base = _normalize(np.asarray([1.0, 0.0, 0.0], dtype=np.float32))
+        pred = TrackFragment(
+            track_id=1,
+            class_id=32,
+            first_frame=0,
+            last_frame=5,
+            hits=2,
+            centroid=base,
+            frame_vecs=np.stack([base], axis=0),
+            last_positions=[(0.0, 0.0, 0), (5.0, 5.0, 5)],
+            first_position=(0.0, 0.0, 0),
+            dino_gallery=np.stack([base, base], axis=0),
+        )
+        succ = TrackFragment(
+            track_id=2,
+            class_id=75,
+            first_frame=10,
+            last_frame=15,
+            hits=2,
+            centroid=base,
+            frame_vecs=np.stack([base], axis=0),
+            last_positions=[(10.0, 10.0, 10), (15.0, 15.0, 15)],
+            first_position=(10.0, 10.0, 10),
+            dino_gallery=np.stack([base, base], axis=0),
+        )
+
+        edges, coverage = score_identity(
+            [(pred, succ)],
+            relink_use_dino=True,
+            relink_dino_min_detections=2,
+            relink_dino_gallery_topk=3,
+            relink_class_mismatch_penalty=0.10,
+        )
+
+        self.assertEqual(edges[0].method, "dino")
+        self.assertAlmostEqual(edges[0].score, 0.90, places=6)
+        self.assertAlmostEqual(coverage, 1.0, places=6)
 
     def test_resolve_chains_is_deterministic(self) -> None:
         fragments = [

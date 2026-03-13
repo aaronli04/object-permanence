@@ -45,7 +45,10 @@ class SerializedTrackObservation:
     det_index: int
     bbox: list[float]
     visual_similarity: float | None
+    confidence: float | None = None
     fragment_track_id: int | None = None
+    class_id: int | None = None
+    class_name: str | None = None
 
 
 ObservationLike: TypeAlias = SerializedTrackObservation | Mapping[str, Any]
@@ -69,6 +72,15 @@ def serialize_observation(
                 else float(observation["visual_similarity"])
             ),
         }
+        raw_confidence = observation.get("confidence")
+        if raw_confidence is not None:
+            payload["confidence"] = float(raw_confidence)
+        raw_class_id = observation.get("class_id")
+        if raw_class_id is not None:
+            payload["class_id"] = int(raw_class_id)
+        raw_class_name = observation.get("class_name")
+        if raw_class_name is not None:
+            payload["class_name"] = str(raw_class_name)
         raw_fragment_track_id = observation.get("fragment_track_id")
         if raw_fragment_track_id is not None:
             payload["fragment_track_id"] = int(raw_fragment_track_id)
@@ -188,6 +200,8 @@ class Track:
     obs_vecs: list[np.ndarray] = field(default_factory=list)
     obs_dino_samples: list[DinoObservationSample] = field(default_factory=list)
     obs_positions: list[tuple[float, float, int]] = field(default_factory=list)
+    class_confidence_sums: dict[int, float] = field(default_factory=dict)
+    class_name_by_id: dict[int, str] = field(default_factory=dict)
     frame_width: float | None = None
     frame_height: float | None = None
     dino_vector: np.ndarray | None = None

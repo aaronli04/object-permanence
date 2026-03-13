@@ -58,6 +58,17 @@ def _gallery_similarity(gallery_a: np.ndarray, gallery_b: np.ndarray, *, topk: i
     return float(np.mean(top_scores))
 
 
+def _relink_class_penalty(
+    frag_a: TrackFragment,
+    frag_b: TrackFragment,
+    *,
+    mismatch_penalty: float,
+) -> float:
+    if int(frag_a.class_id) == int(frag_b.class_id):
+        return 0.0
+    return float(mismatch_penalty)
+
+
 def build_fragments(tracks: list[Track], min_hits: int, dino_gallery_size: int = 20) -> list[TrackFragment]:
     """Build relink-eligible fragments from closed tracks."""
     fragments: list[TrackFragment] = []
@@ -104,13 +115,11 @@ def build_candidates(
     fragments: list[TrackFragment],
     max_gap_frames: int,
 ) -> list[tuple[TrackFragment, TrackFragment]]:
-    """Enumerate temporally ordered same-class fragment pairs."""
+    """Enumerate temporally ordered fragment pairs."""
     candidates: list[tuple[TrackFragment, TrackFragment]] = []
     for i, pred in enumerate(fragments):
         for j, succ in enumerate(fragments):
             if i == j:
-                continue
-            if pred.class_id != succ.class_id:
                 continue
             if pred.last_frame >= succ.first_frame:
                 continue
@@ -122,11 +131,19 @@ def build_candidates(
     return candidates
 
 
-def score_centroid(candidates: list[tuple[TrackFragment, TrackFragment]]) -> list[RelinkEdge]:
+def score_centroid(
+    candidates: list[tuple[TrackFragment, TrackFragment]],
+    *,
+    class_mismatch_penalty: float = 0.0,
+) -> list[RelinkEdge]:
     """YOLO centroid cosine score for each candidate pair."""
     edges: list[RelinkEdge] = []
     for pred, succ in candidates:
-        score = float(np.dot(pred.centroid, succ.centroid))
+        score = float(np.dot(pred.centroid, succ.centroid)) - _relink_class_penalty(
+            pred,
+            succ,
+            mismatch_penalty=class_mismatch_penalty,
+        )
         edges.append(
             RelinkEdge(
                 predecessor_id=pred.track_id,
@@ -144,6 +161,7 @@ def score_identity(
     relink_use_dino: bool,
     relink_dino_min_detections: int = 2,
     relink_dino_gallery_topk: int = 3,
+    relink_class_mismatch_penalty: float = 0.0,
 ) -> tuple[list[RelinkEdge], float]:
     """Score each candidate using DINO when available, else YOLO centroid."""
     edges: list[RelinkEdge] = []
@@ -168,6 +186,11 @@ def score_identity(
         else:
             score = float(np.dot(pred.centroid, succ.centroid))
             method = "yolo"
+        score -= _relink_class_penalty(
+            pred,
+            succ,
+            mismatch_penalty=relink_class_mismatch_penalty,
+        )
         edges.append(
             RelinkEdge(
                 predecessor_id=pred.track_id,
@@ -184,11 +207,17 @@ def score_identity(
 def score_fallback(
     candidates: list[tuple[TrackFragment, TrackFragment]],
     max_pixels_per_frame: float,
+    *,
+    class_mismatch_penalty: float = 0.0,
 ) -> list[RelinkEdge]:
     """Spatial plausibility score for each candidate pair."""
     edges: list[RelinkEdge] = []
     for pred, succ in candidates:
-        score = _spatial_plausibility_score(pred, succ, max_pixels_per_frame)
+        score = _spatial_plausibility_score(pred, succ, max_pixels_per_frame) - _relink_class_penalty(
+            pred,
+            succ,
+            mismatch_penalty=class_mismatch_penalty,
+        )
         edges.append(
             RelinkEdge(
                 predecessor_id=pred.track_id,
@@ -340,8 +369,13 @@ def run_relink(
         relink_use_dino=bool(cfg.relink_use_dino),
         relink_dino_min_detections=int(cfg.relink_dino_min_detections),
         relink_dino_gallery_topk=int(cfg.relink_dino_gallery_topk),
+        relink_class_mismatch_penalty=float(cfg.relink_class_mismatch_penalty),
     )
-    fallback_edges = score_fallback(candidates, cfg.relink_max_pixels_per_frame)
+    fallback_edges = score_fallback(
+        candidates,
+        cfg.relink_max_pixels_per_frame,
+        class_mismatch_penalty=float(cfg.relink_class_mismatch_penalty),
+    )
 
     yolo_threshold = float(cfg.relink_threshold)
     dino_threshold = float(cfg.relink_dino_threshold)

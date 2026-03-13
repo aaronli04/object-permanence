@@ -35,21 +35,27 @@ class SerializeRelinkTests(unittest.TestCase):
                         "det_index": 0,
                         "bbox": [0, 0, 1, 1],
                         "visual_similarity": None,
+                        "confidence": 0.95,
                         "fragment_track_id": 1,
+                        "class_id": 32,
+                        "class_name": "sports ball",
                     },
                     {
                         "frame_num": 5,
                         "det_index": 0,
                         "bbox": [0, 0, 1, 1],
                         "visual_similarity": 0.8,
+                        "confidence": 0.95,
                         "fragment_track_id": 1,
+                        "class_id": 32,
+                        "class_name": "sports ball",
                     },
                 ],
             },
             {
                 "track_id": 2,
-                "class_id": 32,
-                "class_name": "sports ball",
+                "class_id": 75,
+                "class_name": "vase",
                 "status": "closed",
                 "start_frame": 10,
                 "end_frame": 10,
@@ -65,7 +71,10 @@ class SerializeRelinkTests(unittest.TestCase):
                         "det_index": 0,
                         "bbox": [0, 0, 1, 1],
                         "visual_similarity": None,
+                        "confidence": 0.31,
                         "fragment_track_id": 2,
+                        "class_id": 75,
+                        "class_name": "vase",
                     },
                 ],
             },
@@ -84,6 +93,8 @@ class SerializeRelinkTests(unittest.TestCase):
         self.assertEqual(track["relinked_from"], [2])
         self.assertAlmostEqual(float(track["avg_visual_similarity"]), 0.8, places=5)
         self.assertTrue(bool(track["valid_track"]))
+        self.assertEqual(track["class_id"], 32)
+        self.assertEqual(track["class_name"], "sports ball")
         fragment_track_ids = [obs.get("fragment_track_id") for obs in track["observations"]]
         self.assertEqual(fragment_track_ids, [1, 1, 2])
 

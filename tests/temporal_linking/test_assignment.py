@@ -28,6 +28,7 @@ def _make_track(
     vec: np.ndarray,
     class_id: int = 32,
     *,
+    class_name: str = "sports ball",
     bbox: np.ndarray | None = None,
     frame_width: float | None = 100.0,
     frame_height: float | None = 100.0,
@@ -37,7 +38,7 @@ def _make_track(
     track = Track(
         track_id=track_id,
         class_id=class_id,
-        class_name="sports ball",
+        class_name=class_name,
         status=TrackStatus.ACTIVE,
         start_frame=0,
         last_seen_frame=0,
@@ -56,6 +57,7 @@ def _make_det(
     vec: np.ndarray,
     class_id: int = 32,
     *,
+    class_name: str = "sports ball",
     bbox: np.ndarray | None = None,
     frame_width: float | None = 100.0,
     frame_height: float | None = 100.0,
@@ -66,14 +68,14 @@ def _make_det(
         frame_num=1,
         det_index=det_index,
         class_id=class_id,
-        class_name="sports ball",
+        class_name=class_name,
         bbox_xyxy=bbox_xyxy,
         confidence=0.9,
         activation_vec=vec_n,
         small_crop_flag=False,
         raw_payload={
             "class_id": class_id,
-            "class_name": "sports ball",
+            "class_name": class_name,
             "bbox": [float(v) for v in bbox_xyxy.tolist()],
             "confidence": 0.9,
             "activation": {"vector": vec_n.tolist(), "dim": int(vec_n.shape[0]), "small_crop_flag": False},
@@ -114,13 +116,24 @@ class AssignmentTests(unittest.TestCase):
         self.assertEqual(assignments[0].det_index, 1)
         self.assertGreaterEqual(assignments[0].visual_similarity, cfg.similarity_threshold)
 
-    def test_class_policy_blocks_mismatch(self) -> None:
-        cfg = TemporalLinkingConfig(similarity_threshold=0.0, match_within_class=True)
+    def test_class_policy_penalizes_mismatch_but_allows_assignment(self) -> None:
+        cfg = TemporalLinkingConfig(
+            similarity_threshold=0.0,
+            match_within_class=True,
+            class_mismatch_penalty=0.20,
+        )
         track = _make_track(track_id=1, vec=np.asarray([1.0, 0.0, 0.0], dtype=np.float32), class_id=32)
-        det = _make_det(det_index=0, vec=np.asarray([1.0, 0.0, 0.0], dtype=np.float32), class_id=1)
+        det = _make_det(
+            det_index=0,
+            vec=np.asarray([1.0, 0.0, 0.0], dtype=np.float32),
+            class_id=75,
+            class_name="vase",
+        )
 
         assignments = assign_frame([track], [det], cfg)
-        self.assertEqual(assignments, [])
+        self.assertEqual(len(assignments), 1)
+        self.assertEqual(assignments[0].det_index, 0)
+        self.assertAlmostEqual(float(assignments[0].total_score), 1.0, places=5)
 
     def test_spatial_gate_blocks_implausible_high_cosine_match(self) -> None:
         cfg = TemporalLinkingConfig(similarity_threshold=0.0, max_centroid_distance=0.10)

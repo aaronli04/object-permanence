@@ -33,6 +33,7 @@ class TemporalLinkingConfig:
     # Assignment and matching policy.
     assignment_method: Literal["hungarian", "greedy"] = "hungarian"
     match_within_class: bool = True
+    class_mismatch_penalty: float = 0.20
     filter_short_tracks_in_summary: bool = True
     activation_topk: int | None = 64
     max_centroid_distance: float = 0.40
@@ -48,6 +49,7 @@ class TemporalLinkingConfig:
     relink_dino_min_detections: int = 2
     relink_dino_gallery_size: int = 20
     relink_dino_gallery_topk: int = 3
+    relink_class_mismatch_penalty: float = 0.10
 
     @classmethod
     def defaults(cls) -> dict[str, Any]:
@@ -103,6 +105,10 @@ class TemporalLinkingConfig:
             raise ValueError("relink_dino_gallery_size must be > 0")
         if self.relink_dino_gallery_topk <= 0:
             raise ValueError("relink_dino_gallery_topk must be > 0")
+        if self.class_mismatch_penalty < 0.0:
+            raise ValueError("class_mismatch_penalty must be >= 0.0")
+        if self.relink_class_mismatch_penalty < 0.0:
+            raise ValueError("relink_class_mismatch_penalty must be >= 0.0")
         if self.max_lost_frames < 0:
             raise ValueError("max_lost_frames must be >= 0")
         if self.min_hits_to_activate <= 0:

@@ -344,6 +344,7 @@ class RelinkDinoTests(unittest.TestCase):
         self.assertIn("relink_dino_threshold", manifest["config"])
         self.assertIn("relink_dino_gallery_size", manifest["config"])
         self.assertIn("relink_dino_gallery_topk", manifest["config"])
+        self.assertIn("relink_class_mismatch_penalty", manifest["config"])
 
 
 if __name__ == "__main__":

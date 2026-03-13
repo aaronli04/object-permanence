@@ -29,6 +29,7 @@ def _make_det(
     class_id: int,
     vec: np.ndarray,
     *,
+    class_name: str = "sports ball",
     bbox: np.ndarray | None = None,
     frame_width: float | None = 100.0,
     frame_height: float | None = 100.0,
@@ -39,14 +40,14 @@ def _make_det(
         frame_num=frame_num,
         det_index=det_index,
         class_id=class_id,
-        class_name="sports ball",
+        class_name=class_name,
         bbox_xyxy=bbox_xyxy,
         confidence=0.9,
         activation_vec=vec_n,
         small_crop_flag=False,
         raw_payload={
             "class_id": class_id,
-            "class_name": "sports ball",
+            "class_name": class_name,
             "bbox": [float(v) for v in bbox_xyxy.tolist()],
             "confidence": 0.9,
             "activation": {"vector": vec_n.tolist(), "dim": int(vec_n.shape[0]), "small_crop_flag": False},
@@ -61,6 +62,7 @@ def _make_track(
     class_id: int,
     vec: np.ndarray,
     *,
+    class_name: str = "sports ball",
     bbox: np.ndarray | None = None,
     frame_width: float | None = 100.0,
     frame_height: float | None = 100.0,
@@ -70,7 +72,7 @@ def _make_track(
     track = Track(
         track_id=track_id,
         class_id=class_id,
-        class_name="sports ball",
+        class_name=class_name,
         status=TrackStatus.ACTIVE,
         start_frame=0,
         last_seen_frame=0,
@@ -114,18 +116,19 @@ class SimilarityMatrixTests(unittest.TestCase):
         self.assertFalse(bool(scores.eligible[0, 0]))
         self.assertTrue(np.isneginf(float(scores.assignment[0, 0])))
 
-    def test_class_mismatch_is_invalid_when_policy_enabled(self) -> None:
-        cfg = TemporalLinkingConfig(similarity_threshold=0.8, match_within_class=True)
+    def test_class_mismatch_gets_penalized_but_stays_eligible(self) -> None:
+        cfg = TemporalLinkingConfig(similarity_threshold=0.8, match_within_class=True, class_mismatch_penalty=0.20)
         vec = np.asarray([1.0, 0.0, 0.0], dtype=np.float32)
 
         track = _make_track(track_id=1, class_id=32, vec=vec)
-        det = _make_det(frame_num=1, det_index=0, class_id=1, vec=vec)
+        det = _make_det(frame_num=1, det_index=0, class_id=75, class_name="vase", vec=vec)
 
         scores = compute_pair_scores([track], [det], cfg)
 
-        self.assertTrue(np.isneginf(float(scores.visual[0, 0])))
-        self.assertFalse(bool(scores.eligible[0, 0]))
-        self.assertTrue(np.isneginf(float(scores.assignment[0, 0])))
+        self.assertAlmostEqual(float(scores.visual[0, 0]), 1.0, places=5)
+        self.assertTrue(bool(scores.eligible[0, 0]))
+        self.assertAlmostEqual(float(scores.assignment[0, 0]), 1.0 + float(scores.tie_break[0, 0]), places=5)
+        self.assertLess(float(scores.assignment[0, 0]), 1.0 + (0.05 + 0.095 + 0.05))
 
     def test_spatial_gate_blocks_far_pairs_before_cosine(self) -> None:
         cfg = TemporalLinkingConfig(similarity_threshold=0.5, max_centroid_distance=0.10)

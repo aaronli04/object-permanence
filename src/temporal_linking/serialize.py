@@ -119,6 +119,41 @@ def canonical_track_id(track_id: int, merge_map: dict[int, int]) -> int:
     return current
 
 
+def _resolve_merged_track_class(
+    observations: list[dict[str, Any]],
+    *,
+    fallback_class_id: int,
+    fallback_class_name: str,
+) -> tuple[int, str]:
+    scores_by_class: dict[int, float] = {}
+    names_by_class: dict[int, str] = {}
+
+    for obs in observations:
+        raw_class_id = obs.get("class_id")
+        if not isinstance(raw_class_id, int):
+            continue
+        weight = float(obs.get("confidence", 0.0) or 0.0)
+        scores_by_class[raw_class_id] = scores_by_class.get(raw_class_id, 0.0) + max(0.0, weight)
+        raw_class_name = obs.get("class_name")
+        if raw_class_name is not None:
+            names_by_class[raw_class_id] = str(raw_class_name)
+
+    if not scores_by_class:
+        return int(fallback_class_id), str(fallback_class_name)
+
+    best_class_id = int(fallback_class_id)
+    best_score = scores_by_class.get(best_class_id, float("-inf"))
+    for class_id, score in sorted(scores_by_class.items()):
+        if score > best_score:
+            best_class_id = int(class_id)
+            best_score = float(score)
+            continue
+        if score == best_score and int(class_id) == int(fallback_class_id):
+            best_class_id = int(fallback_class_id)
+
+    return best_class_id, names_by_class.get(best_class_id, str(fallback_class_name))
+
+
 def apply_merges_to_tracks_payload(
     tracks: list[dict[str, Any]],
     merge_map: dict[int, int],
@@ -182,6 +217,13 @@ def apply_merges_to_tracks_payload(
         canonical_payload["max_miss_streak"] = int(max_miss_streak)
         canonical_payload["avg_visual_similarity"] = avg_visual_similarity
         canonical_payload["valid_track"] = bool(hits >= cfg.min_track_length)
+        merged_class_id, merged_class_name = _resolve_merged_track_class(
+            observations,
+            fallback_class_id=int(canonical_payload.get("class_id", -1)),
+            fallback_class_name=str(canonical_payload.get("class_name", "")),
+        )
+        canonical_payload["class_id"] = int(merged_class_id)
+        canonical_payload["class_name"] = str(merged_class_name)
         canonical_payload["events"] = events
         canonical_payload["observations"] = observations
         canonical_payload["relinked_from"] = [int(track_id) for track_id in members_sorted if track_id != canonical_id]
@@ -274,6 +316,7 @@ def build_relink_manifest(
         "relink_dino_min_detections": int(cfg.relink_dino_min_detections),
         "relink_dino_gallery_size": int(cfg.relink_dino_gallery_size),
         "relink_dino_gallery_topk": int(cfg.relink_dino_gallery_topk),
+        "relink_class_mismatch_penalty": float(cfg.relink_class_mismatch_penalty),
     }
     manifest = RelinkManifest(
         schema_version=SCHEMA_VERSION_RELINK_MANIFEST,

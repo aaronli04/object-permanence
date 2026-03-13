@@ -96,6 +96,14 @@ def _normalized_centroid_distance(track: Track, det: Detection) -> float | None:
     return float(math.sqrt(((dx / width) ** 2) + ((dy / height) ** 2)) / math.sqrt(2.0))
 
 
+def _class_penalty(track: Track, det: Detection, cfg: TemporalLinkingConfig) -> float:
+    if not bool(cfg.match_within_class):
+        return 0.0
+    if int(track.class_id) == int(det.class_id):
+        return 0.0
+    return float(cfg.class_mismatch_penalty)
+
+
 def compute_pair_scores(
     tracks: list[Track],
     detections: list[Detection],
@@ -103,7 +111,8 @@ def compute_pair_scores(
 ) -> PairScores:
     """Compute visual, tie-break, and assignment score matrices.
 
-    Eligibility is determined by class policy, spatial plausibility, and visual similarity threshold.
+    Eligibility is determined by spatial plausibility and visual similarity threshold.
+    Class mismatch contributes a configurable soft penalty to assignment score.
     """
     n_tracks = len(tracks)
     n_dets = len(detections)
@@ -123,9 +132,6 @@ def compute_pair_scores(
         age_decay = float(math.exp(-float(track.miss_streak) / float(max(cfg.max_lost_frames, 1))))
 
         for j, det in enumerate(detections):
-            if cfg.match_within_class and track.class_id != det.class_id:
-                continue
-
             centroid_distance = _normalized_centroid_distance(track, det)
             if centroid_distance is not None and centroid_distance > cfg.max_centroid_distance:
                 visual[i, j] = np.float32(0.0)
@@ -137,7 +143,8 @@ def compute_pair_scores(
             vis = float(np.dot(ref_vec, det.activation_vec))
             sp = _spatial_score(track, det)
             cons = consistency if consistency is not None else vis
-            tie = (cfg.w_spatial * sp) + (cfg.w_consistency * cons) + (cfg.w_age * age_decay)
+            class_penalty = _class_penalty(track, det, cfg)
+            tie = (cfg.w_spatial * sp) + (cfg.w_consistency * cons) + (cfg.w_age * age_decay) - class_penalty
 
             is_eligible = vis >= cfg.similarity_threshold
 

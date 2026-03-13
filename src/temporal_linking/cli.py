@@ -110,7 +110,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--match-within-class",
         action=argparse.BooleanOptionalAction,
         default=bool(_CFG_DEFAULTS["match_within_class"]),
-        help="Restrict matching to same class_id pairs.",
+        help="Prefer same-class frame matches by applying a penalty to cross-class pairs instead of hard blocking them.",
+    )
+    parser.add_argument(
+        "--class-mismatch-penalty",
+        type=float,
+        default=float(_CFG_DEFAULTS["class_mismatch_penalty"]),
+        help="Assignment score penalty applied to cross-class frame matches when --match-within-class is enabled.",
     )
     parser.add_argument(
         "--filter-short-tracks-in-summary",
@@ -174,6 +180,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-relink-dino",
         action="store_true",
         help="Disable DINO relink scoring and force YOLO centroid relink path.",
+    )
+    parser.add_argument(
+        "--relink-class-mismatch-penalty",
+        type=float,
+        default=float(_CFG_DEFAULTS["relink_class_mismatch_penalty"]),
+        help="Penalty applied to relink scores when predecessor and successor fragments resolve to different classes.",
     )
     parser.add_argument(
         "--relink-dino-gallery-size",
