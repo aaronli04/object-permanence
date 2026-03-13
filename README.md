@@ -1,4 +1,4 @@
-\# Object Permanence
+## Object Permanence
 
 An offline two-stage pipeline for identity-preserving object tracking using YOLOv8. The system builds multi-layer YOLO identity embeddings for frame-to-frame linking and uses DINO CLS vectors as relink-only sidecar evidence to verify identity across occlusion gaps.
 
