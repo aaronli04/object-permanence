@@ -245,7 +245,7 @@ for v in data/raw_videos/*.mp4; do
   python3 experiments/layer_stability_sweep.py \
     --video "$v" \
     --model yolov8n.pt \
-    --sample-rate 5 \
+    --sample-rate 1 \
     --max-sampled-frames 20 \
     --class-id -1 \
     --min-confidence 0.25 \
@@ -270,7 +270,7 @@ python3 experiments/aggregate_layer_sweeps.py \
 python3 src/run_pipeline.py \
   --video-dir data/raw_videos \
   --pattern "*.mp4" \
-  --sample-rate 5 \
+  --sample-rate 1 \
   --model yolov8n.pt
 ```
 Set `TRACE_DISABLE_DINO=1` to disable DINO sidecar extraction. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and marks DINO sidecars unavailable for that run while preserving YOLO enrichment outputs.

@@ -9,6 +9,7 @@ from typing import Sequence
 from .constants import (
     DEFAULT_BATCH_SIZE,
     DEFAULT_HEAD_LAYER,
+    DEFAULT_SAMPLE_RATE,
     DEFAULT_HEAD_STRIDE,
     DEFAULT_OUTPUT_ROOT,
     OUTPUT_VECTOR_DIM,
@@ -31,7 +32,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Glob pattern for batch mode (default: *.mp4). Ignored in single-video mode.",
     )
     parser.add_argument("--model", required=True, help="Ultralytics YOLOv8 model weights or model identifier.")
-    parser.add_argument("--sample-rate", type=int, default=5, help="Sample every N frames (default: 5).")
+    parser.add_argument(
+        "--sample-rate",
+        type=int,
+        default=DEFAULT_SAMPLE_RATE,
+        help=f"Sample every N frames (default: {DEFAULT_SAMPLE_RATE}).",
+    )
 
     parser.add_argument(
         "--head-layer",

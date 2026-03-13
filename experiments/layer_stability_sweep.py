@@ -24,6 +24,7 @@ if PROJECT_SRC not in sys.path:
 from trace_enrichment.model import get_module_map, load_yolo  # noqa: E402
 from trace_enrichment.sampler import FrameSampler  # noqa: E402
 from trace_enrichment.constants import (  # noqa: E402
+    DEFAULT_SAMPLE_RATE,
     DINO_CROP_PADDING_RATIO,
     DINO_EMBEDDING_DIM,
     DINO_INPUT_SIZE,
@@ -308,7 +309,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Layer temporal stability sweep for YOLOv8 module outputs.")
     parser.add_argument("--video", required=True, help="Input video path.")
     parser.add_argument("--model", default="yolov8n.pt", help="YOLO model weights path or identifier.")
-    parser.add_argument("--sample-rate", type=int, default=5, help="Sample every N frames.")
+    parser.add_argument(
+        "--sample-rate",
+        type=int,
+        default=DEFAULT_SAMPLE_RATE,
+        help=f"Sample every N frames (default: {DEFAULT_SAMPLE_RATE}).",
+    )
     parser.add_argument("--max-sampled-frames", type=int, default=20, help="Max sampled frames to process.")
     parser.add_argument("--class-id", type=int, default=-1, help="Target class id (-1 includes all classes).")
     parser.add_argument("--min-confidence", type=float, default=0.25, help="Minimum detection confidence.")

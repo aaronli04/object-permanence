@@ -10,6 +10,7 @@ ACTIVATION_LAYER_ALIASES = ["2.cv1"]
 # PCA compresses the raw YOLO embedding (default 208-D) to this target dimension.
 OUTPUT_VECTOR_DIM = 128
 DEFAULT_BATCH_SIZE = 8
+DEFAULT_SAMPLE_RATE = 1
 # Selected from multi-video separability calibration with winner constraints
 # stored at experiments/results/layer_selection/aggregate/aggregate_separability.csv:
 # feature_dim >= 32 and dedupe .conv layers when parent Conv module exists.
