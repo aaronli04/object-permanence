@@ -135,31 +135,31 @@ Winner under constraint (`total_tracks <= R0`) is `R1`; `R1` through `R4` tie on
 
 ### Qualitative Trace Summary Examples
 
-The rendered trace summary sheets below come directly from `experiments/results/linking/*/trace_summary/` and illustrate both successful recoveries and detector-driven failure modes.
+The figures below are tracked copies of representative `trace_summary` outputs and illustrate both successful recoveries and detector-driven failure modes.
 
 **Successful recovery: long left-to-right ball track**
 
 `10sec_Left_to_Right` track `1` shows the sports ball surviving fragmentation and being merged back into a single canonical trajectory.
 
-![10sec_Left_to_Right recovery](experiments/results/linking/10sec_Left_to_Right/trace_summary/track_1.jpg)
+![10sec_Left_to_Right recovery](assets/readme/10sec-left-to-right-recovery.jpg)
 
 **Successful recovery: bounce-back relink**
 
 `Left_bounce_back` track `1` is a representative case where the ball leaves the immediate neighborhood of its prior detections, fragments, and is later recovered into the same final track.
 
-![Left_bounce_back recovery](experiments/results/linking/Left_bounce_back/trace_summary/track_1.jpg)
+![Left_bounce_back recovery](assets/readme/left-bounce-back-recovery.jpg)
 
 **Limitation: spurious non-ball recovery**
 
 `Occlusion_ball_removed` track `5` is a good example of a detector-driven false positive. The temporal linker can keep this track internally consistent, but it cannot correct the fact that YOLO emitted a persistent non-ball object.
 
-![Occlusion_ball_removed limitation](experiments/results/linking/Occlusion_ball_removed/trace_summary/track_5.jpg)
+![Occlusion_ball_removed limitation](assets/readme/occlusion-ball-removed-limitation.jpg)
 
 **Limitation: stable false-positive track**
 
 `No_occlusion_ball_removed` track `8` shows that even without heavy occlusion, consistent false detections can still form coherent tracks and survive relink.
 
-![No_occlusion_ball_removed limitation](experiments/results/linking/No_occlusion_ball_removed/trace_summary/track_8.jpg)
+![No_occlusion_ball_removed limitation](assets/readme/no-occlusion-ball-removed-limitation.jpg)
 
 ---
 
