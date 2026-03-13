@@ -21,9 +21,9 @@ Links detections across sampled frames using cosine similarity on normalized emb
 ## Known Limitations
 
 The main failure modes are detector-driven rather than linker-driven:
+- **Layer calibration is still class-level, not instance-level.** The current sweep used class fallback (`track_id_coverage = 0.0`) rather than stable instance IDs, so the selected weights separate categories more reliably than visually similar instances of the same class.
 - **Spurious detections remain trackable.** If YOLO emits a persistent false positive, the tracker can keep it internally consistent.
 - **Heavy occlusion is only partially recoverable.** Gallery relink recovers many splits, but cannot resolve cases where the occluder itself creates a competing detection.
-- **Calibration is scenario-specific.** Current thresholds and layer weights were tuned on eight controlled videos, and the layer sweep was effectively class-level (`track_id_coverage = 0.0`) rather than instance-level.
 
 ---
 
@@ -43,6 +43,8 @@ Frame-to-frame linking uses a YOLO-only multi-layer composite embedding. Layer w
 - **Class-level (22.cv3.0):** Detection-head activations encode class probability space. It is retained as a class-consistency gate but weighted conservatively because same-class instances are often near-identical in this space.
 
 Layer weights were chosen from a Fisher-style separability sweep over YOLO layers. The current sweep used class fallback rather than stable instance IDs, so these weights should be interpreted as strong implementation guidance rather than a final instance-level optimum.
+
+**Methodological caveat.** Because the calibration sweep did not have stable `track_id` supervision, the separability scores reflect class separation more than true same-instance re-identification. That is acceptable for choosing a practical YOLO embedding stack, but it is not yet a fully instance-calibrated result.
 
 ### DINO Gallery Relink
 
@@ -81,6 +83,7 @@ Frame-to-frame linking operates on cosine similarity between normalized projecte
 TENTATIVE -> ACTIVE -> LOST -> CLOSED
 ```
 
+New detections start as `TENTATIVE`, become `ACTIVE` once they accumulate enough support, move to `LOST` when temporarily unmatched, and become `CLOSED` when they are no longer eligible for extension and only remain as relink candidates.
 Reference descriptors blend last, EMA, and history vectors for stability against appearance drift.
 Track class is resolved from the confidence-weighted vote of its linked observations, not from the most recent detector label.
 
@@ -176,4 +179,4 @@ python3 -m pip install -r requirements.txt
 bash scripts/run_full_pipeline.sh
 ```
 
-This README is intentionally poster-facing. For full operational detail, use `src/run_pipeline.py`, `src/run_temporal_linking.py`, and `scripts/run_full_pipeline.sh`.
+For each input video, the script writes enriched detections to `experiments/results/activation_enrichment/<scenario>/` and linked outputs to `experiments/results/linking/<scenario>/`, including `tracks.json`, `relink_manifest.json`, `trace_summary.json`, and rendered `trace_summary/` images.
