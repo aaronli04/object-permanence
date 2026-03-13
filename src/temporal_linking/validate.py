@@ -48,6 +48,12 @@ def validate_linked_detections(
                 raise AssertionError(f"Duplicate track_id={track_id} in frame {frame['frame_num']}")
             seen_track_ids.add(track_id)
 
+            fragment_track_id = temporal_link.get("fragment_track_id")
+            if fragment_track_id is not None and not isinstance(fragment_track_id, int):
+                raise AssertionError(
+                    f"fragment_track_id must be int/null in frame {frame['frame_num']} det {det.get('det_index')}"
+                )
+
             source_status = temporal_link.get("source_track_status")
             visual_similarity = temporal_link.get("visual_similarity")
             if source_status != "new":
@@ -85,6 +91,16 @@ def validate_tracks_payload(tracks_payload: dict[str, Any]) -> dict[str, int]:
 
         if bool(track.get("valid_track")):
             valid_count += 1
+
+        observations = track.get("observations", [])
+        if observations is not None and not isinstance(observations, list):
+            raise AssertionError(f"observations must be a list for track_id={track_id}")
+        for observation in observations:
+            if not isinstance(observation, dict):
+                raise AssertionError(f"observation entries must be objects for track_id={track_id}")
+            fragment_track_id = observation.get("fragment_track_id")
+            if fragment_track_id is not None and not isinstance(fragment_track_id, int):
+                raise AssertionError(f"fragment_track_id must be int/null for track_id={track_id}")
 
     return {"num_tracks_total": len(tracks), "num_tracks_valid": valid_count}
 

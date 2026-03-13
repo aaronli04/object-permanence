@@ -527,6 +527,7 @@ def build_manifest(
         "fit_timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "input_video_hash_sha256": sha256_file(run_config.video_path),
         "input_video_file": os.path.basename(run_config.video_path),
+        "input_video_path": run_config.video_path,
         "pool": POOL_STRATEGY,
         "pool_size": list(POOL_SIZE),
         "layers": _layer_manifest_section(hook_config),

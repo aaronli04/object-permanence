@@ -30,8 +30,20 @@ class SerializeRelinkTests(unittest.TestCase):
                 "valid_track": True,
                 "events": [{"frame_num": 0, "type": "created"}, {"frame_num": 5, "type": "closed"}],
                 "observations": [
-                    {"frame_num": 0, "det_index": 0, "bbox": [0, 0, 1, 1], "visual_similarity": None},
-                    {"frame_num": 5, "det_index": 0, "bbox": [0, 0, 1, 1], "visual_similarity": 0.8},
+                    {
+                        "frame_num": 0,
+                        "det_index": 0,
+                        "bbox": [0, 0, 1, 1],
+                        "visual_similarity": None,
+                        "fragment_track_id": 1,
+                    },
+                    {
+                        "frame_num": 5,
+                        "det_index": 0,
+                        "bbox": [0, 0, 1, 1],
+                        "visual_similarity": 0.8,
+                        "fragment_track_id": 1,
+                    },
                 ],
             },
             {
@@ -48,7 +60,13 @@ class SerializeRelinkTests(unittest.TestCase):
                 "valid_track": False,
                 "events": [{"frame_num": 10, "type": "created"}, {"frame_num": 10, "type": "closed"}],
                 "observations": [
-                    {"frame_num": 10, "det_index": 0, "bbox": [0, 0, 1, 1], "visual_similarity": None},
+                    {
+                        "frame_num": 10,
+                        "det_index": 0,
+                        "bbox": [0, 0, 1, 1],
+                        "visual_similarity": None,
+                        "fragment_track_id": 2,
+                    },
                 ],
             },
         ]
@@ -66,13 +84,15 @@ class SerializeRelinkTests(unittest.TestCase):
         self.assertEqual(track["relinked_from"], [2])
         self.assertAlmostEqual(float(track["avg_visual_similarity"]), 0.8, places=5)
         self.assertTrue(bool(track["valid_track"]))
+        fragment_track_ids = [obs.get("fragment_track_id") for obs in track["observations"]]
+        self.assertEqual(fragment_track_ids, [1, 1, 2])
 
     def test_remap_linked_frames_track_ids(self) -> None:
         linked_frames = [
             {
                 "frame_num": 0,
                 "detections": [
-                    {"det_index": 0, "temporal_link": {"track_id": 1}},
+                    {"det_index": 0, "temporal_link": {"track_id": 1, "fragment_track_id": 1}},
                     {"det_index": 1, "temporal_link": {"track_id": 2}},
                 ],
             }
@@ -81,6 +101,8 @@ class SerializeRelinkTests(unittest.TestCase):
         remapped = remap_linked_frames_track_ids(linked_frames, merge_map={2: 1})
         det_ids = [det["temporal_link"]["track_id"] for det in remapped[0]["detections"]]
         self.assertEqual(det_ids, [1, 1])
+        fragment_ids = [det["temporal_link"].get("fragment_track_id") for det in remapped[0]["detections"]]
+        self.assertEqual(fragment_ids, [1, 2])
 
 
 if __name__ == "__main__":

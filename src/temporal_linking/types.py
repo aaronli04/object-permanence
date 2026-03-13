@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, Mapping, TypeAlias
 
 import numpy as np
 
@@ -39,6 +39,125 @@ class FrameDetections:
     detections: list[Detection]
 
 
+@dataclass(frozen=True)
+class SerializedTrackObservation:
+    frame_num: int
+    det_index: int
+    bbox: list[float]
+    visual_similarity: float | None
+    fragment_track_id: int | None = None
+
+
+ObservationLike: TypeAlias = SerializedTrackObservation | Mapping[str, Any]
+
+
+def serialize_observation(
+    observation: ObservationLike,
+    *,
+    default_fragment_track_id: int | None = None,
+) -> dict[str, Any]:
+    if isinstance(observation, SerializedTrackObservation):
+        payload = asdict(observation)
+    else:
+        payload = {
+            "frame_num": int(observation["frame_num"]),
+            "det_index": int(observation["det_index"]),
+            "bbox": [float(v) for v in observation.get("bbox", [])],
+            "visual_similarity": (
+                None
+                if observation.get("visual_similarity") is None
+                else float(observation["visual_similarity"])
+            ),
+        }
+        raw_fragment_track_id = observation.get("fragment_track_id")
+        if raw_fragment_track_id is not None:
+            payload["fragment_track_id"] = int(raw_fragment_track_id)
+
+    if payload.get("fragment_track_id") is None and default_fragment_track_id is not None:
+        payload["fragment_track_id"] = int(default_fragment_track_id)
+    return payload
+
+
+@dataclass(frozen=True)
+class SerializedTemporalLink:
+    track_id: int
+    track_status: str
+    source_track_status: str
+    visual_similarity: float | None
+    spatial_score: float | None
+    total_score: float | None
+    age_since_seen: int
+    fragment_track_id: int | None = None
+
+
+TemporalLinkLike: TypeAlias = SerializedTemporalLink | Mapping[str, Any]
+
+
+def serialize_temporal_link(
+    temporal_link: TemporalLinkLike,
+    *,
+    default_fragment_track_id: int | None = None,
+) -> dict[str, Any]:
+    if isinstance(temporal_link, SerializedTemporalLink):
+        payload = asdict(temporal_link)
+    else:
+        payload = {
+            "track_id": int(temporal_link["track_id"]),
+            "track_status": str(temporal_link["track_status"]),
+            "source_track_status": str(temporal_link["source_track_status"]),
+            "visual_similarity": (
+                None if temporal_link.get("visual_similarity") is None else float(temporal_link["visual_similarity"])
+            ),
+            "spatial_score": None if temporal_link.get("spatial_score") is None else float(temporal_link["spatial_score"]),
+            "total_score": None if temporal_link.get("total_score") is None else float(temporal_link["total_score"]),
+            "age_since_seen": int(temporal_link["age_since_seen"]),
+        }
+        raw_fragment_track_id = temporal_link.get("fragment_track_id")
+        if raw_fragment_track_id is not None:
+            payload["fragment_track_id"] = int(raw_fragment_track_id)
+
+    if payload.get("fragment_track_id") is None and default_fragment_track_id is not None:
+        payload["fragment_track_id"] = int(default_fragment_track_id)
+    return payload
+
+
+@dataclass(frozen=True)
+class TraceFrameReference:
+    frame_num: int
+    det_index: int
+    bbox: list[float]
+    fragment_track_id: int
+    canonical_track_id: int
+    role: str
+
+
+@dataclass(frozen=True)
+class TraceFrameGroup:
+    name: str
+    frames: list[TraceFrameReference]
+
+
+@dataclass(frozen=True)
+class TraceProofItem:
+    kind: Literal["relink", "recovery"]
+    proof_id: str
+    canonical_track_id: int
+    fragment_track_ids: list[int]
+    frame_groups: list[TraceFrameGroup]
+    method: str | None = None
+    score: float | None = None
+    gap_frames: int | None = None
+
+
+@dataclass(frozen=True)
+class TraceReferencesPayload:
+    schema_version: str
+    generated_at_utc: str
+    config_hash_sha256: str
+    input_enriched_json: str
+    items: list[TraceProofItem]
+
+
 @dataclass
 class Track:
     track_id: int
@@ -61,7 +180,7 @@ class Track:
     visual_similarity_sum: float = 0.0
     visual_similarity_count: int = 0
 
-    observations: list[dict[str, Any]] = field(default_factory=list)
+    observations: list[SerializedTrackObservation | dict[str, Any]] = field(default_factory=list)
     events: list[dict[str, Any]] = field(default_factory=list)
     obs_vecs: list[np.ndarray] = field(default_factory=list)
     obs_dino_vecs: list[np.ndarray] = field(default_factory=list)
@@ -134,6 +253,8 @@ class TemporalLinkArtifacts:
     linked_detections_path: str
     tracks_path: str
     manifest_path: str
+    trace_references_path: str
+    trace_proofs_dir: str
 
 
 @dataclass(frozen=True)
@@ -142,6 +263,7 @@ class TemporalLinkingResult:
     tracks_payload: dict[str, Any]
     manifest_payload: dict[str, Any]
     relink_manifest_payload: dict[str, Any]
+    trace_references_payload: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -150,3 +272,5 @@ class TemporalLinkingOutputs:
     tracks: str
     linking_manifest: str
     relink_manifest: str
+    trace_references: str
+    trace_proofs: str | None = None

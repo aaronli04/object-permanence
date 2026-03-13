@@ -237,7 +237,31 @@ find .torch_cache/hub/checkpoints -name "dino_deitsmall8_pretrain.pth"
 
 ## Run Commands
 
-### 1. Per-video layer sweeps
+### 1. End-to-end single video with trace proofs
+```bash
+VIDEO="data/raw_videos/Right_to_left.mp4"
+MODEL="yolov8n.pt"
+SCENARIO="$(basename "$VIDEO" .mp4)"
+
+python3 src/run_pipeline.py \
+  --video "$VIDEO" \
+  --model "$MODEL" \
+  --sample-rate 1
+
+python3 src/run_temporal_linking.py \
+  --enriched-json "experiments/results/activation_enrichment/${SCENARIO}/enriched_detections.json" \
+  --activation-topk 64 \
+  --similarity-threshold 0.70 \
+  --max-centroid-distance 0.40 \
+  --relink-threshold 0.55 \
+  --relink-dino-threshold 0.55 \
+  --relink-max-gap-frames -1 \
+  --relink-fallback-threshold 0.40 \
+  --render-trace-proofs
+```
+When `--render-trace-proofs` is enabled, temporal linking resolves the source video from `projection_manifest.json` by default. Add `--video "$VIDEO"` if the enrichment artifacts were moved or the stored video path is stale.
+
+### 2. Per-video layer sweeps
 Instance-level sweep (recommended when detections include stable `track_id`):
 ```bash
 for v in data/raw_videos/*.mp4; do
@@ -256,7 +280,7 @@ done
 ```
 Class-level fallback sweep (when `track_id` is unavailable) is the same command without `--require-track-id`.
 
-### 2. Aggregate layer sweeps
+### 3. Aggregate layer sweeps
 ```bash
 python3 experiments/aggregate_layer_sweeps.py \
   --input-glob "experiments/results/layer_selection/per_video/layer_stability_sweep_*.csv" \
@@ -265,7 +289,7 @@ python3 experiments/aggregate_layer_sweeps.py \
   --top-n 20
 ```
 
-### 3. Activation enrichment (batch)
+### 4. Activation enrichment (batch)
 ```bash
 python3 src/run_pipeline.py \
   --video-dir data/raw_videos \
@@ -275,7 +299,7 @@ python3 src/run_pipeline.py \
 ```
 Set `TRACE_DISABLE_DINO=1` to disable DINO sidecar extraction. On first DINO-enabled run, `torch.hub` may download model weights; if unavailable offline and uncached, enrichment logs a clear warning and marks DINO sidecars unavailable for that run while preserving YOLO enrichment outputs.
 
-### 4. Temporal linking (batch)
+### 5. Temporal linking (batch)
 ```bash
 for f in experiments/results/activation_enrichment/*/enriched_detections.json; do
   python3 src/run_temporal_linking.py \
@@ -286,12 +310,13 @@ for f in experiments/results/activation_enrichment/*/enriched_detections.json; d
     --relink-threshold 0.55 \
     --relink-dino-threshold 0.55 \
     --relink-max-gap-frames -1 \
-    --relink-fallback-threshold 0.40
+    --relink-fallback-threshold 0.40 \
+    --render-trace-proofs
 done
 ```
-Add `--no-relink-dino` to force YOLO relink scoring.
+Add `--no-relink-dino` to force YOLO relink scoring. Add `--video /path/to/input.mp4` only when the source video cannot be resolved from the sibling `projection_manifest.json`.
 
-### 5. DINO relink threshold sweep (R0..R6)
+### 6. DINO relink threshold sweep (R0..R6)
 ```bash
 python3 experiments/run_dino_param_search.py \
   --enrichment-root experiments/results/activation_enrichment \
@@ -323,6 +348,10 @@ experiments/results/
       tracks.json
       linking_manifest.json
       relink_manifest.json
+      trace_references.json
+      trace_proofs/
+        relink_<pred>_<succ>.jpg
+        recovery_<track>_<frame>.jpg
   param_search/
     summary.csv
     R0/

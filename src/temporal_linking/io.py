@@ -283,6 +283,8 @@ def build_output_paths(output_dir: str) -> TemporalLinkArtifacts:
         linked_detections_path=os.path.join(output_dir, "linked_detections.json"),
         tracks_path=os.path.join(output_dir, "tracks.json"),
         manifest_path=os.path.join(output_dir, "linking_manifest.json"),
+        trace_references_path=os.path.join(output_dir, "trace_references.json"),
+        trace_proofs_dir=os.path.join(output_dir, "trace_proofs"),
     )
 
 
@@ -291,7 +293,9 @@ def write_linking_outputs(
     linked_frames: list[dict[str, Any]],
     tracks_payload: dict[str, Any],
     manifest_payload: dict[str, Any],
+    trace_references_payload: dict[str, Any],
 ) -> None:
     write_json(artifacts.linked_detections_path, linked_frames)
     write_json(artifacts.tracks_path, tracks_payload)
     write_json(artifacts.manifest_path, manifest_payload)
+    write_json(artifacts.trace_references_path, trace_references_payload)

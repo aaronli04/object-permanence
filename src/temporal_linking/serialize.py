@@ -8,11 +8,21 @@ import os
 from typing import Any
 
 from .config import TemporalLinkingConfig
-from .types import Assignment, FrameDetections, RelinkManifest, Track
+from .types import (
+    Assignment,
+    FrameDetections,
+    RelinkManifest,
+    SerializedTemporalLink,
+    TraceReferencesPayload,
+    Track,
+    serialize_observation,
+    serialize_temporal_link,
+)
 
 SCHEMA_VERSION_TRACKS = "temporal_linking_v1"
 SCHEMA_VERSION_MANIFEST = "temporal_linking_manifest_v1"
 SCHEMA_VERSION_RELINK_MANIFEST = "temporal_linking_relink_manifest_v1"
+SCHEMA_VERSION_TRACE_REFERENCES = "temporal_linking_trace_references_v1"
 
 
 def match_link_meta(
@@ -22,27 +32,33 @@ def match_link_meta(
     track_status: str,
     age_since_seen: int,
 ) -> dict[str, Any]:
-    return {
-        "track_id": int(track_id),
-        "track_status": track_status,
-        "source_track_status": assignment.source_track_status.value,
-        "visual_similarity": float(assignment.visual_similarity),
-        "spatial_score": float(assignment.spatial_score),
-        "total_score": float(assignment.total_score),
-        "age_since_seen": int(age_since_seen),
-    }
+    return serialize_temporal_link(
+        SerializedTemporalLink(
+            track_id=int(track_id),
+            track_status=track_status,
+            source_track_status=assignment.source_track_status.value,
+            visual_similarity=float(assignment.visual_similarity),
+            spatial_score=float(assignment.spatial_score),
+            total_score=float(assignment.total_score),
+            age_since_seen=int(age_since_seen),
+            fragment_track_id=int(track_id),
+        )
+    )
 
 
 def new_track_link_meta(*, track_id: int, track_status: str) -> dict[str, Any]:
-    return {
-        "track_id": int(track_id),
-        "track_status": track_status,
-        "source_track_status": "new",
-        "visual_similarity": None,
-        "spatial_score": None,
-        "total_score": None,
-        "age_since_seen": 0,
-    }
+    return serialize_temporal_link(
+        SerializedTemporalLink(
+            track_id=int(track_id),
+            track_status=track_status,
+            source_track_status="new",
+            visual_similarity=None,
+            spatial_score=None,
+            total_score=None,
+            age_since_seen=0,
+            fragment_track_id=int(track_id),
+        )
+    )
 
 
 def serialize_linked_frame(
@@ -84,11 +100,14 @@ def _track_payload(track: Track, cfg: TemporalLinkingConfig) -> dict[str, Any]:
         "avg_visual_similarity": None if avg_visual_similarity is None else float(avg_visual_similarity),
         "valid_track": bool(track.hits >= cfg.min_track_length),
         "events": list(track.events),
-        "observations": list(track.observations),
+        "observations": [
+            serialize_observation(observation, default_fragment_track_id=track.track_id)
+            for observation in track.observations
+        ],
     }
 
 
-def _canonical_track_id(track_id: int, merge_map: dict[int, int]) -> int:
+def canonical_track_id(track_id: int, merge_map: dict[int, int]) -> int:
     seen: set[int] = set()
     current = int(track_id)
     while current in merge_map and current not in seen:
@@ -112,7 +131,7 @@ def apply_merges_to_tracks_payload(
 
     groups: dict[int, list[int]] = {}
     for track_id in tracks_by_id:
-        canonical_id = _canonical_track_id(track_id, merge_map)
+        canonical_id = canonical_track_id(track_id, merge_map)
         if canonical_id not in tracks_by_id:
             canonical_id = track_id
         groups.setdefault(canonical_id, []).append(track_id)
@@ -188,7 +207,9 @@ def remap_linked_frames_track_ids(
             raw_track_id = temporal_link.get("track_id")
             if not isinstance(raw_track_id, int):
                 continue
-            canonical_id = _canonical_track_id(raw_track_id, merge_map)
+            if temporal_link.get("fragment_track_id") is None:
+                temporal_link["fragment_track_id"] = int(raw_track_id)
+            canonical_id = canonical_track_id(raw_track_id, merge_map)
             temporal_link["track_id"] = int(canonical_id)
     return remapped
 
@@ -268,6 +289,7 @@ def serialize_manifest(
     linked_frames: list[dict[str, Any]],
     tracks_payload: dict[str, Any],
     cfg: TemporalLinkingConfig,
+    artifacts: dict[str, Any],
 ) -> dict[str, Any]:
     tracks = tracks_payload.get("tracks", [])
 
@@ -284,6 +306,7 @@ def serialize_manifest(
         "schema_version": SCHEMA_VERSION_MANIFEST,
         "input_enriched_json": os.path.basename(enriched_json_path),
         "config": asdict(cfg),
+        "artifacts": copy.deepcopy(artifacts),
         "stats": {
             "num_frames": int(len(linked_frames)),
             "num_detections": int(num_detections),
@@ -292,3 +315,28 @@ def serialize_manifest(
             "num_recoveries": int(num_recoveries),
         },
     }
+
+
+def build_manifest_artifacts(
+    *,
+    trace_references_json: str,
+    trace_proofs_dir: str,
+    trace_proofs_requested: bool,
+    trace_proofs_present: bool,
+    trace_proofs_state: str,
+    trace_proofs_num_items: int,
+) -> dict[str, Any]:
+    return {
+        "trace_references_json": trace_references_json,
+        "trace_proofs": {
+            "requested": bool(trace_proofs_requested),
+            "present": bool(trace_proofs_present),
+            "state": str(trace_proofs_state),
+            "num_items": int(trace_proofs_num_items),
+            "dir": trace_proofs_dir,
+        },
+    }
+
+
+def serialize_trace_references(payload: TraceReferencesPayload) -> dict[str, Any]:
+    return asdict(payload)

@@ -8,7 +8,7 @@ import numpy as np
 from common.numeric import l2_normalize
 
 from .config import TemporalLinkingConfig
-from .types import Assignment, Detection, Track, TrackStatus, TrackerState
+from .types import Assignment, Detection, SerializedTrackObservation, Track, TrackStatus, TrackerState
 
 
 class TrackManager:
@@ -57,12 +57,13 @@ class TrackManager:
         if status == TrackStatus.ACTIVE:
             track.events.append({"frame_num": int(frame_num), "type": "activated"})
         track.observations.append(
-            {
-                "frame_num": int(frame_num),
-                "det_index": int(det.det_index),
-                "bbox": [float(v) for v in det.bbox_xyxy.tolist()],
-                "visual_similarity": None,
-            }
+            SerializedTrackObservation(
+                frame_num=int(frame_num),
+                det_index=int(det.det_index),
+                bbox=[float(v) for v in det.bbox_xyxy.tolist()],
+                visual_similarity=None,
+                fragment_track_id=int(track_id),
+            )
         )
         track.obs_vecs.append(det.activation_vec.copy())
         self._append_dino_observation(track, det)
@@ -101,12 +102,13 @@ class TrackManager:
         track.visual_similarity_count += 1
 
         track.observations.append(
-            {
-                "frame_num": int(frame_num),
-                "det_index": int(det.det_index),
-                "bbox": [float(v) for v in det.bbox_xyxy.tolist()],
-                "visual_similarity": float(assignment.visual_similarity),
-            }
+            SerializedTrackObservation(
+                frame_num=int(frame_num),
+                det_index=int(det.det_index),
+                bbox=[float(v) for v in det.bbox_xyxy.tolist()],
+                visual_similarity=float(assignment.visual_similarity),
+                fragment_track_id=int(track.track_id),
+            )
         )
         track.obs_vecs.append(det.activation_vec.copy())
         self._append_dino_observation(track, det)
