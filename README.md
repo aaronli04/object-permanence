@@ -164,6 +164,15 @@ The figures below are tracked copies of representative `trace_summary` outputs a
 
 ![No_occlusion_ball_removed limitation](assets/readme/no-occlusion-ball-removed-limitation.jpg)
 
+**Consolidated ball / vehicle readout**
+
+| Domain | Example | Track Continuity | Semantic Label | What It Shows |
+|---|---|---|---|---|
+| Ball rolling | `10sec_Left_to_Right` track `1` | Pass | Pass | The tracker preserves one canonical sports-ball identity across fragmentation and relink. |
+| Vehicle motion | `drift-chicane` track `5` | Pass | Fail at clip level | The main race car stays boxed, but the scene still produces off-class vehicle fragments elsewhere. |
+| Ball removal | `Occlusion_ball_removed` track `5` | Pass | Fail | A stable false-positive track can survive relink even when the target semantics are wrong. |
+| Vehicle street scene | `scooter-black` track `1` | Pass | Fail | One rider+scooter entity can split into parallel `car`, `motorcycle`, and `person` identities. |
+
 ### DAVIS Stress Benchmark (`SAMPLE_RATE=1`)
 
 To stress the tracker on real-world motion and occlusion, the repo now includes a curated DAVIS stress subset built from frame sequences via `scripts/build_davis_curated_dataset.py --preset stress`. All results below come from the dense run:
@@ -185,7 +194,7 @@ The benchmark summary is written to `experiments/results/davis_curated_summary.c
 |---|---:|---:|---|---|---|---|
 | `parkour` | `86.2%` | `96 / 100` | `PASS` | `PASS` | `PASS` | Strong person continuity; small `skateboard` / `suitcase` fragments remain. |
 | `bmx-bumps` | `86.1%` | `49 / 90` | `PASS` | `PASS` | `PASS` | Person and bicycle dominate, with occasional clutter labels (`bench`, `car`, `backpack`). |
-| `breakdance` | `95.1%` | `84 / 84` | `PASS` | `PASS` | `PASS` | Person labeling stays strong despite extreme pose and motion changes. |
+| `breakdance` | `95.1%` | `84 / 84` | `PASS` | `PASS` | `PASS` | Numerically strong on class purity, but the longest-lived person tracks are often spectators rather than the acrobat. |
 | `dance-twirl` | `98.2%` | `75 / 90` | `PASS` | `PASS` | `PASS` | The primary dancer stays on-class even in a cluttered crowd scene. |
 | `horsejump-high` | `69.7%` | `50 / 50` | `FAIL` | `PASS` | `FAIL` | Rider track is stable, but scene clutter creates `potted plant`, `stop sign`, and `car` fragments. |
 | `bear` | `93.2%` | `49 / 82` | `PASS` | `PASS` | `PASS` | Stable bear track with only a small `vase` spillover. |
@@ -199,11 +208,11 @@ The benchmark summary is written to `experiments/results/davis_curated_summary.c
 
 ![DAVIS parkour strength](assets/readme/davis-parkour-strength.jpg)
 
-**DAVIS strength: fast motion with strong class stability**
+**DAVIS strength: race car remains localized through smoke and motion**
 
-`breakdance` track `1` shows that the model can keep the primary performer on-class even under rapid pose changes, crowd background clutter, and large appearance shifts.
+`drift-chicane` track `5` is the clean vehicle-tracking case in the stress set. The main race car stays boxed across smoke, scale change, and rapid motion, even though the same clip still accumulates off-class fragments elsewhere in the scene.
 
-![DAVIS breakdance strength](assets/readme/davis-breakdance-strength.jpg)
+![DAVIS drift-chicane strength](assets/readme/davis-drift-chicane-strength.jpg)
 
 **DAVIS limitation: stable track, wrong class**
 
@@ -216,6 +225,10 @@ The benchmark summary is written to `experiments/results/davis_curated_summary.c
 `scooter-black` shows a harder semantic failure mode than simple false positives. The same rider+scooter entity is broken into parallel `motorcycle`, `person`, and `car` tracks, so temporal consistency alone is not enough to resolve the class identity.
 
 ![DAVIS scooter-black failure](assets/readme/davis-scooter-black-failure.jpg)
+
+**Why `breakdance` is not the hero image**
+
+`breakdance` still passes the heuristic table above because most detections are correctly labeled `person` and the clip contains several long-lived person tracks. The problem is qualitative: the highest-hit person tracks often belong to spectators at the frame edge, while the acrobat appears in lower-hit tracks such as `track_10`. That makes it a good stress clip for detector behavior, but a poor showcase for “primary subject tracked correctly.”
 
 These DAVIS examples reinforce the same lesson as the ball examples above: the linker is often stronger than the detector. Stable boxes and long relinked tracks are necessary, but they do not guarantee that the semantic class is correct.
 
