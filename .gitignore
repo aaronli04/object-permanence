@@ -38,6 +38,11 @@ dist/
 experiments/results/
 topk_similarity_sweep*.csv
 experiments/*_ball_vectors*.json
+DAVIS/
+DAVIS-2017-trainval-480p.zip
+data/davis_curated_manifest.csv
+data/davis_curated_manifest.json
+data/raw_videos/davis__*.mp4
 
 # Large model weights
 *.pt

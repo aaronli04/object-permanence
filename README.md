@@ -164,6 +164,61 @@ The figures below are tracked copies of representative `trace_summary` outputs a
 
 ![No_occlusion_ball_removed limitation](assets/readme/no-occlusion-ball-removed-limitation.jpg)
 
+### DAVIS Stress Benchmark (`SAMPLE_RATE=1`)
+
+To stress the tracker on real-world motion and occlusion, the repo now includes a curated DAVIS stress subset built from frame sequences via `scripts/build_davis_curated_dataset.py --preset stress`. All results below come from the dense run:
+
+```bash
+SAMPLE_RATE=1 VIDEO_GLOB='data/raw_videos/davis__*.mp4' bash scripts/run_full_pipeline.sh
+python3 scripts/summarize_davis_curated_results.py
+```
+
+The benchmark summary is written to `experiments/results/davis_curated_summary.csv` and `experiments/results/davis_curated_summary.json`.
+
+**How to read the pass/fail table**
+- `Class Eval` is `PASS` when at least `85%` of detections fall into the scenario's expected class set.
+- `Track Eval` is `PASS` when the strongest expected-class track covers at least `50%` of sampled frames.
+- `Overall` is `PASS` only when both of the above pass.
+- These are practical heuristics for README reporting, not ground-truth mAP or ReID metrics.
+
+| DAVIS Sequence | Expected-Class Share | Best Expected Track | Class Eval | Track Eval | Overall | Notes |
+|---|---:|---:|---|---|---|---|
+| `parkour` | `86.2%` | `96 / 100` | `PASS` | `PASS` | `PASS` | Strong person continuity; small `skateboard` / `suitcase` fragments remain. |
+| `bmx-bumps` | `86.1%` | `49 / 90` | `PASS` | `PASS` | `PASS` | Person and bicycle dominate, with occasional clutter labels (`bench`, `car`, `backpack`). |
+| `breakdance` | `95.1%` | `84 / 84` | `PASS` | `PASS` | `PASS` | Person labeling stays strong despite extreme pose and motion changes. |
+| `dance-twirl` | `98.2%` | `75 / 90` | `PASS` | `PASS` | `PASS` | The primary dancer stays on-class even in a cluttered crowd scene. |
+| `horsejump-high` | `69.7%` | `50 / 50` | `FAIL` | `PASS` | `FAIL` | Rider track is stable, but scene clutter creates `potted plant`, `stop sign`, and `car` fragments. |
+| `bear` | `93.2%` | `49 / 82` | `PASS` | `PASS` | `PASS` | Stable bear track with only a small `vase` spillover. |
+| `drift-chicane` | `32.3%` | `47 / 52` | `FAIL` | `PASS` | `FAIL` | Car motion is stable, but detector labels drift into `person`, `truck`, `boat`, and `airplane`. |
+| `scooter-black` | `81.0%` | `43 / 43` | `FAIL` | `PASS` | `FAIL` | Same rider+scooter entity splits into `motorcycle`, `person`, and `car` tracks. |
+| `motocross-jump` | `95.0%` | `39 / 40` | `PASS` | `PASS` | `PASS` | Rider and motorcycle labels remain clean overall. |
+
+**DAVIS strength: long person track through occlusion**
+
+`parkour` track `1` is the best example of the detector and linker working together on a real-world occlusion clip: the dominant person remains correctly labeled and the final track spans nearly the entire sequence.
+
+![DAVIS parkour strength](assets/readme/davis-parkour-strength.jpg)
+
+**DAVIS strength: fast motion with strong class stability**
+
+`breakdance` track `1` shows that the model can keep the primary performer on-class even under rapid pose changes, crowd background clutter, and large appearance shifts.
+
+![DAVIS breakdance strength](assets/readme/davis-breakdance-strength.jpg)
+
+**DAVIS limitation: stable track, wrong class**
+
+`drift-chicane` track `2` is analogous to the README's earlier non-ball failure cases: the box is spatially consistent, but the semantic label is wrong. The pipeline can relink the fragment; it cannot correct a detector-driven `truck` label on a race car.
+
+![DAVIS drift-chicane failure](assets/readme/davis-drift-chicane-failure.jpg)
+
+**DAVIS limitation: one physical object, multiple class identities**
+
+`scooter-black` shows a harder semantic failure mode than simple false positives. The same rider+scooter entity is broken into parallel `motorcycle`, `person`, and `car` tracks, so temporal consistency alone is not enough to resolve the class identity.
+
+![DAVIS scooter-black failure](assets/readme/davis-scooter-black-failure.jpg)
+
+These DAVIS examples reinforce the same lesson as the ball examples above: the linker is often stronger than the detector. Stable boxes and long relinked tracks are necessary, but they do not guarantee that the semantic class is correct.
+
 ---
 
 ## Reproduction
@@ -180,3 +235,10 @@ bash scripts/run_full_pipeline.sh
 ```
 
 For each input video, the script writes enriched detections to `experiments/results/activation_enrichment/<scenario>/` and linked outputs to `experiments/results/linking/<scenario>/`, including `tracks.json`, `relink_manifest.json`, `trace_summary.json`, and rendered `trace_summary/` images.
+
+**DAVIS stress subset**
+```bash
+python3 scripts/build_davis_curated_dataset.py --preset stress
+SAMPLE_RATE=1 VIDEO_GLOB='data/raw_videos/davis__*.mp4' bash scripts/run_full_pipeline.sh
+python3 scripts/summarize_davis_curated_results.py
+```
