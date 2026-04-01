@@ -164,7 +164,23 @@ def summary_color(track_id: int) -> tuple[int, int, int]:
     return _SUMMARY_PALETTE[summary_color_index(track_id)]
 
 
-def _load_frames(video_path: str, frame_nums: set[int]) -> dict[int, np.ndarray]:
+def collect_trace_summary_frame_nums(trace_summary_payload: dict[str, Any]) -> set[int]:
+    items = trace_summary_payload.get("items", [])
+    if not isinstance(items, list):
+        return set()
+
+    frame_nums: set[int] = set()
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        for frame_ref in item.get("frames", []):
+            if not isinstance(frame_ref, dict):
+                continue
+            frame_nums.add(int(frame_ref["frame_num"]))
+    return frame_nums
+
+
+def load_video_frames(video_path: str, frame_nums: set[int]) -> dict[int, np.ndarray]:
     frames: dict[int, np.ndarray] = {}
     if not frame_nums:
         return frames
@@ -184,7 +200,7 @@ def _load_frames(video_path: str, frame_nums: set[int]) -> dict[int, np.ndarray]
     return frames
 
 
-def _annotate_frame(frame: np.ndarray, frame_ref: dict[str, Any], color: tuple[int, int, int]) -> np.ndarray:
+def annotate_trace_frame(frame: np.ndarray, frame_ref: dict[str, Any], color: tuple[int, int, int]) -> np.ndarray:
     annotated = frame.copy()
     bbox = [int(round(float(v))) for v in frame_ref.get("bbox", [0, 0, 0, 0])]
     x1, y1, x2, y2 = bbox
@@ -246,7 +262,7 @@ def _frame_strip(item: dict[str, Any], frames_by_num: dict[int, np.ndarray], col
         if not isinstance(frame_ref, dict):
             continue
         frame_num = int(frame_ref["frame_num"])
-        annotated = _annotate_frame(frames_by_num[frame_num], frame_ref, color)
+        annotated = annotate_trace_frame(frames_by_num[frame_num], frame_ref, color)
         tile = _resize_and_pad(annotated)
         label_band = np.full((_GROUP_HEADER_HEIGHT, _TILE_WIDTH, 3), 232, dtype=np.uint8)
         cv2.putText(
@@ -292,16 +308,7 @@ def render_trace_summary(
     if not items:
         return 0
 
-    frame_nums: set[int] = set()
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-        for frame_ref in item.get("frames", []):
-            if not isinstance(frame_ref, dict):
-                continue
-            frame_nums.add(int(frame_ref["frame_num"]))
-
-    frames_by_num = _load_frames(video_path, frame_nums)
+    frames_by_num = load_video_frames(video_path, collect_trace_summary_frame_nums(trace_summary_payload))
     rendered = 0
     for item in items:
         if not isinstance(item, dict):

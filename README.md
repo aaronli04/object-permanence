@@ -232,13 +232,39 @@ source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
-**Minimal reproduction:**
+**Run one video end to end:**
+
+```bash
+python3 scripts/run_single_video.py \
+  --video data/raw_videos/Left_bounce_back.mp4 \
+  --model yolov8n.pt
+```
+
+This writes enrichment outputs to `experiments/results/activation_enrichment/<scenario>/` and linking outputs to `experiments/results/linking/<scenario>/`.
+
+The linking directory now also includes `track_docs/`:
+
+- `track_docs/README.md`: scenario-level index of all final tracks
+- `track_docs/track_<id>/summary.jpg`: the same summary-strip style used in the README examples
+- `track_docs/track_<id>/frames/*.jpg`: annotated start / middle / end frames for poster selection
+- `track_docs/track_<id>/track.json`: machine-readable metadata, label mix, and relink edges
+- `track_docs/track_<id>/README.md`: quick human-readable summary for that track
+
+**Batch reproduction:**
 
 ```bash
 bash scripts/run_full_pipeline.sh
 ```
 
-For each input video, writes enriched detections to `experiments/results/activation_enrichment/<scenario>/` and linked outputs to `experiments/results/linking/<scenario>/`, including `tracks.json`, `relink_manifest.json`, `trace_summary.json`, and rendered `trace_summary/` images.
+For each input video, writes enriched detections to `experiments/results/activation_enrichment/<scenario>/` and linked outputs to `experiments/results/linking/<scenario>/`, including `tracks.json`, `relink_manifest.json`, `trace_summary.json`, rendered `trace_summary/` images, and per-track `track_docs/` folders.
+
+**Backfill docs for existing results only:**
+
+```bash
+python3 scripts/build_track_docs.py
+```
+
+This refreshes `track_docs/` under each existing linking result and writes a batch overview to `experiments/results/linking/track_docs_overview.md`.
 
 **DAVIS stress subset:**
 

@@ -22,23 +22,16 @@ if [ "${#videos[@]}" -eq 0 ]; then
 fi
 
 for video in "${videos[@]}"; do
-  scenario="$(basename "${video}" .mp4)"
-
-  echo "[enrichment] ${video}"
-  python3 src/run_pipeline.py \
+  echo "[full-pipeline] ${video}"
+  python3 scripts/run_single_video.py \
     --video "${video}" \
     --model "${MODEL}" \
-    --sample-rate "${SAMPLE_RATE}"
-
-  echo "[linking] ${scenario}"
-  python3 src/run_temporal_linking.py \
-    --enriched-json "experiments/results/activation_enrichment/${scenario}/enriched_detections.json" \
+    --sample-rate "${SAMPLE_RATE}" \
     --activation-topk "${ACTIVATION_TOPK}" \
     --similarity-threshold "${SIMILARITY_THRESHOLD}" \
     --max-centroid-distance "${MAX_CENTROID_DISTANCE}" \
     --relink-threshold "${RELINK_THRESHOLD}" \
     --relink-dino-threshold "${RELINK_DINO_THRESHOLD}" \
     --relink-max-gap-frames "${RELINK_MAX_GAP_FRAMES}" \
-    --relink-fallback-threshold "${RELINK_FALLBACK_THRESHOLD}" \
-    --render-trace-summary
+    --relink-fallback-threshold "${RELINK_FALLBACK_THRESHOLD}"
 done
