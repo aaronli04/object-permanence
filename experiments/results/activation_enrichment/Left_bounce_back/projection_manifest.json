@@ -1,0 +1,82 @@
+{
+  "schema_version": "activation_enrichment_v2_single_pass",
+  "projection_file": "pca_projection.pkl",
+  "projection_dim": 105,
+  "projection_dim_requested": 128,
+  "fitted_pca_components": 105,
+  "projection_fit_scope": "per_run_all_detections",
+  "projection_caveats": [
+    "low_sample_count_for_per_run_pca_fit"
+  ],
+  "fit_timestamp_utc": "2026-04-01T21:04:41.041573+00:00",
+  "input_video_hash_sha256": "14bda503e03faec3a19d64f93ef407f026763cd4e082f636c8f4fe495d3c0acd",
+  "input_video_file": "Left_bounce_back.mp4",
+  "input_video_path": "data/raw_videos/Left_bounce_back.mp4",
+  "pool": "adaptive_avg_1x1",
+  "pool_size": [
+    1,
+    1
+  ],
+  "layers": {
+    "aliases": [
+      "2.cv1"
+    ],
+    "requested": "multi_layer_embedding",
+    "resolved": "4.cv1",
+    "actual": {
+      "resolved_hook_layer": "4.cv1",
+      "resolved_hook_layers": [
+        "4.cv1",
+        "15",
+        "22.cv3.0"
+      ]
+    },
+    "strides": {
+      "resolved_hook_layer": 8
+    },
+    "embedding": {
+      "enabled": true,
+      "resolved_layers": [
+        "4.cv1",
+        "15",
+        "22.cv3.0"
+      ],
+      "layer_weights": [
+        0.549,
+        0.351,
+        0.1
+      ],
+      "layers": [
+        {
+          "layer": "4.cv1",
+          "weight": 0.549
+        },
+        {
+          "layer": "15",
+          "weight": 0.351
+        },
+        {
+          "layer": "22.cv3.0",
+          "weight": 0.1
+        }
+      ]
+    }
+  },
+  "raw_activation_dim": 208,
+  "raw_embedding_dim": 208,
+  "dino_enabled": true,
+  "dino_role": "relink_sidecar",
+  "dino_model": "facebookresearch/dino:main/dino_vits8",
+  "dino_load_error": null,
+  "num_vectors_fit": 105,
+  "model_name": "yolov8n.pt",
+  "batch_size": 8,
+  "sample_rate": 5,
+  "total_sampled_frames": 64,
+  "frames_with_detections": 64,
+  "total_detections": 105,
+  "artifacts": {
+    "enriched_detections_json": "enriched_detections.json",
+    "projection_manifest_json": "projection_manifest.json"
+  }
+}

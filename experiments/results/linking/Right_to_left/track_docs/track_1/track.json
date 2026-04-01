@@ -1,0 +1,317 @@
+{
+  "scenario": "Right_to_left",
+  "track": {
+    "track_id": 1,
+    "class_id": 32,
+    "class_name": "sports ball",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 100,
+    "hits": 11,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": 0.9497341248724196,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "activated"
+      },
+      {
+        "frame_num": 15,
+        "type": "closed"
+      },
+      {
+        "frame_num": 20,
+        "type": "lost"
+      },
+      {
+        "frame_num": 70,
+        "type": "created"
+      },
+      {
+        "frame_num": 75,
+        "type": "activated"
+      },
+      {
+        "frame_num": 100,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 0,
+        "bbox": [
+          1653.9935302734375,
+          648.3600463867188,
+          1907.219970703125,
+          874.38671875
+        ],
+        "visual_similarity": null,
+        "confidence": 0.8603812456130981,
+        "fragment_track_id": 1,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 5,
+        "det_index": 0,
+        "bbox": [
+          1605.980712890625,
+          648.1154174804688,
+          1857.1552734375,
+          883.41015625
+        ],
+        "visual_similarity": 0.9317277073860168,
+        "confidence": 0.8150694370269775,
+        "fragment_track_id": 1,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 0,
+        "bbox": [
+          1531.130859375,
+          646.2769775390625,
+          1780.156494140625,
+          878.18408203125
+        ],
+        "visual_similarity": 0.9729445576667786,
+        "confidence": 0.8344058990478516,
+        "fragment_track_id": 1,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 1,
+        "bbox": [
+          1448.23388671875,
+          646.702880859375,
+          1699.786376953125,
+          881.4986572265625
+        ],
+        "visual_similarity": 0.942031741142273,
+        "confidence": 0.6299835443496704,
+        "fragment_track_id": 1,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 1,
+        "bbox": [
+          595.06884765625,
+          637.26513671875,
+          726.0608520507812,
+          879.190673828125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.376925528049469,
+        "fragment_track_id": 4,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 1,
+        "bbox": [
+          517.5743408203125,
+          636.7278442382812,
+          724.0032348632812,
+          876.8302001953125
+        ],
+        "visual_similarity": 0.8736080527305603,
+        "confidence": 0.7616061568260193,
+        "fragment_track_id": 4,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 80,
+        "det_index": 1,
+        "bbox": [
+          439.3919677734375,
+          637.7811279296875,
+          682.8406372070312,
+          877.5863037109375
+        ],
+        "visual_similarity": 0.9205142259597778,
+        "confidence": 0.7388896942138672,
+        "fragment_track_id": 4,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 85,
+        "det_index": 1,
+        "bbox": [
+          358.53961181640625,
+          637.3935546875,
+          605.8627319335938,
+          879.9186401367188
+        ],
+        "visual_similarity": 0.9690436720848083,
+        "confidence": 0.5688484311103821,
+        "fragment_track_id": 4,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 90,
+        "det_index": 1,
+        "bbox": [
+          280.6959228515625,
+          637.4602661132812,
+          533.4768676757812,
+          876.7928466796875
+        ],
+        "visual_similarity": 0.9785903096199036,
+        "confidence": 0.6742295026779175,
+        "fragment_track_id": 4,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 95,
+        "det_index": 1,
+        "bbox": [
+          202.4413604736328,
+          638.640625,
+          453.9220275878906,
+          877.09375
+        ],
+        "visual_similarity": 0.9770944714546204,
+        "confidence": 0.7122318744659424,
+        "fragment_track_id": 4,
+        "class_id": 32,
+        "class_name": "sports ball"
+      },
+      {
+        "frame_num": 100,
+        "det_index": 0,
+        "bbox": [
+          122.69163513183594,
+          638.6885375976562,
+          381.45904541015625,
+          875.0524291992188
+        ],
+        "visual_similarity": 0.9820523858070374,
+        "confidence": 0.7840391397476196,
+        "fragment_track_id": 4,
+        "class_id": 32,
+        "class_name": "sports ball"
+      }
+    ],
+    "relinked_from": [
+      4
+    ]
+  },
+  "trace_summary": {
+    "track_id": 1,
+    "class_id": 32,
+    "class_name": "sports ball",
+    "start_frame": 0,
+    "end_frame": 100,
+    "hits": 11,
+    "valid_track": true,
+    "relinked_from": [
+      4
+    ],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 0,
+        "bbox": [
+          1653.9935302734375,
+          648.3600463867188,
+          1907.219970703125,
+          874.38671875
+        ],
+        "fragment_track_id": 1,
+        "canonical_track_id": 1,
+        "role": "start"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 1,
+        "bbox": [
+          517.5743408203125,
+          636.7278442382812,
+          724.0032348632812,
+          876.8302001953125
+        ],
+        "fragment_track_id": 4,
+        "canonical_track_id": 1,
+        "role": "middle"
+      },
+      {
+        "frame_num": 100,
+        "det_index": 0,
+        "bbox": [
+          122.69163513183594,
+          638.6885375976562,
+          381.45904541015625,
+          875.0524291992188
+        ],
+        "fragment_track_id": 4,
+        "canonical_track_id": 1,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 1,
+    "span_frames": 101,
+    "fragment_track_ids": [
+      1,
+      4
+    ],
+    "observed_classes": [
+      {
+        "class_id": 32,
+        "class_name": "sports ball",
+        "detections": 11,
+        "confidence_sum": 7.756610453128815
+      }
+    ],
+    "accepted_relink_edges": [
+      {
+        "predecessor_id": 1,
+        "successor_id": 4,
+        "score": 0.9108972549438477,
+        "method": "dino"
+      }
+    ]
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 1,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 75,
+        "fragment_track_id": 4,
+        "path": "frames/middle_f0075.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 100,
+        "fragment_track_id": 4,
+        "path": "frames/end_f0100.jpg"
+      }
+    ]
+  }
+}

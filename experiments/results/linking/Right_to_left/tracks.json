@@ -1,0 +1,731 @@
+{
+  "schema_version": "temporal_linking_v1",
+  "tracks": [
+    {
+      "track_id": 1,
+      "class_id": 32,
+      "class_name": "sports ball",
+      "status": "closed",
+      "start_frame": 0,
+      "end_frame": 100,
+      "hits": 11,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": 0.9497341248724196,
+      "valid_track": true,
+      "events": [
+        {
+          "frame_num": 0,
+          "type": "created"
+        },
+        {
+          "frame_num": 5,
+          "type": "activated"
+        },
+        {
+          "frame_num": 15,
+          "type": "closed"
+        },
+        {
+          "frame_num": 20,
+          "type": "lost"
+        },
+        {
+          "frame_num": 70,
+          "type": "created"
+        },
+        {
+          "frame_num": 75,
+          "type": "activated"
+        },
+        {
+          "frame_num": 100,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 0,
+          "det_index": 0,
+          "bbox": [
+            1653.9935302734375,
+            648.3600463867188,
+            1907.219970703125,
+            874.38671875
+          ],
+          "visual_similarity": null,
+          "confidence": 0.8603812456130981,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 5,
+          "det_index": 0,
+          "bbox": [
+            1605.980712890625,
+            648.1154174804688,
+            1857.1552734375,
+            883.41015625
+          ],
+          "visual_similarity": 0.9317277073860168,
+          "confidence": 0.8150694370269775,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 10,
+          "det_index": 0,
+          "bbox": [
+            1531.130859375,
+            646.2769775390625,
+            1780.156494140625,
+            878.18408203125
+          ],
+          "visual_similarity": 0.9729445576667786,
+          "confidence": 0.8344058990478516,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 15,
+          "det_index": 1,
+          "bbox": [
+            1448.23388671875,
+            646.702880859375,
+            1699.786376953125,
+            881.4986572265625
+          ],
+          "visual_similarity": 0.942031741142273,
+          "confidence": 0.6299835443496704,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 70,
+          "det_index": 1,
+          "bbox": [
+            595.06884765625,
+            637.26513671875,
+            726.0608520507812,
+            879.190673828125
+          ],
+          "visual_similarity": null,
+          "confidence": 0.376925528049469,
+          "fragment_track_id": 4,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 75,
+          "det_index": 1,
+          "bbox": [
+            517.5743408203125,
+            636.7278442382812,
+            724.0032348632812,
+            876.8302001953125
+          ],
+          "visual_similarity": 0.8736080527305603,
+          "confidence": 0.7616061568260193,
+          "fragment_track_id": 4,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 80,
+          "det_index": 1,
+          "bbox": [
+            439.3919677734375,
+            637.7811279296875,
+            682.8406372070312,
+            877.5863037109375
+          ],
+          "visual_similarity": 0.9205142259597778,
+          "confidence": 0.7388896942138672,
+          "fragment_track_id": 4,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 85,
+          "det_index": 1,
+          "bbox": [
+            358.53961181640625,
+            637.3935546875,
+            605.8627319335938,
+            879.9186401367188
+          ],
+          "visual_similarity": 0.9690436720848083,
+          "confidence": 0.5688484311103821,
+          "fragment_track_id": 4,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 90,
+          "det_index": 1,
+          "bbox": [
+            280.6959228515625,
+            637.4602661132812,
+            533.4768676757812,
+            876.7928466796875
+          ],
+          "visual_similarity": 0.9785903096199036,
+          "confidence": 0.6742295026779175,
+          "fragment_track_id": 4,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 95,
+          "det_index": 1,
+          "bbox": [
+            202.4413604736328,
+            638.640625,
+            453.9220275878906,
+            877.09375
+          ],
+          "visual_similarity": 0.9770944714546204,
+          "confidence": 0.7122318744659424,
+          "fragment_track_id": 4,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 100,
+          "det_index": 0,
+          "bbox": [
+            122.69163513183594,
+            638.6885375976562,
+            381.45904541015625,
+            875.0524291992188
+          ],
+          "visual_similarity": 0.9820523858070374,
+          "confidence": 0.7840391397476196,
+          "fragment_track_id": 4,
+          "class_id": 32,
+          "class_name": "sports ball"
+        }
+      ],
+      "relinked_from": [
+        4
+      ]
+    },
+    {
+      "track_id": 2,
+      "class_id": 0,
+      "class_name": "person",
+      "status": "closed",
+      "start_frame": 0,
+      "end_frame": 45,
+      "hits": 8,
+      "total_misses": 9,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": 0.8855411069733756,
+      "valid_track": true,
+      "events": [
+        {
+          "frame_num": 0,
+          "type": "created"
+        },
+        {
+          "frame_num": 5,
+          "type": "lost"
+        },
+        {
+          "frame_num": 10,
+          "type": "recovered"
+        },
+        {
+          "frame_num": 40,
+          "type": "lost"
+        },
+        {
+          "frame_num": 45,
+          "type": "recovered"
+        },
+        {
+          "frame_num": 50,
+          "type": "lost"
+        },
+        {
+          "frame_num": 45,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 0,
+          "det_index": 1,
+          "bbox": [
+            1663.5296630859375,
+            504.47601318359375,
+            1919.4788818359375,
+            972.939697265625
+          ],
+          "visual_similarity": null,
+          "confidence": 0.5567469596862793,
+          "fragment_track_id": 2,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 10,
+          "det_index": 2,
+          "bbox": [
+            1667.640380859375,
+            393.1655578613281,
+            1919.1416015625,
+            675.5751342773438
+          ],
+          "visual_similarity": 0.7049017548561096,
+          "confidence": 0.2791278660297394,
+          "fragment_track_id": 2,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 15,
+          "det_index": 2,
+          "bbox": [
+            1646.9666748046875,
+            354.8053894042969,
+            1918.9925537109375,
+            685.0567626953125
+          ],
+          "visual_similarity": 0.8726861476898193,
+          "confidence": 0.5915219783782959,
+          "fragment_track_id": 2,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 20,
+          "det_index": 1,
+          "bbox": [
+            1649.5872802734375,
+            346.2253112792969,
+            1919.069091796875,
+            683.4613037109375
+          ],
+          "visual_similarity": 0.9515296220779419,
+          "confidence": 0.5995293259620667,
+          "fragment_track_id": 2,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 1,
+          "bbox": [
+            1665.246826171875,
+            368.4407043457031,
+            1919.06689453125,
+            696.3543090820312
+          ],
+          "visual_similarity": 0.9649395942687988,
+          "confidence": 0.688515841960907,
+          "fragment_track_id": 2,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 30,
+          "det_index": 0,
+          "bbox": [
+            1689.0689697265625,
+            396.4523010253906,
+            1919.0369873046875,
+            724.1886596679688
+          ],
+          "visual_similarity": 0.9644819498062134,
+          "confidence": 0.7621892094612122,
+          "fragment_track_id": 2,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 35,
+          "det_index": 1,
+          "bbox": [
+            1715.8382568359375,
+            442.093505859375,
+            1919.17578125,
+            764.3457641601562
+          ],
+          "visual_similarity": 0.9448114633560181,
+          "confidence": 0.28996220231056213,
+          "fragment_track_id": 2,
+          "class_id": 15,
+          "class_name": "cat"
+        },
+        {
+          "frame_num": 45,
+          "det_index": 1,
+          "bbox": [
+            1788.3914794921875,
+            537.3023681640625,
+            1919.0233154296875,
+            781.2821655273438
+          ],
+          "visual_similarity": 0.795437216758728,
+          "confidence": 0.4093881845474243,
+          "fragment_track_id": 2,
+          "class_id": 0,
+          "class_name": "person"
+        }
+      ]
+    },
+    {
+      "track_id": 3,
+      "class_id": 63,
+      "class_name": "laptop",
+      "status": "closed",
+      "start_frame": 0,
+      "end_frame": 100,
+      "hits": 21,
+      "total_misses": 0,
+      "max_miss_streak": 0,
+      "avg_visual_similarity": 0.9956901729106903,
+      "valid_track": true,
+      "events": [
+        {
+          "frame_num": 0,
+          "type": "created"
+        },
+        {
+          "frame_num": 5,
+          "type": "activated"
+        },
+        {
+          "frame_num": 100,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 0,
+          "det_index": 2,
+          "bbox": [
+            707.3599243164062,
+            493.3402404785156,
+            1447.5185546875,
+            1030.01953125
+          ],
+          "visual_similarity": null,
+          "confidence": 0.5195465683937073,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 5,
+          "det_index": 1,
+          "bbox": [
+            707.725341796875,
+            493.7702941894531,
+            1448.3350830078125,
+            1029.4200439453125
+          ],
+          "visual_similarity": 0.9991052150726318,
+          "confidence": 0.5443397164344788,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 10,
+          "det_index": 1,
+          "bbox": [
+            709.7067260742188,
+            494.98236083984375,
+            1449.12353515625,
+            1032.109130859375
+          ],
+          "visual_similarity": 0.9978193640708923,
+          "confidence": 0.7534764409065247,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 15,
+          "det_index": 0,
+          "bbox": [
+            709.5514526367188,
+            495.0697937011719,
+            1451.6583251953125,
+            1033.832275390625
+          ],
+          "visual_similarity": 0.9908890128135681,
+          "confidence": 0.7596978545188904,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 20,
+          "det_index": 0,
+          "bbox": [
+            710.5751342773438,
+            495.52618408203125,
+            1451.3536376953125,
+            1036.90283203125
+          ],
+          "visual_similarity": 0.9848047494888306,
+          "confidence": 0.8255649209022522,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 0,
+          "bbox": [
+            711.0718383789062,
+            495.3320617675781,
+            1453.925048828125,
+            1035.095458984375
+          ],
+          "visual_similarity": 0.9965446591377258,
+          "confidence": 0.8579084277153015,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 30,
+          "det_index": 1,
+          "bbox": [
+            710.5015869140625,
+            493.9778137207031,
+            1454.0635986328125,
+            1032.4676513671875
+          ],
+          "visual_similarity": 0.9870882034301758,
+          "confidence": 0.7462137341499329,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 35,
+          "det_index": 0,
+          "bbox": [
+            711.00439453125,
+            494.11962890625,
+            1452.90283203125,
+            1031.503173828125
+          ],
+          "visual_similarity": 0.9977006912231445,
+          "confidence": 0.7139469385147095,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 40,
+          "det_index": 0,
+          "bbox": [
+            711.674560546875,
+            493.9775390625,
+            1452.9129638671875,
+            1031.732421875
+          ],
+          "visual_similarity": 0.9990067481994629,
+          "confidence": 0.6964952349662781,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 45,
+          "det_index": 0,
+          "bbox": [
+            712.1295776367188,
+            493.96417236328125,
+            1453.011962890625,
+            1032.6082763671875
+          ],
+          "visual_similarity": 0.9989994168281555,
+          "confidence": 0.7358117699623108,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 50,
+          "det_index": 0,
+          "bbox": [
+            712.3909301757812,
+            494.4446716308594,
+            1453.1563720703125,
+            1030.628662109375
+          ],
+          "visual_similarity": 0.9990466833114624,
+          "confidence": 0.6604275703430176,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 55,
+          "det_index": 0,
+          "bbox": [
+            713.0361328125,
+            494.9366455078125,
+            1453.858642578125,
+            1030.686767578125
+          ],
+          "visual_similarity": 0.9995649456977844,
+          "confidence": 0.6234605312347412,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 60,
+          "det_index": 0,
+          "bbox": [
+            712.8380126953125,
+            495.02581787109375,
+            1454.123291015625,
+            1031.293701171875
+          ],
+          "visual_similarity": 0.992228627204895,
+          "confidence": 0.7452008128166199,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 65,
+          "det_index": 0,
+          "bbox": [
+            709.4266357421875,
+            495.220947265625,
+            1454.4927978515625,
+            1032.6190185546875
+          ],
+          "visual_similarity": 0.9908602237701416,
+          "confidence": 0.9368226528167725,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 70,
+          "det_index": 0,
+          "bbox": [
+            711.970947265625,
+            495.1157531738281,
+            1454.0084228515625,
+            1032.6895751953125
+          ],
+          "visual_similarity": 0.9886577725410461,
+          "confidence": 0.9593859910964966,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 75,
+          "det_index": 0,
+          "bbox": [
+            713.9782104492188,
+            495.8615417480469,
+            1453.5506591796875,
+            1032.8211669921875
+          ],
+          "visual_similarity": 0.9983658194541931,
+          "confidence": 0.944883406162262,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 80,
+          "det_index": 0,
+          "bbox": [
+            712.19677734375,
+            495.4409484863281,
+            1453.988525390625,
+            1033.484619140625
+          ],
+          "visual_similarity": 0.9975166916847229,
+          "confidence": 0.9394391179084778,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 85,
+          "det_index": 0,
+          "bbox": [
+            712.8550415039062,
+            495.9465637207031,
+            1454.4847412109375,
+            1033.832763671875
+          ],
+          "visual_similarity": 0.9989819526672363,
+          "confidence": 0.9198856949806213,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 90,
+          "det_index": 0,
+          "bbox": [
+            713.75732421875,
+            496.8323669433594,
+            1454.1402587890625,
+            1033.0244140625
+          ],
+          "visual_similarity": 0.9987539649009705,
+          "confidence": 0.8334672451019287,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 95,
+          "det_index": 0,
+          "bbox": [
+            714.4889526367188,
+            497.5254211425781,
+            1455.217041015625,
+            1031.62939453125
+          ],
+          "visual_similarity": 0.9982988238334656,
+          "confidence": 0.76249760389328,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        },
+        {
+          "frame_num": 100,
+          "det_index": 1,
+          "bbox": [
+            714.6018676757812,
+            497.2185363769531,
+            1455.226318359375,
+            1031.8458251953125
+          ],
+          "visual_similarity": 0.9995698928833008,
+          "confidence": 0.7833328247070312,
+          "fragment_track_id": 3,
+          "class_id": 63,
+          "class_name": "laptop"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "num_tracks_total": 3,
+    "num_tracks_valid": 3
+  }
+}

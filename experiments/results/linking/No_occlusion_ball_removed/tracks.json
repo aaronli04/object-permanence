@@ -1,0 +1,839 @@
+{
+  "schema_version": "temporal_linking_v1",
+  "tracks": [
+    {
+      "track_id": 1,
+      "class_id": 32,
+      "class_name": "sports ball",
+      "status": "closed",
+      "start_frame": 0,
+      "end_frame": 75,
+      "hits": 16,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": 0.8579019029935201,
+      "valid_track": true,
+      "events": [
+        {
+          "frame_num": 0,
+          "type": "created"
+        },
+        {
+          "frame_num": 5,
+          "type": "activated"
+        },
+        {
+          "frame_num": 80,
+          "type": "lost"
+        },
+        {
+          "frame_num": 75,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 0,
+          "det_index": 0,
+          "bbox": [
+            41.706207275390625,
+            532.6356811523438,
+            322.23687744140625,
+            779.7197265625
+          ],
+          "visual_similarity": null,
+          "confidence": 0.8184420466423035,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 5,
+          "det_index": 0,
+          "bbox": [
+            80.03084564208984,
+            533.739501953125,
+            344.4280700683594,
+            779.72314453125
+          ],
+          "visual_similarity": 0.9229469895362854,
+          "confidence": 0.9294036030769348,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 10,
+          "det_index": 0,
+          "bbox": [
+            127.53559875488281,
+            535.33544921875,
+            397.1948547363281,
+            782.837646484375
+          ],
+          "visual_similarity": 0.8130091428756714,
+          "confidence": 0.9691168665885925,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 15,
+          "det_index": 0,
+          "bbox": [
+            201.73965454101562,
+            537.7164916992188,
+            463.7723693847656,
+            788.7643432617188
+          ],
+          "visual_similarity": 0.8438142538070679,
+          "confidence": 0.9516810774803162,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 20,
+          "det_index": 3,
+          "bbox": [
+            271.8624267578125,
+            539.066162109375,
+            533.1369018554688,
+            791.0116577148438
+          ],
+          "visual_similarity": 0.7047863602638245,
+          "confidence": 0.3145703971385956,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 0,
+          "bbox": [
+            338.680419921875,
+            540.6651000976562,
+            601.6748657226562,
+            791.3375854492188
+          ],
+          "visual_similarity": 0.8226624131202698,
+          "confidence": 0.8126371502876282,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 30,
+          "det_index": 0,
+          "bbox": [
+            410.5238342285156,
+            542.6802978515625,
+            671.37744140625,
+            791.56201171875
+          ],
+          "visual_similarity": 0.9024913907051086,
+          "confidence": 0.8849013447761536,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 35,
+          "det_index": 0,
+          "bbox": [
+            478.9836730957031,
+            545.1472778320312,
+            733.556640625,
+            794.6995849609375
+          ],
+          "visual_similarity": 0.8890221118927002,
+          "confidence": 0.9480910301208496,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 40,
+          "det_index": 0,
+          "bbox": [
+            545.5501708984375,
+            548.0810546875,
+            798.3809204101562,
+            796.8768920898438
+          ],
+          "visual_similarity": 0.8450766205787659,
+          "confidence": 0.756569504737854,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 45,
+          "det_index": 0,
+          "bbox": [
+            612.5993041992188,
+            548.7097778320312,
+            865.6312866210938,
+            800.9000854492188
+          ],
+          "visual_similarity": 0.8745308518409729,
+          "confidence": 0.34518054127693176,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 50,
+          "det_index": 0,
+          "bbox": [
+            675.0841064453125,
+            551.8731079101562,
+            923.1991577148438,
+            799.7817993164062
+          ],
+          "visual_similarity": 0.8722912073135376,
+          "confidence": 0.43872779607772827,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 55,
+          "det_index": 0,
+          "bbox": [
+            739.5113525390625,
+            551.3875122070312,
+            985.704345703125,
+            800.3430786132812
+          ],
+          "visual_similarity": 0.8487111330032349,
+          "confidence": 0.6672788262367249,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 60,
+          "det_index": 0,
+          "bbox": [
+            799.0570678710938,
+            554.8799438476562,
+            1047.9171142578125,
+            804.7888793945312
+          ],
+          "visual_similarity": 0.9325344562530518,
+          "confidence": 0.7948398590087891,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 65,
+          "det_index": 0,
+          "bbox": [
+            860.8526611328125,
+            555.6239013671875,
+            1110.00732421875,
+            807.8904418945312
+          ],
+          "visual_similarity": 0.8764553070068359,
+          "confidence": 0.7328347563743591,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 70,
+          "det_index": 0,
+          "bbox": [
+            919.7089233398438,
+            555.9891357421875,
+            1167.8603515625,
+            807.34716796875
+          ],
+          "visual_similarity": 0.8660750389099121,
+          "confidence": 0.7140101194381714,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        },
+        {
+          "frame_num": 75,
+          "det_index": 0,
+          "bbox": [
+            976.1224365234375,
+            558.8939819335938,
+            1222.9837646484375,
+            808.7030639648438
+          ],
+          "visual_similarity": 0.8541212677955627,
+          "confidence": 0.9004334211349487,
+          "fragment_track_id": 1,
+          "class_id": 32,
+          "class_name": "sports ball"
+        }
+      ]
+    },
+    {
+      "track_id": 2,
+      "class_id": 16,
+      "class_name": "dog",
+      "status": "closed",
+      "start_frame": 5,
+      "end_frame": 5,
+      "hits": 1,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 5,
+          "type": "created"
+        },
+        {
+          "frame_num": 10,
+          "type": "lost"
+        },
+        {
+          "frame_num": 5,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 5,
+          "det_index": 1,
+          "bbox": [
+            0.0,
+            382.8078918457031,
+            249.10345458984375,
+            733.8626098632812
+          ],
+          "visual_similarity": null,
+          "confidence": 0.3063144385814667,
+          "fragment_track_id": 2,
+          "class_id": 16,
+          "class_name": "dog"
+        }
+      ]
+    },
+    {
+      "track_id": 3,
+      "class_id": 16,
+      "class_name": "dog",
+      "status": "closed",
+      "start_frame": 10,
+      "end_frame": 10,
+      "hits": 1,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 10,
+          "type": "created"
+        },
+        {
+          "frame_num": 15,
+          "type": "lost"
+        },
+        {
+          "frame_num": 10,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 10,
+          "det_index": 1,
+          "bbox": [
+            0.4288330078125,
+            328.8838806152344,
+            265.2890930175781,
+            688.6307983398438
+          ],
+          "visual_similarity": null,
+          "confidence": 0.6083600521087646,
+          "fragment_track_id": 3,
+          "class_id": 16,
+          "class_name": "dog"
+        }
+      ]
+    },
+    {
+      "track_id": 4,
+      "class_id": 0,
+      "class_name": "person",
+      "status": "closed",
+      "start_frame": 10,
+      "end_frame": 10,
+      "hits": 1,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 10,
+          "type": "created"
+        },
+        {
+          "frame_num": 15,
+          "type": "lost"
+        },
+        {
+          "frame_num": 10,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 10,
+          "det_index": 2,
+          "bbox": [
+            0.29791259765625,
+            334.3775939941406,
+            265.343994140625,
+            684.5438232421875
+          ],
+          "visual_similarity": null,
+          "confidence": 0.4437587559223175,
+          "fragment_track_id": 4,
+          "class_id": 0,
+          "class_name": "person"
+        }
+      ]
+    },
+    {
+      "track_id": 5,
+      "class_id": 16,
+      "class_name": "dog",
+      "status": "closed",
+      "start_frame": 15,
+      "end_frame": 30,
+      "hits": 4,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": 0.8802627523740133,
+      "valid_track": true,
+      "events": [
+        {
+          "frame_num": 15,
+          "type": "created"
+        },
+        {
+          "frame_num": 20,
+          "type": "activated"
+        },
+        {
+          "frame_num": 35,
+          "type": "lost"
+        },
+        {
+          "frame_num": 30,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 15,
+          "det_index": 1,
+          "bbox": [
+            0.2393646240234375,
+            282.2002258300781,
+            276.1527099609375,
+            645.0706787109375
+          ],
+          "visual_similarity": null,
+          "confidence": 0.8803843259811401,
+          "fragment_track_id": 5,
+          "class_id": 16,
+          "class_name": "dog"
+        },
+        {
+          "frame_num": 20,
+          "det_index": 0,
+          "bbox": [
+            0.38385772705078125,
+            248.83836364746094,
+            280.9862976074219,
+            595.10595703125
+          ],
+          "visual_similarity": 0.80649733543396,
+          "confidence": 0.628514289855957,
+          "fragment_track_id": 5,
+          "class_id": 16,
+          "class_name": "dog"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 1,
+          "bbox": [
+            0.3981170654296875,
+            238.42703247070312,
+            271.2581481933594,
+            580.2704467773438
+          ],
+          "visual_similarity": 0.9386001229286194,
+          "confidence": 0.7631614208221436,
+          "fragment_track_id": 5,
+          "class_id": 16,
+          "class_name": "dog"
+        },
+        {
+          "frame_num": 30,
+          "det_index": 1,
+          "bbox": [
+            0.20317840576171875,
+            279.6260070800781,
+            249.32638549804688,
+            608.9384765625
+          ],
+          "visual_similarity": 0.8956907987594604,
+          "confidence": 0.5249350070953369,
+          "fragment_track_id": 5,
+          "class_id": 16,
+          "class_name": "dog"
+        }
+      ]
+    },
+    {
+      "track_id": 6,
+      "class_id": 14,
+      "class_name": "bird",
+      "status": "closed",
+      "start_frame": 20,
+      "end_frame": 20,
+      "hits": 1,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 20,
+          "type": "created"
+        },
+        {
+          "frame_num": 25,
+          "type": "lost"
+        },
+        {
+          "frame_num": 20,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 20,
+          "det_index": 1,
+          "bbox": [
+            271.8840637207031,
+            538.3698120117188,
+            532.9429321289062,
+            793.3405151367188
+          ],
+          "visual_similarity": null,
+          "confidence": 0.6111391186714172,
+          "fragment_track_id": 6,
+          "class_id": 14,
+          "class_name": "bird"
+        }
+      ]
+    },
+    {
+      "track_id": 7,
+      "class_id": 14,
+      "class_name": "bird",
+      "status": "closed",
+      "start_frame": 20,
+      "end_frame": 20,
+      "hits": 1,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 20,
+          "type": "created"
+        },
+        {
+          "frame_num": 25,
+          "type": "lost"
+        },
+        {
+          "frame_num": 20,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 20,
+          "det_index": 2,
+          "bbox": [
+            0.3563232421875,
+            249.96006774902344,
+            282.15399169921875,
+            592.8369140625
+          ],
+          "visual_similarity": null,
+          "confidence": 0.3640424311161041,
+          "fragment_track_id": 7,
+          "class_id": 14,
+          "class_name": "bird"
+        }
+      ]
+    },
+    {
+      "track_id": 8,
+      "class_id": 0,
+      "class_name": "person",
+      "status": "closed",
+      "start_frame": 20,
+      "end_frame": 105,
+      "hits": 12,
+      "total_misses": 17,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": 0.9119185507297516,
+      "valid_track": true,
+      "events": [
+        {
+          "frame_num": 20,
+          "type": "created"
+        },
+        {
+          "frame_num": 25,
+          "type": "lost"
+        },
+        {
+          "frame_num": 30,
+          "type": "recovered"
+        },
+        {
+          "frame_num": 40,
+          "type": "closed"
+        },
+        {
+          "frame_num": 45,
+          "type": "lost"
+        },
+        {
+          "frame_num": 60,
+          "type": "created"
+        },
+        {
+          "frame_num": 65,
+          "type": "activated"
+        },
+        {
+          "frame_num": 70,
+          "type": "lost"
+        },
+        {
+          "frame_num": 80,
+          "type": "recovered"
+        },
+        {
+          "frame_num": 105,
+          "type": "closed"
+        },
+        {
+          "frame_num": 110,
+          "type": "lost"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 20,
+          "det_index": 4,
+          "bbox": [
+            0.20688629150390625,
+            249.15875244140625,
+            283.5812072753906,
+            593.2245483398438
+          ],
+          "visual_similarity": null,
+          "confidence": 0.27525416016578674,
+          "fragment_track_id": 8,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 30,
+          "det_index": 2,
+          "bbox": [
+            0.13039398193359375,
+            279.89599609375,
+            249.5799560546875,
+            610.7725219726562
+          ],
+          "visual_similarity": 0.8339604735374451,
+          "confidence": 0.3657641112804413,
+          "fragment_track_id": 8,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 35,
+          "det_index": 1,
+          "bbox": [
+            0.1034088134765625,
+            352.8065185546875,
+            205.99234008789062,
+            661.8480834960938
+          ],
+          "visual_similarity": 0.7592622637748718,
+          "confidence": 0.44533348083496094,
+          "fragment_track_id": 8,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 40,
+          "det_index": 1,
+          "bbox": [
+            0.27106475830078125,
+            433.11767578125,
+            151.71112060546875,
+            716.9297485351562
+          ],
+          "visual_similarity": 0.7285627722740173,
+          "confidence": 0.7228483557701111,
+          "fragment_track_id": 8,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 60,
+          "det_index": 1,
+          "bbox": [
+            1458.0279541015625,
+            126.22787475585938,
+            1919.09375,
+            830.3873291015625
+          ],
+          "visual_similarity": null,
+          "confidence": 0.26435309648513794,
+          "fragment_track_id": 9,
+          "class_id": 25,
+          "class_name": "umbrella"
+        },
+        {
+          "frame_num": 65,
+          "det_index": 1,
+          "bbox": [
+            1309.0146484375,
+            42.78369140625,
+            1918.8555908203125,
+            878.1791381835938
+          ],
+          "visual_similarity": 0.9599800705909729,
+          "confidence": 0.594934344291687,
+          "fragment_track_id": 9,
+          "class_id": 25,
+          "class_name": "umbrella"
+        },
+        {
+          "frame_num": 80,
+          "det_index": 0,
+          "bbox": [
+            1035.15234375,
+            1.07574462890625,
+            1917.673828125,
+            892.209228515625
+          ],
+          "visual_similarity": 0.9144701957702637,
+          "confidence": 0.479086697101593,
+          "fragment_track_id": 9,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 85,
+          "det_index": 0,
+          "bbox": [
+            1068.99951171875,
+            9.333251953125,
+            1918.3070068359375,
+            882.755859375
+          ],
+          "visual_similarity": 0.988249659538269,
+          "confidence": 0.32189199328422546,
+          "fragment_track_id": 9,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 90,
+          "det_index": 0,
+          "bbox": [
+            1074.8822021484375,
+            1.04095458984375,
+            1919.512939453125,
+            894.57275390625
+          ],
+          "visual_similarity": 0.987750768661499,
+          "confidence": 0.5510382056236267,
+          "fragment_track_id": 9,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 95,
+          "det_index": 0,
+          "bbox": [
+            1081.6168212890625,
+            6.196929931640625,
+            1918.5970458984375,
+            888.2796020507812
+          ],
+          "visual_similarity": 0.9922403693199158,
+          "confidence": 0.6375508904457092,
+          "fragment_track_id": 9,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 100,
+          "det_index": 0,
+          "bbox": [
+            1084.68505859375,
+            1.86822509765625,
+            1917.555908203125,
+            887.6953125
+          ],
+          "visual_similarity": 0.9813838005065918,
+          "confidence": 0.7371535897254944,
+          "fragment_track_id": 9,
+          "class_id": 0,
+          "class_name": "person"
+        },
+        {
+          "frame_num": 105,
+          "det_index": 0,
+          "bbox": [
+            1085.10986328125,
+            5.63616943359375,
+            1919.18603515625,
+            584.9929809570312
+          ],
+          "visual_similarity": 0.9733251333236694,
+          "confidence": 0.5930314660072327,
+          "fragment_track_id": 9,
+          "class_id": 0,
+          "class_name": "person"
+        }
+      ],
+      "relinked_from": [
+        9
+      ]
+    }
+  ],
+  "summary": {
+    "num_tracks_total": 8,
+    "num_tracks_valid": 3
+  }
+}

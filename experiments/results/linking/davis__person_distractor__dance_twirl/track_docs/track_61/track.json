@@ -1,0 +1,205 @@
+{
+  "scenario": "davis__person_distractor__dance_twirl",
+  "track": {
+    "track_id": 61,
+    "class_id": 20,
+    "class_name": "elephant",
+    "status": "closed",
+    "start_frame": 40,
+    "end_frame": 70,
+    "hits": 4,
+    "total_misses": 6,
+    "max_miss_streak": 3,
+    "avg_visual_similarity": 0.925277829170227,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 40,
+        "type": "created"
+      },
+      {
+        "frame_num": 45,
+        "type": "lost"
+      },
+      {
+        "frame_num": 55,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 60,
+        "type": "lost"
+      },
+      {
+        "frame_num": 65,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 75,
+        "type": "lost"
+      },
+      {
+        "frame_num": 70,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 40,
+        "det_index": 13,
+        "bbox": [
+          367.6076965332031,
+          34.215328216552734,
+          701.9368286132812,
+          151.5336151123047
+        ],
+        "visual_similarity": null,
+        "confidence": 0.2547885775566101,
+        "fragment_track_id": 61,
+        "class_id": 20,
+        "class_name": "elephant"
+      },
+      {
+        "frame_num": 55,
+        "det_index": 13,
+        "bbox": [
+          452.57147216796875,
+          76.27165985107422,
+          607.8399658203125,
+          205.7269287109375
+        ],
+        "visual_similarity": 0.8493983745574951,
+        "confidence": 0.27553823590278625,
+        "fragment_track_id": 61,
+        "class_id": 20,
+        "class_name": "elephant"
+      },
+      {
+        "frame_num": 65,
+        "det_index": 11,
+        "bbox": [
+          447.9363708496094,
+          42.09980010986328,
+          741.5862426757812,
+          185.16351318359375
+        ],
+        "visual_similarity": 0.9617857933044434,
+        "confidence": 0.33100366592407227,
+        "fragment_track_id": 61,
+        "class_id": 20,
+        "class_name": "elephant"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 14,
+        "bbox": [
+          596.5317993164062,
+          39.24831771850586,
+          748.3525390625,
+          142.41075134277344
+        ],
+        "visual_similarity": 0.9646493196487427,
+        "confidence": 0.25488418340682983,
+        "fragment_track_id": 61,
+        "class_id": 18,
+        "class_name": "sheep"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 61,
+    "class_id": 20,
+    "class_name": "elephant",
+    "start_frame": 40,
+    "end_frame": 70,
+    "hits": 4,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": true,
+    "frames": [
+      {
+        "frame_num": 40,
+        "det_index": 13,
+        "bbox": [
+          367.6076965332031,
+          34.215328216552734,
+          701.9368286132812,
+          151.5336151123047
+        ],
+        "fragment_track_id": 61,
+        "canonical_track_id": 61,
+        "role": "start"
+      },
+      {
+        "frame_num": 65,
+        "det_index": 11,
+        "bbox": [
+          447.9363708496094,
+          42.09980010986328,
+          741.5862426757812,
+          185.16351318359375
+        ],
+        "fragment_track_id": 61,
+        "canonical_track_id": 61,
+        "role": "middle"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 14,
+        "bbox": [
+          596.5317993164062,
+          39.24831771850586,
+          748.3525390625,
+          142.41075134277344
+        ],
+        "fragment_track_id": 61,
+        "canonical_track_id": 61,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 61,
+    "span_frames": 31,
+    "fragment_track_ids": [
+      61
+    ],
+    "observed_classes": [
+      {
+        "class_id": 20,
+        "class_name": "elephant",
+        "detections": 3,
+        "confidence_sum": 0.8613304793834686
+      },
+      {
+        "class_id": 18,
+        "class_name": "sheep",
+        "detections": 1,
+        "confidence_sum": 0.25488418340682983
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 40,
+        "fragment_track_id": 61,
+        "path": "frames/start_f0040.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 65,
+        "fragment_track_id": 61,
+        "path": "frames/middle_f0065.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 70,
+        "fragment_track_id": 61,
+        "path": "frames/end_f0070.jpg"
+      }
+    ]
+  }
+}

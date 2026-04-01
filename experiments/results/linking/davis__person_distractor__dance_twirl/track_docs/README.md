@@ -1,0 +1,66 @@
+# Track docs for davis__person_distractor__dance_twirl
+
+Per-track folders contain a rendered summary image, annotated key frames, and machine-readable metadata.
+
+## Tracks
+- [track_1](track_1/README.md): person, hits 17, frames 0-85 (86 span), valid yes, recovered yes, relinked from none
+- [track_2](track_2/README.md): person, hits 1, frames 0-0 (1 span), valid no, recovered no, relinked from none
+- [track_3](track_3/README.md): person, hits 10, frames 0-85 (86 span), valid yes, recovered yes, relinked from 30
+- [track_4](track_4/README.md): person, hits 7, frames 0-30 (31 span), valid yes, recovered no, relinked from 35
+- [track_5](track_5/README.md): person, hits 14, frames 0-85 (86 span), valid yes, recovered no, relinked from 57
+- [track_6](track_6/README.md): person, hits 17, frames 0-80 (81 span), valid yes, recovered no, relinked from 24, 36
+- [track_7](track_7/README.md): person, hits 7, frames 0-75 (76 span), valid yes, recovered yes, relinked from 47, 59
+- [track_8](track_8/README.md): person, hits 10, frames 0-80 (81 span), valid yes, recovered yes, relinked from 63
+- [track_9](track_9/README.md): person, hits 12, frames 0-85 (86 span), valid yes, recovered yes, relinked from none
+- [track_10](track_10/README.md): person, hits 11, frames 0-80 (81 span), valid yes, recovered no, relinked from 26, 67
+- [track_11](track_11/README.md): person, hits 8, frames 0-35 (36 span), valid yes, recovered no, relinked from 33
+- [track_12](track_12/README.md): person, hits 6, frames 0-30 (31 span), valid yes, recovered yes, relinked from none
+- [track_13](track_13/README.md): person, hits 9, frames 0-80 (81 span), valid yes, recovered yes, relinked from 66
+- [track_14](track_14/README.md): person, hits 1, frames 0-0 (1 span), valid no, recovered no, relinked from none
+- [track_15](track_15/README.md): person, hits 1, frames 0-0 (1 span), valid no, recovered no, relinked from none
+- [track_16](track_16/README.md): person, hits 15, frames 0-85 (86 span), valid yes, recovered yes, relinked from none
+- [track_17](track_17/README.md): person, hits 1, frames 0-0 (1 span), valid no, recovered no, relinked from none
+- [track_18](track_18/README.md): person, hits 11, frames 0-75 (76 span), valid yes, recovered yes, relinked from 27, 68
+- [track_19](track_19/README.md): person, hits 7, frames 5-35 (31 span), valid yes, recovered no, relinked from none
+- [track_20](track_20/README.md): person, hits 1, frames 5-5 (1 span), valid no, recovered no, relinked from none
+- [track_21](track_21/README.md): person, hits 9, frames 5-80 (76 span), valid yes, recovered yes, relinked from 65, 75
+- [track_22](track_22/README.md): person, hits 1, frames 5-5 (1 span), valid no, recovered no, relinked from none
+- [track_23](track_23/README.md): person, hits 1, frames 5-5 (1 span), valid no, recovered no, relinked from none
+- [track_25](track_25/README.md): person, hits 1, frames 10-10 (1 span), valid no, recovered no, relinked from none
+- [track_28](track_28/README.md): person, hits 1, frames 15-15 (1 span), valid no, recovered no, relinked from none
+- [track_29](track_29/README.md): person, hits 9, frames 15-65 (51 span), valid yes, recovered no, relinked from 69
+- [track_31](track_31/README.md): person, hits 1, frames 15-15 (1 span), valid no, recovered no, relinked from none
+- [track_32](track_32/README.md): person, hits 1, frames 15-15 (1 span), valid no, recovered no, relinked from none
+- [track_34](track_34/README.md): person, hits 1, frames 20-20 (1 span), valid no, recovered no, relinked from none
+- [track_37](track_37/README.md): person, hits 10, frames 20-80 (61 span), valid yes, recovered no, relinked from 73
+- [track_38](track_38/README.md): person, hits 1, frames 20-20 (1 span), valid no, recovered no, relinked from none
+- [track_39](track_39/README.md): person, hits 12, frames 20-80 (61 span), valid yes, recovered no, relinked from 60
+- [track_40](track_40/README.md): person, hits 8, frames 20-85 (66 span), valid yes, recovered yes, relinked from 56
+- [track_41](track_41/README.md): person, hits 1, frames 20-20 (1 span), valid no, recovered no, relinked from none
+- [track_42](track_42/README.md): person, hits 1, frames 20-20 (1 span), valid no, recovered no, relinked from none
+- [track_43](track_43/README.md): person, hits 5, frames 20-70 (51 span), valid yes, recovered yes, relinked from none
+- [track_44](track_44/README.md): person, hits 5, frames 20-40 (21 span), valid yes, recovered no, relinked from none
+- [track_45](track_45/README.md): person, hits 1, frames 25-25 (1 span), valid no, recovered no, relinked from none
+- [track_46](track_46/README.md): person, hits 1, frames 25-25 (1 span), valid no, recovered no, relinked from none
+- [track_48](track_48/README.md): person, hits 1, frames 25-25 (1 span), valid no, recovered no, relinked from none
+- [track_49](track_49/README.md): person, hits 1, frames 25-25 (1 span), valid no, recovered no, relinked from none
+- [track_50](track_50/README.md): person, hits 1, frames 25-25 (1 span), valid no, recovered no, relinked from none
+- [track_51](track_51/README.md): person, hits 1, frames 30-30 (1 span), valid no, recovered no, relinked from none
+- [track_52](track_52/README.md): person, hits 1, frames 30-30 (1 span), valid no, recovered no, relinked from none
+- [track_53](track_53/README.md): person, hits 1, frames 35-35 (1 span), valid no, recovered no, relinked from none
+- [track_54](track_54/README.md): person, hits 1, frames 35-35 (1 span), valid no, recovered no, relinked from none
+- [track_55](track_55/README.md): person, hits 1, frames 35-35 (1 span), valid no, recovered no, relinked from none
+- [track_58](track_58/README.md): person, hits 7, frames 40-80 (41 span), valid yes, recovered yes, relinked from none
+- [track_61](track_61/README.md): elephant, hits 4, frames 40-70 (31 span), valid yes, recovered yes, relinked from none
+- [track_62](track_62/README.md): person, hits 1, frames 45-45 (1 span), valid no, recovered no, relinked from none
+- [track_64](track_64/README.md): person, hits 1, frames 45-45 (1 span), valid no, recovered no, relinked from none
+- [track_70](track_70/README.md): person, hits 1, frames 60-60 (1 span), valid no, recovered no, relinked from none
+- [track_71](track_71/README.md): person, hits 4, frames 60-75 (16 span), valid yes, recovered no, relinked from none
+- [track_72](track_72/README.md): person, hits 3, frames 65-80 (16 span), valid yes, recovered yes, relinked from none
+- [track_74](track_74/README.md): person, hits 1, frames 75-75 (1 span), valid no, recovered no, relinked from none
+- [track_76](track_76/README.md): person, hits 1, frames 75-75 (1 span), valid no, recovered no, relinked from none
+- [track_77](track_77/README.md): person, hits 1, frames 80-80 (1 span), valid no, recovered no, relinked from none
+- [track_78](track_78/README.md): person, hits 1, frames 85-85 (1 span), valid no, recovered no, relinked from none
+- [track_79](track_79/README.md): person, hits 1, frames 85-85 (1 span), valid no, recovered no, relinked from none
+- [track_80](track_80/README.md): person, hits 1, frames 85-85 (1 span), valid no, recovered no, relinked from none
+- [track_81](track_81/README.md): person, hits 1, frames 85-85 (1 span), valid no, recovered no, relinked from none

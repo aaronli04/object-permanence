@@ -1,0 +1,306 @@
+{
+  "scenario": "Left_to_right",
+  "track": {
+    "track_id": 4,
+    "class_id": 14,
+    "class_name": "bird",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 115,
+    "hits": 10,
+    "total_misses": 8,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": 0.9933333843946457,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "activated"
+      },
+      {
+        "frame_num": 15,
+        "type": "closed"
+      },
+      {
+        "frame_num": 20,
+        "type": "lost"
+      },
+      {
+        "frame_num": 90,
+        "type": "created"
+      },
+      {
+        "frame_num": 95,
+        "type": "activated"
+      },
+      {
+        "frame_num": 115,
+        "type": "closed"
+      },
+      {
+        "frame_num": 120,
+        "type": "lost"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 3,
+        "bbox": [
+          987.6264038085938,
+          633.9547119140625,
+          1074.7296142578125,
+          744.7890014648438
+        ],
+        "visual_similarity": null,
+        "confidence": 0.2707037031650543,
+        "fragment_track_id": 4,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 5,
+        "det_index": 3,
+        "bbox": [
+          987.4639892578125,
+          634.2980346679688,
+          1074.9283447265625,
+          747.068359375
+        ],
+        "visual_similarity": 0.9943768978118896,
+        "confidence": 0.33561328053474426,
+        "fragment_track_id": 4,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 3,
+        "bbox": [
+          987.373046875,
+          634.8054809570312,
+          1074.0318603515625,
+          749.248046875
+        ],
+        "visual_similarity": 0.992569088935852,
+        "confidence": 0.31377625465393066,
+        "fragment_track_id": 4,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 3,
+        "bbox": [
+          987.10400390625,
+          635.0945434570312,
+          1073.1058349609375,
+          751.1737670898438
+        ],
+        "visual_similarity": 0.9918281435966492,
+        "confidence": 0.4056684374809265,
+        "fragment_track_id": 4,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 90,
+        "det_index": 1,
+        "bbox": [
+          987.8331298828125,
+          654.1834716796875,
+          1073.39208984375,
+          765.5606689453125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.35595276951789856,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 95,
+        "det_index": 1,
+        "bbox": [
+          987.875244140625,
+          655.1054077148438,
+          1074.02197265625,
+          765.6798706054688
+        ],
+        "visual_similarity": 0.9953739047050476,
+        "confidence": 0.3483741879463196,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 100,
+        "det_index": 1,
+        "bbox": [
+          988.4415893554688,
+          656.6202392578125,
+          1074.100830078125,
+          765.8014526367188
+        ],
+        "visual_similarity": 0.9911535978317261,
+        "confidence": 0.29855141043663025,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 105,
+        "det_index": 2,
+        "bbox": [
+          988.4351806640625,
+          657.0513305664062,
+          1074.5787353515625,
+          766.6093139648438
+        ],
+        "visual_similarity": 0.9961347579956055,
+        "confidence": 0.30498796701431274,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 110,
+        "det_index": 1,
+        "bbox": [
+          988.724853515625,
+          657.316650390625,
+          1074.80712890625,
+          767.4710693359375
+        ],
+        "visual_similarity": 0.9929107427597046,
+        "confidence": 0.2678263187408447,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 115,
+        "det_index": 1,
+        "bbox": [
+          989.9346923828125,
+          657.192138671875,
+          1075.6005859375,
+          767.1758422851562
+        ],
+        "visual_similarity": 0.9923199415206909,
+        "confidence": 0.36279505491256714,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      }
+    ],
+    "relinked_from": [
+      6
+    ]
+  },
+  "trace_summary": {
+    "track_id": 4,
+    "class_id": 14,
+    "class_name": "bird",
+    "start_frame": 0,
+    "end_frame": 115,
+    "hits": 10,
+    "valid_track": true,
+    "relinked_from": [
+      6
+    ],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 3,
+        "bbox": [
+          987.6264038085938,
+          633.9547119140625,
+          1074.7296142578125,
+          744.7890014648438
+        ],
+        "fragment_track_id": 4,
+        "canonical_track_id": 4,
+        "role": "start"
+      },
+      {
+        "frame_num": 95,
+        "det_index": 1,
+        "bbox": [
+          987.875244140625,
+          655.1054077148438,
+          1074.02197265625,
+          765.6798706054688
+        ],
+        "fragment_track_id": 6,
+        "canonical_track_id": 4,
+        "role": "middle"
+      },
+      {
+        "frame_num": 115,
+        "det_index": 1,
+        "bbox": [
+          989.9346923828125,
+          657.192138671875,
+          1075.6005859375,
+          767.1758422851562
+        ],
+        "fragment_track_id": 6,
+        "canonical_track_id": 4,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 4,
+    "span_frames": 116,
+    "fragment_track_ids": [
+      4,
+      6
+    ],
+    "observed_classes": [
+      {
+        "class_id": 14,
+        "class_name": "bird",
+        "detections": 10,
+        "confidence_sum": 3.2642493844032288
+      }
+    ],
+    "accepted_relink_edges": [
+      {
+        "predecessor_id": 4,
+        "successor_id": 6,
+        "score": 0.9749223589897156,
+        "method": "dino"
+      }
+    ]
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 4,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 95,
+        "fragment_track_id": 6,
+        "path": "frames/middle_f0095.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 115,
+        "fragment_track_id": 6,
+        "path": "frames/end_f0115.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,372 @@
+{
+  "schema_version": "temporal_linking_trace_summary_v1",
+  "generated_at_utc": "2026-04-01T21:07:18.229401+00:00",
+  "config_hash_sha256": "dcc7cb3f3b5d28984457b8fc18c4f5de89a29bb42d14987a9094b54e9ae7fa11",
+  "input_enriched_json": "enriched_detections.json",
+  "items": [
+    {
+      "track_id": 1,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 0,
+      "end_frame": 0,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 0,
+          "bbox": [
+            569.5339965820312,
+            145.82864379882812,
+            662.6044311523438,
+            309.0216369628906
+          ],
+          "fragment_track_id": 1,
+          "canonical_track_id": 1,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 2,
+      "class_id": 3,
+      "class_name": "motorcycle",
+      "start_frame": 5,
+      "end_frame": 5,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 5,
+          "det_index": 0,
+          "bbox": [
+            503.9480895996094,
+            131.92041015625,
+            683.8868408203125,
+            379.2979736328125
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 3,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 5,
+      "end_frame": 5,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 5,
+          "det_index": 1,
+          "bbox": [
+            549.4845581054688,
+            53.4611701965332,
+            693.3184814453125,
+            278.7584228515625
+          ],
+          "fragment_track_id": 3,
+          "canonical_track_id": 3,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 4,
+      "class_id": 3,
+      "class_name": "motorcycle",
+      "start_frame": 10,
+      "end_frame": 10,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 10,
+          "det_index": 0,
+          "bbox": [
+            396.1799011230469,
+            114.19718170166016,
+            717.6201171875,
+            473.73052978515625
+          ],
+          "fragment_track_id": 4,
+          "canonical_track_id": 4,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 5,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 10,
+      "end_frame": 10,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 10,
+          "det_index": 1,
+          "bbox": [
+            541.9881591796875,
+            30.22977638244629,
+            734.4530029296875,
+            417.2626647949219
+          ],
+          "fragment_track_id": 5,
+          "canonical_track_id": 5,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 6,
+      "class_id": 3,
+      "class_name": "motorcycle",
+      "start_frame": 15,
+      "end_frame": 30,
+      "hits": 4,
+      "valid_track": true,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 15,
+          "det_index": 0,
+          "bbox": [
+            62.2468376159668,
+            2.7283668518066406,
+            784.318115234375,
+            453.1951904296875
+          ],
+          "fragment_track_id": 6,
+          "canonical_track_id": 6,
+          "role": "start"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 0,
+          "bbox": [
+            290.4054260253906,
+            0.0,
+            844.7759399414062,
+            475.9109191894531
+          ],
+          "fragment_track_id": 6,
+          "canonical_track_id": 6,
+          "role": "middle"
+        },
+        {
+          "frame_num": 30,
+          "det_index": 1,
+          "bbox": [
+            438.9290771484375,
+            138.59890747070312,
+            711.6978759765625,
+            437.47320556640625
+          ],
+          "fragment_track_id": 6,
+          "canonical_track_id": 6,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 7,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 25,
+      "end_frame": 25,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 25,
+          "det_index": 1,
+          "bbox": [
+            288.6289367675781,
+            1.4959187507629395,
+            569.2777099609375,
+            366.741455078125
+          ],
+          "fragment_track_id": 7,
+          "canonical_track_id": 7,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 8,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 30,
+      "end_frame": 30,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 30,
+          "det_index": 0,
+          "bbox": [
+            420.728759765625,
+            70.8316650390625,
+            583.2254028320312,
+            330.7887878417969
+          ],
+          "fragment_track_id": 8,
+          "canonical_track_id": 8,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 9,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 35,
+      "end_frame": 35,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 35,
+          "det_index": 0,
+          "bbox": [
+            470.2020568847656,
+            167.49273681640625,
+            581.6930541992188,
+            349.49127197265625
+          ],
+          "fragment_track_id": 9,
+          "canonical_track_id": 9,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 10,
+      "class_id": 3,
+      "class_name": "motorcycle",
+      "start_frame": 35,
+      "end_frame": 35,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 35,
+          "det_index": 1,
+          "bbox": [
+            498.0008239746094,
+            223.02455139160156,
+            650.9761962890625,
+            432.5135803222656
+          ],
+          "fragment_track_id": 10,
+          "canonical_track_id": 10,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 11,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 35,
+      "end_frame": 35,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 35,
+          "det_index": 2,
+          "bbox": [
+            48.55815124511719,
+            283.09393310546875,
+            68.04698944091797,
+            335.8058166503906
+          ],
+          "fragment_track_id": 11,
+          "canonical_track_id": 11,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 12,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 35,
+      "end_frame": 35,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 35,
+          "det_index": 3,
+          "bbox": [
+            104.0691146850586,
+            232.29417419433594,
+            114.99960327148438,
+            260.4076843261719
+          ],
+          "fragment_track_id": 12,
+          "canonical_track_id": 12,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 13,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 35,
+      "end_frame": 35,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 35,
+          "det_index": 4,
+          "bbox": [
+            42.4460563659668,
+            246.67381286621094,
+            56.1733283996582,
+            275.55828857421875
+          ],
+          "fragment_track_id": 13,
+          "canonical_track_id": 13,
+          "role": "start"
+        }
+      ]
+    }
+  ]
+}

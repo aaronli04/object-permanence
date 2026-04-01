@@ -1,0 +1,100 @@
+{
+  "scenario": "davis__person_rotation__breakdance",
+  "track": {
+    "track_id": 58,
+    "class_id": 32,
+    "class_name": "sports ball",
+    "status": "closed",
+    "start_frame": 47,
+    "end_frame": 47,
+    "hits": 1,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 47,
+        "type": "created"
+      },
+      {
+        "frame_num": 48,
+        "type": "lost"
+      },
+      {
+        "frame_num": 47,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 47,
+        "det_index": 11,
+        "bbox": [
+          324.5935363769531,
+          352.32489013671875,
+          384.3592529296875,
+          412.37054443359375
+        ],
+        "visual_similarity": null,
+        "confidence": 0.44408756494522095,
+        "fragment_track_id": 58,
+        "class_id": 32,
+        "class_name": "sports ball"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 58,
+    "class_id": 32,
+    "class_name": "sports ball",
+    "start_frame": 47,
+    "end_frame": 47,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 47,
+        "det_index": 11,
+        "bbox": [
+          324.5935363769531,
+          352.32489013671875,
+          384.3592529296875,
+          412.37054443359375
+        ],
+        "fragment_track_id": 58,
+        "canonical_track_id": 58,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 58,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      58
+    ],
+    "observed_classes": [
+      {
+        "class_id": 32,
+        "class_name": "sports ball",
+        "detections": 1,
+        "confidence_sum": 0.44408756494522095
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 47,
+        "fragment_track_id": 58,
+        "path": "frames/start_f0047.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "scenario": "davis__person_fast_motion__bmx_bumps",
+  "track": {
+    "track_id": 6,
+    "class_id": 1,
+    "class_name": "bicycle",
+    "status": "closed",
+    "start_frame": 30,
+    "end_frame": 30,
+    "hits": 1,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 30,
+        "type": "created"
+      },
+      {
+        "frame_num": 35,
+        "type": "lost"
+      },
+      {
+        "frame_num": 30,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 30,
+        "det_index": 0,
+        "bbox": [
+          0.0,
+          210.76531982421875,
+          225.2804412841797,
+          376.46807861328125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.8937219381332397,
+        "fragment_track_id": 6,
+        "class_id": 1,
+        "class_name": "bicycle"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 6,
+    "class_id": 1,
+    "class_name": "bicycle",
+    "start_frame": 30,
+    "end_frame": 30,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 30,
+        "det_index": 0,
+        "bbox": [
+          0.0,
+          210.76531982421875,
+          225.2804412841797,
+          376.46807861328125
+        ],
+        "fragment_track_id": 6,
+        "canonical_track_id": 6,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 6,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      6
+    ],
+    "observed_classes": [
+      {
+        "class_id": 1,
+        "class_name": "bicycle",
+        "detections": 1,
+        "confidence_sum": 0.8937219381332397
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 30,
+        "fragment_track_id": 6,
+        "path": "frames/start_f0030.jpg"
+      }
+    ]
+  }
+}

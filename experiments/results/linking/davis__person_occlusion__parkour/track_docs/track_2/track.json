@@ -1,0 +1,100 @@
+{
+  "scenario": "davis__person_occlusion__parkour",
+  "track": {
+    "track_id": 2,
+    "class_id": 36,
+    "class_name": "skateboard",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 0,
+    "hits": 1,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "lost"
+      },
+      {
+        "frame_num": 0,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 1,
+        "bbox": [
+          520.4461669921875,
+          158.89830017089844,
+          549.8467407226562,
+          216.90940856933594
+        ],
+        "visual_similarity": null,
+        "confidence": 0.27275872230529785,
+        "fragment_track_id": 2,
+        "class_id": 36,
+        "class_name": "skateboard"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 2,
+    "class_id": 36,
+    "class_name": "skateboard",
+    "start_frame": 0,
+    "end_frame": 0,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 1,
+        "bbox": [
+          520.4461669921875,
+          158.89830017089844,
+          549.8467407226562,
+          216.90940856933594
+        ],
+        "fragment_track_id": 2,
+        "canonical_track_id": 2,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 2,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      2
+    ],
+    "observed_classes": [
+      {
+        "class_id": 36,
+        "class_name": "skateboard",
+        "detections": 1,
+        "confidence_sum": 0.27275872230529785
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 2,
+        "path": "frames/start_f0000.jpg"
+      }
+    ]
+  }
+}

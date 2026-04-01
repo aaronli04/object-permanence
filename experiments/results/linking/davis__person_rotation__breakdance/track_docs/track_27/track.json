@@ -1,0 +1,100 @@
+{
+  "scenario": "davis__person_rotation__breakdance",
+  "track": {
+    "track_id": 27,
+    "class_id": 0,
+    "class_name": "person",
+    "status": "closed",
+    "start_frame": 25,
+    "end_frame": 25,
+    "hits": 1,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 25,
+        "type": "created"
+      },
+      {
+        "frame_num": 30,
+        "type": "lost"
+      },
+      {
+        "frame_num": 25,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 25,
+        "det_index": 10,
+        "bbox": [
+          248.26287841796875,
+          106.99005889892578,
+          435.5903015136719,
+          340.24609375
+        ],
+        "visual_similarity": null,
+        "confidence": 0.5052908658981323,
+        "fragment_track_id": 27,
+        "class_id": 0,
+        "class_name": "person"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 27,
+    "class_id": 0,
+    "class_name": "person",
+    "start_frame": 25,
+    "end_frame": 25,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 25,
+        "det_index": 10,
+        "bbox": [
+          248.26287841796875,
+          106.99005889892578,
+          435.5903015136719,
+          340.24609375
+        ],
+        "fragment_track_id": 27,
+        "canonical_track_id": 27,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 27,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      27
+    ],
+    "observed_classes": [
+      {
+        "class_id": 0,
+        "class_name": "person",
+        "detections": 1,
+        "confidence_sum": 0.5052908658981323
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 25,
+        "fragment_track_id": 27,
+        "path": "frames/start_f0025.jpg"
+      }
+    ]
+  }
+}

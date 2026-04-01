@@ -1,0 +1,430 @@
+{
+  "schema_version": "temporal_linking_trace_summary_v1",
+  "generated_at_utc": "2026-04-01T21:06:46.355204+00:00",
+  "config_hash_sha256": "dcc7cb3f3b5d28984457b8fc18c4f5de89a29bb42d14987a9094b54e9ae7fa11",
+  "input_enriched_json": "enriched_detections.json",
+  "items": [
+    {
+      "track_id": 1,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 0,
+      "end_frame": 50,
+      "hits": 5,
+      "valid_track": true,
+      "relinked_from": [
+        12
+      ],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 0,
+          "bbox": [
+            434.4767150878906,
+            193.72129821777344,
+            447.2106018066406,
+            232.89437866210938
+          ],
+          "fragment_track_id": 1,
+          "canonical_track_id": 1,
+          "role": "start"
+        },
+        {
+          "frame_num": 10,
+          "det_index": 1,
+          "bbox": [
+            434.51531982421875,
+            193.86973571777344,
+            447.2380676269531,
+            231.95655822753906
+          ],
+          "fragment_track_id": 1,
+          "canonical_track_id": 1,
+          "role": "middle"
+        },
+        {
+          "frame_num": 50,
+          "det_index": 1,
+          "bbox": [
+            630.999267578125,
+            64.8150634765625,
+            697.4246826171875,
+            109.19453430175781
+          ],
+          "fragment_track_id": 12,
+          "canonical_track_id": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 2,
+      "class_id": 7,
+      "class_name": "truck",
+      "start_frame": 0,
+      "end_frame": 45,
+      "hits": 4,
+      "valid_track": true,
+      "relinked_from": [],
+      "had_recovery": true,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 1,
+          "bbox": [
+            231.95553588867188,
+            152.90179443359375,
+            380.59033203125,
+            231.08705139160156
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "start"
+        },
+        {
+          "frame_num": 40,
+          "det_index": 1,
+          "bbox": [
+            232.1499786376953,
+            152.84625244140625,
+            379.2864990234375,
+            230.58059692382812
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "middle"
+        },
+        {
+          "frame_num": 45,
+          "det_index": 3,
+          "bbox": [
+            231.04275512695312,
+            152.29843139648438,
+            383.06109619140625,
+            231.9755859375
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 3,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 0,
+      "end_frame": 0,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 2,
+          "bbox": [
+            309.6013488769531,
+            217.7638702392578,
+            320.0677795410156,
+            235.9745330810547
+          ],
+          "fragment_track_id": 3,
+          "canonical_track_id": 3,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 4,
+      "class_id": 2,
+      "class_name": "car",
+      "start_frame": 5,
+      "end_frame": 5,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 5,
+          "det_index": 2,
+          "bbox": [
+            242.25425720214844,
+            215.04261779785156,
+            318.0557556152344,
+            259.4539794921875
+          ],
+          "fragment_track_id": 4,
+          "canonical_track_id": 4,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 5,
+      "class_id": 7,
+      "class_name": "truck",
+      "start_frame": 5,
+      "end_frame": 5,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 5,
+          "det_index": 3,
+          "bbox": [
+            239.9824676513672,
+            214.84048461914062,
+            317.56915283203125,
+            259.4881286621094
+          ],
+          "fragment_track_id": 5,
+          "canonical_track_id": 5,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 6,
+      "class_id": 8,
+      "class_name": "boat",
+      "start_frame": 5,
+      "end_frame": 35,
+      "hits": 6,
+      "valid_track": true,
+      "relinked_from": [
+        9
+      ],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 5,
+          "det_index": 4,
+          "bbox": [
+            449.7171936035156,
+            195.23020935058594,
+            460.4203796386719,
+            231.2678680419922
+          ],
+          "fragment_track_id": 6,
+          "canonical_track_id": 6,
+          "role": "start"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 0,
+          "bbox": [
+            387.2884216308594,
+            217.7230224609375,
+            543.2333984375,
+            272.5579833984375
+          ],
+          "fragment_track_id": 9,
+          "canonical_track_id": 6,
+          "role": "middle"
+        },
+        {
+          "frame_num": 35,
+          "det_index": 1,
+          "bbox": [
+            354.1029357910156,
+            220.28201293945312,
+            505.3098449707031,
+            285.7042236328125
+          ],
+          "fragment_track_id": 9,
+          "canonical_track_id": 6,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 7,
+      "class_id": 2,
+      "class_name": "car",
+      "start_frame": 10,
+      "end_frame": 50,
+      "hits": 6,
+      "valid_track": true,
+      "relinked_from": [
+        10
+      ],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 10,
+          "det_index": 0,
+          "bbox": [
+            309.3244323730469,
+            213.5347442626953,
+            396.2311706542969,
+            260.7833251953125
+          ],
+          "fragment_track_id": 7,
+          "canonical_track_id": 7,
+          "role": "start"
+        },
+        {
+          "frame_num": 40,
+          "det_index": 0,
+          "bbox": [
+            341.236328125,
+            221.81826782226562,
+            495.0303649902344,
+            292.83209228515625
+          ],
+          "fragment_track_id": 10,
+          "canonical_track_id": 7,
+          "role": "middle"
+        },
+        {
+          "frame_num": 50,
+          "det_index": 0,
+          "bbox": [
+            317.829833984375,
+            227.80201721191406,
+            650.1716918945312,
+            322.6647033691406
+          ],
+          "fragment_track_id": 10,
+          "canonical_track_id": 7,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 8,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 15,
+      "end_frame": 50,
+      "hits": 7,
+      "valid_track": true,
+      "relinked_from": [],
+      "had_recovery": true,
+      "frames": [
+        {
+          "frame_num": 15,
+          "det_index": 0,
+          "bbox": [
+            149.50836181640625,
+            197.0724639892578,
+            167.82647705078125,
+            246.76808166503906
+          ],
+          "fragment_track_id": 8,
+          "canonical_track_id": 8,
+          "role": "start"
+        },
+        {
+          "frame_num": 30,
+          "det_index": 1,
+          "bbox": [
+            149.72984313964844,
+            196.78387451171875,
+            167.35450744628906,
+            246.04946899414062
+          ],
+          "fragment_track_id": 8,
+          "canonical_track_id": 8,
+          "role": "middle"
+        },
+        {
+          "frame_num": 50,
+          "det_index": 2,
+          "bbox": [
+            150.54188537597656,
+            196.80137634277344,
+            168.13352966308594,
+            245.54141235351562
+          ],
+          "fragment_track_id": 8,
+          "canonical_track_id": 8,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 11,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 40,
+      "end_frame": 40,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 40,
+          "det_index": 2,
+          "bbox": [
+            149.4097442626953,
+            193.76544189453125,
+            168.7470245361328,
+            246.10635375976562
+          ],
+          "fragment_track_id": 11,
+          "canonical_track_id": 11,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 13,
+      "class_id": 7,
+      "class_name": "truck",
+      "start_frame": 45,
+      "end_frame": 45,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 45,
+          "det_index": 4,
+          "bbox": [
+            161.9324493408203,
+            154.278564453125,
+            390.544677734375,
+            272.5478820800781
+          ],
+          "fragment_track_id": 13,
+          "canonical_track_id": 13,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 14,
+      "class_id": 2,
+      "class_name": "car",
+      "start_frame": 50,
+      "end_frame": 50,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 50,
+          "det_index": 3,
+          "bbox": [
+            307.1907043457031,
+            231.85910034179688,
+            382.2389221191406,
+            284.04156494140625
+          ],
+          "fragment_track_id": 14,
+          "canonical_track_id": 14,
+          "role": "start"
+        }
+      ]
+    }
+  ]
+}

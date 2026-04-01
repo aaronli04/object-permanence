@@ -1,0 +1,100 @@
+{
+  "scenario": "Left_bounce_back",
+  "track": {
+    "track_id": 7,
+    "class_id": 75,
+    "class_name": "vase",
+    "status": "closed",
+    "start_frame": 305,
+    "end_frame": 305,
+    "hits": 1,
+    "total_misses": 2,
+    "max_miss_streak": 2,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 305,
+        "type": "created"
+      },
+      {
+        "frame_num": 310,
+        "type": "lost"
+      },
+      {
+        "frame_num": 305,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 305,
+        "det_index": 2,
+        "bbox": [
+          493.42852783203125,
+          656.3277587890625,
+          704.621826171875,
+          865.3613891601562
+        ],
+        "visual_similarity": null,
+        "confidence": 0.27542930841445923,
+        "fragment_track_id": 7,
+        "class_id": 75,
+        "class_name": "vase"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 7,
+    "class_id": 75,
+    "class_name": "vase",
+    "start_frame": 305,
+    "end_frame": 305,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 305,
+        "det_index": 2,
+        "bbox": [
+          493.42852783203125,
+          656.3277587890625,
+          704.621826171875,
+          865.3613891601562
+        ],
+        "fragment_track_id": 7,
+        "canonical_track_id": 7,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 7,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      7
+    ],
+    "observed_classes": [
+      {
+        "class_id": 75,
+        "class_name": "vase",
+        "detections": 1,
+        "confidence_sum": 0.27542930841445923
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 305,
+        "fragment_track_id": 7,
+        "path": "frames/start_f0305.jpg"
+      }
+    ]
+  }
+}

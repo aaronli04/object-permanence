@@ -1,0 +1,100 @@
+{
+  "scenario": "No_occlusion_ball_removed",
+  "track": {
+    "track_id": 7,
+    "class_id": 14,
+    "class_name": "bird",
+    "status": "closed",
+    "start_frame": 20,
+    "end_frame": 20,
+    "hits": 1,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 20,
+        "type": "created"
+      },
+      {
+        "frame_num": 25,
+        "type": "lost"
+      },
+      {
+        "frame_num": 20,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 20,
+        "det_index": 2,
+        "bbox": [
+          0.3563232421875,
+          249.96006774902344,
+          282.15399169921875,
+          592.8369140625
+        ],
+        "visual_similarity": null,
+        "confidence": 0.3640424311161041,
+        "fragment_track_id": 7,
+        "class_id": 14,
+        "class_name": "bird"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 7,
+    "class_id": 14,
+    "class_name": "bird",
+    "start_frame": 20,
+    "end_frame": 20,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 20,
+        "det_index": 2,
+        "bbox": [
+          0.3563232421875,
+          249.96006774902344,
+          282.15399169921875,
+          592.8369140625
+        ],
+        "fragment_track_id": 7,
+        "canonical_track_id": 7,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 7,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      7
+    ],
+    "observed_classes": [
+      {
+        "class_id": 14,
+        "class_name": "bird",
+        "detections": 1,
+        "confidence_sum": 0.3640424311161041
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 20,
+        "fragment_track_id": 7,
+        "path": "frames/start_f0020.jpg"
+      }
+    ]
+  }
+}

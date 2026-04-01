@@ -1,0 +1,96 @@
+{
+  "scenario": "davis__person_fast_motion__bmx_bumps",
+  "track": {
+    "track_id": 21,
+    "class_id": 24,
+    "class_name": "backpack",
+    "status": "closed",
+    "start_frame": 89,
+    "end_frame": 89,
+    "hits": 1,
+    "total_misses": 0,
+    "max_miss_streak": 0,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 89,
+        "type": "created"
+      },
+      {
+        "frame_num": 89,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 89,
+        "det_index": 2,
+        "bbox": [
+          624.0616455078125,
+          160.39601135253906,
+          661.8720703125,
+          211.63758850097656
+        ],
+        "visual_similarity": null,
+        "confidence": 0.36130788922309875,
+        "fragment_track_id": 21,
+        "class_id": 24,
+        "class_name": "backpack"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 21,
+    "class_id": 24,
+    "class_name": "backpack",
+    "start_frame": 89,
+    "end_frame": 89,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 89,
+        "det_index": 2,
+        "bbox": [
+          624.0616455078125,
+          160.39601135253906,
+          661.8720703125,
+          211.63758850097656
+        ],
+        "fragment_track_id": 21,
+        "canonical_track_id": 21,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 21,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      21
+    ],
+    "observed_classes": [
+      {
+        "class_id": 24,
+        "class_name": "backpack",
+        "detections": 1,
+        "confidence_sum": 0.36130788922309875
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 89,
+        "fragment_track_id": 21,
+        "path": "frames/start_f0089.jpg"
+      }
+    ]
+  }
+}

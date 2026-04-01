@@ -1,0 +1,100 @@
+{
+  "scenario": "No_occlusion_ball_removed",
+  "track": {
+    "track_id": 3,
+    "class_id": 16,
+    "class_name": "dog",
+    "status": "closed",
+    "start_frame": 10,
+    "end_frame": 10,
+    "hits": 1,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 10,
+        "type": "created"
+      },
+      {
+        "frame_num": 15,
+        "type": "lost"
+      },
+      {
+        "frame_num": 10,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 10,
+        "det_index": 1,
+        "bbox": [
+          0.4288330078125,
+          328.8838806152344,
+          265.2890930175781,
+          688.6307983398438
+        ],
+        "visual_similarity": null,
+        "confidence": 0.6083600521087646,
+        "fragment_track_id": 3,
+        "class_id": 16,
+        "class_name": "dog"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 3,
+    "class_id": 16,
+    "class_name": "dog",
+    "start_frame": 10,
+    "end_frame": 10,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 10,
+        "det_index": 1,
+        "bbox": [
+          0.4288330078125,
+          328.8838806152344,
+          265.2890930175781,
+          688.6307983398438
+        ],
+        "fragment_track_id": 3,
+        "canonical_track_id": 3,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 3,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      3
+    ],
+    "observed_classes": [
+      {
+        "class_id": 16,
+        "class_name": "dog",
+        "detections": 1,
+        "confidence_sum": 0.6083600521087646
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 10,
+        "fragment_track_id": 3,
+        "path": "frames/start_f0010.jpg"
+      }
+    ]
+  }
+}

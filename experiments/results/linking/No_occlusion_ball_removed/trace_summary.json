@@ -1,0 +1,296 @@
+{
+  "schema_version": "temporal_linking_trace_summary_v1",
+  "generated_at_utc": "2026-04-01T21:05:25.835325+00:00",
+  "config_hash_sha256": "dcc7cb3f3b5d28984457b8fc18c4f5de89a29bb42d14987a9094b54e9ae7fa11",
+  "input_enriched_json": "enriched_detections.json",
+  "items": [
+    {
+      "track_id": 1,
+      "class_id": 32,
+      "class_name": "sports ball",
+      "start_frame": 0,
+      "end_frame": 75,
+      "hits": 16,
+      "valid_track": true,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 0,
+          "bbox": [
+            41.706207275390625,
+            532.6356811523438,
+            322.23687744140625,
+            779.7197265625
+          ],
+          "fragment_track_id": 1,
+          "canonical_track_id": 1,
+          "role": "start"
+        },
+        {
+          "frame_num": 40,
+          "det_index": 0,
+          "bbox": [
+            545.5501708984375,
+            548.0810546875,
+            798.3809204101562,
+            796.8768920898438
+          ],
+          "fragment_track_id": 1,
+          "canonical_track_id": 1,
+          "role": "middle"
+        },
+        {
+          "frame_num": 75,
+          "det_index": 0,
+          "bbox": [
+            976.1224365234375,
+            558.8939819335938,
+            1222.9837646484375,
+            808.7030639648438
+          ],
+          "fragment_track_id": 1,
+          "canonical_track_id": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 2,
+      "class_id": 16,
+      "class_name": "dog",
+      "start_frame": 5,
+      "end_frame": 5,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 5,
+          "det_index": 1,
+          "bbox": [
+            0.0,
+            382.8078918457031,
+            249.10345458984375,
+            733.8626098632812
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 3,
+      "class_id": 16,
+      "class_name": "dog",
+      "start_frame": 10,
+      "end_frame": 10,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 10,
+          "det_index": 1,
+          "bbox": [
+            0.4288330078125,
+            328.8838806152344,
+            265.2890930175781,
+            688.6307983398438
+          ],
+          "fragment_track_id": 3,
+          "canonical_track_id": 3,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 4,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 10,
+      "end_frame": 10,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 10,
+          "det_index": 2,
+          "bbox": [
+            0.29791259765625,
+            334.3775939941406,
+            265.343994140625,
+            684.5438232421875
+          ],
+          "fragment_track_id": 4,
+          "canonical_track_id": 4,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 5,
+      "class_id": 16,
+      "class_name": "dog",
+      "start_frame": 15,
+      "end_frame": 30,
+      "hits": 4,
+      "valid_track": true,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 15,
+          "det_index": 1,
+          "bbox": [
+            0.2393646240234375,
+            282.2002258300781,
+            276.1527099609375,
+            645.0706787109375
+          ],
+          "fragment_track_id": 5,
+          "canonical_track_id": 5,
+          "role": "start"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 1,
+          "bbox": [
+            0.3981170654296875,
+            238.42703247070312,
+            271.2581481933594,
+            580.2704467773438
+          ],
+          "fragment_track_id": 5,
+          "canonical_track_id": 5,
+          "role": "middle"
+        },
+        {
+          "frame_num": 30,
+          "det_index": 1,
+          "bbox": [
+            0.20317840576171875,
+            279.6260070800781,
+            249.32638549804688,
+            608.9384765625
+          ],
+          "fragment_track_id": 5,
+          "canonical_track_id": 5,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 6,
+      "class_id": 14,
+      "class_name": "bird",
+      "start_frame": 20,
+      "end_frame": 20,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 20,
+          "det_index": 1,
+          "bbox": [
+            271.8840637207031,
+            538.3698120117188,
+            532.9429321289062,
+            793.3405151367188
+          ],
+          "fragment_track_id": 6,
+          "canonical_track_id": 6,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 7,
+      "class_id": 14,
+      "class_name": "bird",
+      "start_frame": 20,
+      "end_frame": 20,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 20,
+          "det_index": 2,
+          "bbox": [
+            0.3563232421875,
+            249.96006774902344,
+            282.15399169921875,
+            592.8369140625
+          ],
+          "fragment_track_id": 7,
+          "canonical_track_id": 7,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 8,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 20,
+      "end_frame": 105,
+      "hits": 12,
+      "valid_track": true,
+      "relinked_from": [
+        9
+      ],
+      "had_recovery": true,
+      "frames": [
+        {
+          "frame_num": 20,
+          "det_index": 4,
+          "bbox": [
+            0.20688629150390625,
+            249.15875244140625,
+            283.5812072753906,
+            593.2245483398438
+          ],
+          "fragment_track_id": 8,
+          "canonical_track_id": 8,
+          "role": "start"
+        },
+        {
+          "frame_num": 80,
+          "det_index": 0,
+          "bbox": [
+            1035.15234375,
+            1.07574462890625,
+            1917.673828125,
+            892.209228515625
+          ],
+          "fragment_track_id": 9,
+          "canonical_track_id": 8,
+          "role": "middle"
+        },
+        {
+          "frame_num": 105,
+          "det_index": 0,
+          "bbox": [
+            1085.10986328125,
+            5.63616943359375,
+            1919.18603515625,
+            584.9929809570312
+          ],
+          "fragment_track_id": 9,
+          "canonical_track_id": 8,
+          "role": "end"
+        }
+      ]
+    }
+  ]
+}

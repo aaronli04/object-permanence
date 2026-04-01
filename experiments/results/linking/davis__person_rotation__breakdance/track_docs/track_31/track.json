@@ -1,0 +1,180 @@
+{
+  "scenario": "davis__person_rotation__breakdance",
+  "track": {
+    "track_id": 31,
+    "class_id": 0,
+    "class_name": "person",
+    "status": "closed",
+    "start_frame": 30,
+    "end_frame": 70,
+    "hits": 3,
+    "total_misses": 8,
+    "max_miss_streak": 6,
+    "avg_visual_similarity": 0.8657689690589905,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 30,
+        "type": "created"
+      },
+      {
+        "frame_num": 35,
+        "type": "activated"
+      },
+      {
+        "frame_num": 40,
+        "type": "lost"
+      },
+      {
+        "frame_num": 70,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 75,
+        "type": "lost"
+      },
+      {
+        "frame_num": 70,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 30,
+        "det_index": 10,
+        "bbox": [
+          383.3503723144531,
+          9.663549423217773,
+          593.6367797851562,
+          457.5116271972656
+        ],
+        "visual_similarity": null,
+        "confidence": 0.5161352157592773,
+        "fragment_track_id": 31,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 35,
+        "det_index": 5,
+        "bbox": [
+          346.7732238769531,
+          8.277702331542969,
+          569.8671264648438,
+          460.77587890625
+        ],
+        "visual_similarity": 0.9285552501678467,
+        "confidence": 0.7900734543800354,
+        "fragment_track_id": 31,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 0,
+        "bbox": [
+          228.9588165283203,
+          50.91780090332031,
+          571.0826416015625,
+          453.69189453125
+        ],
+        "visual_similarity": 0.8029826879501343,
+        "confidence": 0.8873599767684937,
+        "fragment_track_id": 31,
+        "class_id": 0,
+        "class_name": "person"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 31,
+    "class_id": 0,
+    "class_name": "person",
+    "start_frame": 30,
+    "end_frame": 70,
+    "hits": 3,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": true,
+    "frames": [
+      {
+        "frame_num": 30,
+        "det_index": 10,
+        "bbox": [
+          383.3503723144531,
+          9.663549423217773,
+          593.6367797851562,
+          457.5116271972656
+        ],
+        "fragment_track_id": 31,
+        "canonical_track_id": 31,
+        "role": "start"
+      },
+      {
+        "frame_num": 35,
+        "det_index": 5,
+        "bbox": [
+          346.7732238769531,
+          8.277702331542969,
+          569.8671264648438,
+          460.77587890625
+        ],
+        "fragment_track_id": 31,
+        "canonical_track_id": 31,
+        "role": "middle"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 0,
+        "bbox": [
+          228.9588165283203,
+          50.91780090332031,
+          571.0826416015625,
+          453.69189453125
+        ],
+        "fragment_track_id": 31,
+        "canonical_track_id": 31,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 31,
+    "span_frames": 41,
+    "fragment_track_ids": [
+      31
+    ],
+    "observed_classes": [
+      {
+        "class_id": 0,
+        "class_name": "person",
+        "detections": 3,
+        "confidence_sum": 2.1935686469078064
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 30,
+        "fragment_track_id": 31,
+        "path": "frames/start_f0030.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 35,
+        "fragment_track_id": 31,
+        "path": "frames/middle_f0035.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 70,
+        "fragment_track_id": 31,
+        "path": "frames/end_f0070.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "scenario": "davis__motorcycle_jump__motocross_jump",
+  "track": {
+    "track_id": 2,
+    "class_id": 3,
+    "class_name": "motorcycle",
+    "status": "closed",
+    "start_frame": 5,
+    "end_frame": 5,
+    "hits": 1,
+    "total_misses": 6,
+    "max_miss_streak": 6,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 5,
+        "type": "created"
+      },
+      {
+        "frame_num": 10,
+        "type": "lost"
+      },
+      {
+        "frame_num": 5,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 5,
+        "det_index": 0,
+        "bbox": [
+          503.9480895996094,
+          131.92041015625,
+          683.8868408203125,
+          379.2979736328125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.8280347585678101,
+        "fragment_track_id": 2,
+        "class_id": 3,
+        "class_name": "motorcycle"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 2,
+    "class_id": 3,
+    "class_name": "motorcycle",
+    "start_frame": 5,
+    "end_frame": 5,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 5,
+        "det_index": 0,
+        "bbox": [
+          503.9480895996094,
+          131.92041015625,
+          683.8868408203125,
+          379.2979736328125
+        ],
+        "fragment_track_id": 2,
+        "canonical_track_id": 2,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 2,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      2
+    ],
+    "observed_classes": [
+      {
+        "class_id": 3,
+        "class_name": "motorcycle",
+        "detections": 1,
+        "confidence_sum": 0.8280347585678101
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 5,
+        "fragment_track_id": 2,
+        "path": "frames/start_f0005.jpg"
+      }
+    ]
+  }
+}

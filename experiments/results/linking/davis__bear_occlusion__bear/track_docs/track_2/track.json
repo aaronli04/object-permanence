@@ -1,0 +1,361 @@
+{
+  "scenario": "davis__bear_occlusion__bear",
+  "track": {
+    "track_id": 2,
+    "class_id": 21,
+    "class_name": "bear",
+    "status": "closed",
+    "start_frame": 5,
+    "end_frame": 75,
+    "hits": 12,
+    "total_misses": 15,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": 0.8153863880369399,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 5,
+        "type": "created"
+      },
+      {
+        "frame_num": 10,
+        "type": "activated"
+      },
+      {
+        "frame_num": 25,
+        "type": "closed"
+      },
+      {
+        "frame_num": 30,
+        "type": "lost"
+      },
+      {
+        "frame_num": 35,
+        "type": "created"
+      },
+      {
+        "frame_num": 40,
+        "type": "activated"
+      },
+      {
+        "frame_num": 45,
+        "type": "closed"
+      },
+      {
+        "frame_num": 50,
+        "type": "lost"
+      },
+      {
+        "frame_num": 60,
+        "type": "created"
+      },
+      {
+        "frame_num": 65,
+        "type": "activated"
+      },
+      {
+        "frame_num": 75,
+        "type": "closed"
+      },
+      {
+        "frame_num": 80,
+        "type": "lost"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 5,
+        "det_index": 0,
+        "bbox": [
+          95.14727783203125,
+          212.7039794921875,
+          434.5654602050781,
+          423.5433044433594
+        ],
+        "visual_similarity": null,
+        "confidence": 0.9554774761199951,
+        "fragment_track_id": 2,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 0,
+        "bbox": [
+          96.55360412597656,
+          208.82342529296875,
+          430.3869323730469,
+          423.7888488769531
+        ],
+        "visual_similarity": 0.8145114779472351,
+        "confidence": 0.9538447856903076,
+        "fragment_track_id": 2,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 0,
+        "bbox": [
+          101.46511840820312,
+          209.91500854492188,
+          443.6029052734375,
+          421.32696533203125
+        ],
+        "visual_similarity": 0.7500094175338745,
+        "confidence": 0.9484006762504578,
+        "fragment_track_id": 2,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 20,
+        "det_index": 0,
+        "bbox": [
+          108.72843170166016,
+          213.66708374023438,
+          460.782470703125,
+          420.9818420410156
+        ],
+        "visual_similarity": 0.7382322549819946,
+        "confidence": 0.9476452469825745,
+        "fragment_track_id": 2,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 25,
+        "det_index": 0,
+        "bbox": [
+          110.2388916015625,
+          217.16700744628906,
+          474.2710876464844,
+          426.8072204589844
+        ],
+        "visual_similarity": 0.8057718873023987,
+        "confidence": 0.9461538791656494,
+        "fragment_track_id": 2,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 35,
+        "det_index": 0,
+        "bbox": [
+          109.59809112548828,
+          225.2229766845703,
+          483.65191650390625,
+          473.1107482910156
+        ],
+        "visual_similarity": null,
+        "confidence": 0.9440938234329224,
+        "fragment_track_id": 5,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 40,
+        "det_index": 0,
+        "bbox": [
+          108.17298889160156,
+          228.187255859375,
+          475.5430603027344,
+          472.9620056152344
+        ],
+        "visual_similarity": 0.881937563419342,
+        "confidence": 0.9420574307441711,
+        "fragment_track_id": 5,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 45,
+        "det_index": 0,
+        "bbox": [
+          108.90178680419922,
+          229.6393280029297,
+          464.3697204589844,
+          472.13592529296875
+        ],
+        "visual_similarity": 0.8852419257164001,
+        "confidence": 0.9331915378570557,
+        "fragment_track_id": 5,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 60,
+        "det_index": 0,
+        "bbox": [
+          108.11149597167969,
+          189.27162170410156,
+          445.228271484375,
+          423.52459716796875
+        ],
+        "visual_similarity": null,
+        "confidence": 0.9534032344818115,
+        "fragment_track_id": 8,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 65,
+        "det_index": 0,
+        "bbox": [
+          108.04132080078125,
+          176.61753845214844,
+          442.19061279296875,
+          414.18988037109375
+        ],
+        "visual_similarity": 0.8178914189338684,
+        "confidence": 0.9601490497589111,
+        "fragment_track_id": 8,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 0,
+        "bbox": [
+          99.87574005126953,
+          166.01852416992188,
+          441.4297790527344,
+          401.3033447265625
+        ],
+        "visual_similarity": 0.8344255685806274,
+        "confidence": 0.9741595983505249,
+        "fragment_track_id": 8,
+        "class_id": 21,
+        "class_name": "bear"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 0,
+        "bbox": [
+          93.07522583007812,
+          161.67141723632812,
+          443.1244201660156,
+          393.0555419921875
+        ],
+        "visual_similarity": 0.8104559779167175,
+        "confidence": 0.9600473642349243,
+        "fragment_track_id": 8,
+        "class_id": 21,
+        "class_name": "bear"
+      }
+    ],
+    "relinked_from": [
+      5,
+      8
+    ]
+  },
+  "trace_summary": {
+    "track_id": 2,
+    "class_id": 21,
+    "class_name": "bear",
+    "start_frame": 5,
+    "end_frame": 75,
+    "hits": 12,
+    "valid_track": true,
+    "relinked_from": [
+      5,
+      8
+    ],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 5,
+        "det_index": 0,
+        "bbox": [
+          95.14727783203125,
+          212.7039794921875,
+          434.5654602050781,
+          423.5433044433594
+        ],
+        "fragment_track_id": 2,
+        "canonical_track_id": 2,
+        "role": "start"
+      },
+      {
+        "frame_num": 40,
+        "det_index": 0,
+        "bbox": [
+          108.17298889160156,
+          228.187255859375,
+          475.5430603027344,
+          472.9620056152344
+        ],
+        "fragment_track_id": 5,
+        "canonical_track_id": 2,
+        "role": "middle"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 0,
+        "bbox": [
+          93.07522583007812,
+          161.67141723632812,
+          443.1244201660156,
+          393.0555419921875
+        ],
+        "fragment_track_id": 8,
+        "canonical_track_id": 2,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 2,
+    "span_frames": 71,
+    "fragment_track_ids": [
+      2,
+      5,
+      8
+    ],
+    "observed_classes": [
+      {
+        "class_id": 21,
+        "class_name": "bear",
+        "detections": 12,
+        "confidence_sum": 11.418624103069305
+      }
+    ],
+    "accepted_relink_edges": [
+      {
+        "predecessor_id": 2,
+        "successor_id": 5,
+        "score": 0.9596808552742004,
+        "method": "dino"
+      },
+      {
+        "predecessor_id": 5,
+        "successor_id": 8,
+        "score": 0.9735150337219238,
+        "method": "dino"
+      }
+    ]
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 5,
+        "fragment_track_id": 2,
+        "path": "frames/start_f0005.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 40,
+        "fragment_track_id": 5,
+        "path": "frames/middle_f0040.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 75,
+        "fragment_track_id": 8,
+        "path": "frames/end_f0075.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "scenario": "davis__person_distractor__dance_twirl",
+  "track": {
+    "track_id": 80,
+    "class_id": 0,
+    "class_name": "person",
+    "status": "closed",
+    "start_frame": 85,
+    "end_frame": 85,
+    "hits": 1,
+    "total_misses": 0,
+    "max_miss_streak": 0,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 85,
+        "type": "created"
+      },
+      {
+        "frame_num": 85,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 85,
+        "det_index": 7,
+        "bbox": [
+          671.2234497070312,
+          54.26361846923828,
+          728.322265625,
+          181.07110595703125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.46963387727737427,
+        "fragment_track_id": 80,
+        "class_id": 0,
+        "class_name": "person"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 80,
+    "class_id": 0,
+    "class_name": "person",
+    "start_frame": 85,
+    "end_frame": 85,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 85,
+        "det_index": 7,
+        "bbox": [
+          671.2234497070312,
+          54.26361846923828,
+          728.322265625,
+          181.07110595703125
+        ],
+        "fragment_track_id": 80,
+        "canonical_track_id": 80,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 80,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      80
+    ],
+    "observed_classes": [
+      {
+        "class_id": 0,
+        "class_name": "person",
+        "detections": 1,
+        "confidence_sum": 0.46963387727737427
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 85,
+        "fragment_track_id": 80,
+        "path": "frames/start_f0085.jpg"
+      }
+    ]
+  }
+}

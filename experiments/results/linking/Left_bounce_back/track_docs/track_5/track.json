@@ -1,0 +1,138 @@
+{
+  "scenario": "Left_bounce_back",
+  "track": {
+    "track_id": 5,
+    "class_id": 75,
+    "class_name": "vase",
+    "status": "closed",
+    "start_frame": 215,
+    "end_frame": 220,
+    "hits": 2,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": 0.9802665710449219,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 215,
+        "type": "created"
+      },
+      {
+        "frame_num": 220,
+        "type": "activated"
+      },
+      {
+        "frame_num": 225,
+        "type": "lost"
+      },
+      {
+        "frame_num": 220,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 215,
+        "det_index": 1,
+        "bbox": [
+          593.2681884765625,
+          655.5033569335938,
+          778.0285034179688,
+          868.1646118164062
+        ],
+        "visual_similarity": null,
+        "confidence": 0.30183979868888855,
+        "fragment_track_id": 5,
+        "class_id": 75,
+        "class_name": "vase"
+      },
+      {
+        "frame_num": 220,
+        "det_index": 2,
+        "bbox": [
+          586.693603515625,
+          653.64208984375,
+          778.8659057617188,
+          867.183349609375
+        ],
+        "visual_similarity": 0.9802665710449219,
+        "confidence": 0.26536068320274353,
+        "fragment_track_id": 5,
+        "class_id": 75,
+        "class_name": "vase"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 5,
+    "class_id": 75,
+    "class_name": "vase",
+    "start_frame": 215,
+    "end_frame": 220,
+    "hits": 2,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 215,
+        "det_index": 1,
+        "bbox": [
+          593.2681884765625,
+          655.5033569335938,
+          778.0285034179688,
+          868.1646118164062
+        ],
+        "fragment_track_id": 5,
+        "canonical_track_id": 5,
+        "role": "start"
+      },
+      {
+        "frame_num": 220,
+        "det_index": 2,
+        "bbox": [
+          586.693603515625,
+          653.64208984375,
+          778.8659057617188,
+          867.183349609375
+        ],
+        "fragment_track_id": 5,
+        "canonical_track_id": 5,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 5,
+    "span_frames": 6,
+    "fragment_track_ids": [
+      5
+    ],
+    "observed_classes": [
+      {
+        "class_id": 75,
+        "class_name": "vase",
+        "detections": 2,
+        "confidence_sum": 0.5672004818916321
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 215,
+        "fragment_track_id": 5,
+        "path": "frames/start_f0215.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 220,
+        "fragment_track_id": 5,
+        "path": "frames/end_f0220.jpg"
+      }
+    ]
+  }
+}

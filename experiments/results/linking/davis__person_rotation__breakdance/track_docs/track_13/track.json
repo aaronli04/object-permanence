@@ -1,0 +1,293 @@
+{
+  "scenario": "davis__person_rotation__breakdance",
+  "track": {
+    "track_id": 13,
+    "class_id": 36,
+    "class_name": "skateboard",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 75,
+    "hits": 10,
+    "total_misses": 7,
+    "max_miss_streak": 5,
+    "avg_visual_similarity": 0.9518876804245843,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "activated"
+      },
+      {
+        "frame_num": 20,
+        "type": "lost"
+      },
+      {
+        "frame_num": 45,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 50,
+        "type": "lost"
+      },
+      {
+        "frame_num": 55,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 80,
+        "type": "lost"
+      },
+      {
+        "frame_num": 75,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 12,
+        "bbox": [
+          584.7498779296875,
+          320.2002868652344,
+          615.4307250976562,
+          441.5106506347656
+        ],
+        "visual_similarity": null,
+        "confidence": 0.4078919589519501,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 5,
+        "det_index": 12,
+        "bbox": [
+          585.6572875976562,
+          335.4096984863281,
+          616.4193115234375,
+          440.0144958496094
+        ],
+        "visual_similarity": 0.9819176197052002,
+        "confidence": 0.441410094499588,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 11,
+        "bbox": [
+          584.8239135742188,
+          323.5733337402344,
+          616.9126586914062,
+          440.9144287109375
+        ],
+        "visual_similarity": 0.983252763748169,
+        "confidence": 0.34056219458580017,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 11,
+        "bbox": [
+          584.952392578125,
+          322.644775390625,
+          616.1199951171875,
+          441.7535400390625
+        ],
+        "visual_similarity": 0.9760311841964722,
+        "confidence": 0.37392207980155945,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 45,
+        "det_index": 17,
+        "bbox": [
+          585.3239135742188,
+          338.7962341308594,
+          616.0654907226562,
+          439.15679931640625
+        ],
+        "visual_similarity": 0.9155684113502502,
+        "confidence": 0.28922706842422485,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 55,
+        "det_index": 11,
+        "bbox": [
+          585.9246826171875,
+          358.4309387207031,
+          616.562255859375,
+          439.58428955078125
+        ],
+        "visual_similarity": 0.9259909391403198,
+        "confidence": 0.43958529829978943,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 60,
+        "det_index": 7,
+        "bbox": [
+          586.1806030273438,
+          348.4565124511719,
+          615.7313232421875,
+          439.40228271484375
+        ],
+        "visual_similarity": 0.9606648087501526,
+        "confidence": 0.5666212439537048,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 65,
+        "det_index": 10,
+        "bbox": [
+          585.2699584960938,
+          323.6864318847656,
+          616.3759765625,
+          441.01885986328125
+        ],
+        "visual_similarity": 0.939930260181427,
+        "confidence": 0.5635092258453369,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 8,
+        "bbox": [
+          584.7357788085938,
+          315.66412353515625,
+          616.918701171875,
+          440.755615234375
+        ],
+        "visual_similarity": 0.9693554639816284,
+        "confidence": 0.6419519782066345,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 10,
+        "bbox": [
+          586.0699462890625,
+          356.6127014160156,
+          616.5150756835938,
+          439.5726623535156
+        ],
+        "visual_similarity": 0.9142776727676392,
+        "confidence": 0.4258878529071808,
+        "fragment_track_id": 13,
+        "class_id": 36,
+        "class_name": "skateboard"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 13,
+    "class_id": 36,
+    "class_name": "skateboard",
+    "start_frame": 0,
+    "end_frame": 75,
+    "hits": 10,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": true,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 12,
+        "bbox": [
+          584.7498779296875,
+          320.2002868652344,
+          615.4307250976562,
+          441.5106506347656
+        ],
+        "fragment_track_id": 13,
+        "canonical_track_id": 13,
+        "role": "start"
+      },
+      {
+        "frame_num": 55,
+        "det_index": 11,
+        "bbox": [
+          585.9246826171875,
+          358.4309387207031,
+          616.562255859375,
+          439.58428955078125
+        ],
+        "fragment_track_id": 13,
+        "canonical_track_id": 13,
+        "role": "middle"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 10,
+        "bbox": [
+          586.0699462890625,
+          356.6127014160156,
+          616.5150756835938,
+          439.5726623535156
+        ],
+        "fragment_track_id": 13,
+        "canonical_track_id": 13,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 13,
+    "span_frames": 76,
+    "fragment_track_ids": [
+      13
+    ],
+    "observed_classes": [
+      {
+        "class_id": 36,
+        "class_name": "skateboard",
+        "detections": 10,
+        "confidence_sum": 4.490568995475769
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 13,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 55,
+        "fragment_track_id": 13,
+        "path": "frames/middle_f0055.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 75,
+        "fragment_track_id": 13,
+        "path": "frames/end_f0075.jpg"
+      }
+    ]
+  }
+}

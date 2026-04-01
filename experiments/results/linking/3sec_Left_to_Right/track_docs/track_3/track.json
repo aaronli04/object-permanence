@@ -1,0 +1,858 @@
+{
+  "scenario": "3sec_Left_to_Right",
+  "track": {
+    "track_id": 3,
+    "class_id": 63,
+    "class_name": "laptop",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 240,
+    "hits": 49,
+    "total_misses": 0,
+    "max_miss_streak": 0,
+    "avg_visual_similarity": 0.9959861387809118,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "activated"
+      },
+      {
+        "frame_num": 240,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 2,
+        "bbox": [
+          671.01416015625,
+          439.2142639160156,
+          1405.9150390625,
+          967.7305908203125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.6954546570777893,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 5,
+        "det_index": 1,
+        "bbox": [
+          670.687744140625,
+          440.9907531738281,
+          1402.6563720703125,
+          968.6726684570312
+        ],
+        "visual_similarity": 0.9932243227958679,
+        "confidence": 0.6978774070739746,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 1,
+        "bbox": [
+          668.7216796875,
+          442.7776794433594,
+          1403.3475341796875,
+          970.7197875976562
+        ],
+        "visual_similarity": 0.9960623383522034,
+        "confidence": 0.7308287024497986,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 1,
+        "bbox": [
+          667.89990234375,
+          443.8490295410156,
+          1401.8446044921875,
+          971.4292602539062
+        ],
+        "visual_similarity": 0.9955523014068604,
+        "confidence": 0.7919450402259827,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 20,
+        "det_index": 1,
+        "bbox": [
+          668.4190063476562,
+          445.43389892578125,
+          1401.39892578125,
+          973.0521240234375
+        ],
+        "visual_similarity": 0.9907045364379883,
+        "confidence": 0.7832474708557129,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 25,
+        "det_index": 0,
+        "bbox": [
+          667.1302490234375,
+          446.84033203125,
+          1401.7406005859375,
+          974.654296875
+        ],
+        "visual_similarity": 0.9878081679344177,
+        "confidence": 0.956599771976471,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 30,
+        "det_index": 0,
+        "bbox": [
+          665.8150634765625,
+          449.0287170410156,
+          1401.367431640625,
+          976.4555053710938
+        ],
+        "visual_similarity": 0.9896538257598877,
+        "confidence": 0.9145041108131409,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 35,
+        "det_index": 0,
+        "bbox": [
+          668.3953857421875,
+          448.46759033203125,
+          1401.9310302734375,
+          979.1709594726562
+        ],
+        "visual_similarity": 0.9849658608436584,
+        "confidence": 0.6982318758964539,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 40,
+        "det_index": 0,
+        "bbox": [
+          669.0003662109375,
+          449.15789794921875,
+          1402.266845703125,
+          980.1655883789062
+        ],
+        "visual_similarity": 0.9942149519920349,
+        "confidence": 0.719685435295105,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 45,
+        "det_index": 0,
+        "bbox": [
+          668.8114013671875,
+          450.7574157714844,
+          1402.226806640625,
+          981.5257568359375
+        ],
+        "visual_similarity": 0.988853931427002,
+        "confidence": 0.7464765906333923,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 50,
+        "det_index": 0,
+        "bbox": [
+          667.76953125,
+          451.4561462402344,
+          1403.077880859375,
+          984.0648193359375
+        ],
+        "visual_similarity": 0.9923987984657288,
+        "confidence": 0.8050021529197693,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 55,
+        "det_index": 0,
+        "bbox": [
+          667.5653686523438,
+          452.65081787109375,
+          1403.0040283203125,
+          985.2236938476562
+        ],
+        "visual_similarity": 0.9957817792892456,
+        "confidence": 0.7227528691291809,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 60,
+        "det_index": 0,
+        "bbox": [
+          669.40234375,
+          453.697998046875,
+          1403.3104248046875,
+          985.2608642578125
+        ],
+        "visual_similarity": 0.9973710179328918,
+        "confidence": 0.7304067611694336,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 65,
+        "det_index": 0,
+        "bbox": [
+          668.9403076171875,
+          455.4789733886719,
+          1402.283203125,
+          983.934326171875
+        ],
+        "visual_similarity": 0.9957288503646851,
+        "confidence": 0.5232154726982117,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 0,
+        "bbox": [
+          666.0310668945312,
+          457.9588623046875,
+          1401.0245361328125,
+          985.3068237304688
+        ],
+        "visual_similarity": 0.9925945997238159,
+        "confidence": 0.4467204213142395,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 0,
+        "bbox": [
+          666.2389526367188,
+          457.9476013183594,
+          1401.00634765625,
+          985.4749755859375
+        ],
+        "visual_similarity": 0.9989114999771118,
+        "confidence": 0.6133698225021362,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 80,
+        "det_index": 0,
+        "bbox": [
+          666.2334594726562,
+          457.9552917480469,
+          1401.0103759765625,
+          985.4578857421875
+        ],
+        "visual_similarity": 0.9996417164802551,
+        "confidence": 0.608108639717102,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 85,
+        "det_index": 0,
+        "bbox": [
+          666.2332763671875,
+          457.95501708984375,
+          1401.0118408203125,
+          985.4569702148438
+        ],
+        "visual_similarity": 0.9998624920845032,
+        "confidence": 0.6078716516494751,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 90,
+        "det_index": 0,
+        "bbox": [
+          666.4910278320312,
+          457.9562072753906,
+          1401.385986328125,
+          985.6110229492188
+        ],
+        "visual_similarity": 0.9990788102149963,
+        "confidence": 0.5713066458702087,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 95,
+        "det_index": 0,
+        "bbox": [
+          666.3905029296875,
+          457.974609375,
+          1401.2685546875,
+          985.5489501953125
+        ],
+        "visual_similarity": 0.9997578859329224,
+        "confidence": 0.5681290030479431,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 100,
+        "det_index": 0,
+        "bbox": [
+          666.3905029296875,
+          457.974609375,
+          1401.2685546875,
+          985.5489501953125
+        ],
+        "visual_similarity": 0.9999601244926453,
+        "confidence": 0.5681290030479431,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 105,
+        "det_index": 0,
+        "bbox": [
+          666.3905029296875,
+          457.974609375,
+          1401.2685546875,
+          985.5489501953125
+        ],
+        "visual_similarity": 0.9999822974205017,
+        "confidence": 0.5681290030479431,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 110,
+        "det_index": 0,
+        "bbox": [
+          666.3905029296875,
+          457.974609375,
+          1401.2685546875,
+          985.5489501953125
+        ],
+        "visual_similarity": 0.999993085861206,
+        "confidence": 0.5681290030479431,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 115,
+        "det_index": 0,
+        "bbox": [
+          666.3905029296875,
+          457.974609375,
+          1401.2685546875,
+          985.5489501953125
+        ],
+        "visual_similarity": 0.9999977350234985,
+        "confidence": 0.5681290030479431,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 120,
+        "det_index": 0,
+        "bbox": [
+          666.4855346679688,
+          457.97515869140625,
+          1401.186767578125,
+          985.4401245117188
+        ],
+        "visual_similarity": 0.9993661046028137,
+        "confidence": 0.5685765743255615,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 125,
+        "det_index": 0,
+        "bbox": [
+          666.4083862304688,
+          457.8476257324219,
+          1401.219970703125,
+          985.3672485351562
+        ],
+        "visual_similarity": 0.9998199343681335,
+        "confidence": 0.5741208791732788,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 130,
+        "det_index": 0,
+        "bbox": [
+          666.3964233398438,
+          457.8533020019531,
+          1401.2176513671875,
+          985.36328125
+        ],
+        "visual_similarity": 0.9999582171440125,
+        "confidence": 0.5719212293624878,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 135,
+        "det_index": 0,
+        "bbox": [
+          666.3960571289062,
+          457.8531188964844,
+          1401.218017578125,
+          985.3629150390625
+        ],
+        "visual_similarity": 0.9999822378158569,
+        "confidence": 0.5717644095420837,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 140,
+        "det_index": 0,
+        "bbox": [
+          666.3964233398438,
+          457.8533020019531,
+          1401.2176513671875,
+          985.36328125
+        ],
+        "visual_similarity": 0.999993622303009,
+        "confidence": 0.5719212293624878,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 145,
+        "det_index": 0,
+        "bbox": [
+          666.3960571289062,
+          457.8531188964844,
+          1401.218017578125,
+          985.3629150390625
+        ],
+        "visual_similarity": 0.9999984502792358,
+        "confidence": 0.5717644095420837,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 150,
+        "det_index": 0,
+        "bbox": [
+          666.4855346679688,
+          457.97515869140625,
+          1401.186767578125,
+          985.4401245117188
+        ],
+        "visual_similarity": 0.9998537302017212,
+        "confidence": 0.5685765743255615,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 155,
+        "det_index": 0,
+        "bbox": [
+          666.4440307617188,
+          457.9335021972656,
+          1401.2308349609375,
+          985.4257202148438
+        ],
+        "visual_similarity": 0.999950647354126,
+        "confidence": 0.5789865255355835,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 160,
+        "det_index": 0,
+        "bbox": [
+          666.4447021484375,
+          457.9336853027344,
+          1401.23046875,
+          985.4259033203125
+        ],
+        "visual_similarity": 0.999998152256012,
+        "confidence": 0.57915198802948,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 165,
+        "det_index": 0,
+        "bbox": [
+          666.4440307617188,
+          457.9335021972656,
+          1401.2308349609375,
+          985.4257202148438
+        ],
+        "visual_similarity": 0.9999990463256836,
+        "confidence": 0.5789865255355835,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 170,
+        "det_index": 0,
+        "bbox": [
+          666.4447021484375,
+          457.9336853027344,
+          1401.23046875,
+          985.4259033203125
+        ],
+        "visual_similarity": 0.9999996423721313,
+        "confidence": 0.57915198802948,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 175,
+        "det_index": 0,
+        "bbox": [
+          666.4440307617188,
+          457.9335021972656,
+          1401.2308349609375,
+          985.4257202148438
+        ],
+        "visual_similarity": 0.9999997019767761,
+        "confidence": 0.5789865255355835,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 180,
+        "det_index": 0,
+        "bbox": [
+          666.4855346679688,
+          457.97515869140625,
+          1401.186767578125,
+          985.4401245117188
+        ],
+        "visual_similarity": 0.999898374080658,
+        "confidence": 0.5685765743255615,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 185,
+        "det_index": 0,
+        "bbox": [
+          666.4440307617188,
+          457.9335021972656,
+          1401.2308349609375,
+          985.4257202148438
+        ],
+        "visual_similarity": 0.9999499917030334,
+        "confidence": 0.5789865255355835,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 190,
+        "det_index": 0,
+        "bbox": [
+          666.4447021484375,
+          457.9336853027344,
+          1401.23046875,
+          985.4259033203125
+        ],
+        "visual_similarity": 0.999998927116394,
+        "confidence": 0.57915198802948,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 195,
+        "det_index": 0,
+        "bbox": [
+          666.4440307617188,
+          457.9335021972656,
+          1401.2308349609375,
+          985.4257202148438
+        ],
+        "visual_similarity": 0.9999994039535522,
+        "confidence": 0.5789865255355835,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 200,
+        "det_index": 0,
+        "bbox": [
+          666.4447021484375,
+          457.9336853027344,
+          1401.23046875,
+          985.4259033203125
+        ],
+        "visual_similarity": 0.9999997019767761,
+        "confidence": 0.57915198802948,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 205,
+        "det_index": 0,
+        "bbox": [
+          669.3971557617188,
+          462.9489440917969,
+          1408.1163330078125,
+          987.5077514648438
+        ],
+        "visual_similarity": 0.9819627404212952,
+        "confidence": 0.8998677730560303,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 210,
+        "det_index": 0,
+        "bbox": [
+          669.9356689453125,
+          463.47601318359375,
+          1404.95068359375,
+          987.4011840820312
+        ],
+        "visual_similarity": 0.9928251504898071,
+        "confidence": 0.8904330134391785,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 215,
+        "det_index": 0,
+        "bbox": [
+          670.6434936523438,
+          461.79803466796875,
+          1403.7528076171875,
+          987.7840576171875
+        ],
+        "visual_similarity": 0.9939355850219727,
+        "confidence": 0.9238842725753784,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 220,
+        "det_index": 0,
+        "bbox": [
+          671.6383666992188,
+          462.9766845703125,
+          1406.3792724609375,
+          988.259765625
+        ],
+        "visual_similarity": 0.9881876707077026,
+        "confidence": 0.9391819834709167,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 225,
+        "det_index": 0,
+        "bbox": [
+          671.989013671875,
+          463.8131103515625,
+          1406.6759033203125,
+          989.4970703125
+        ],
+        "visual_similarity": 0.9888497591018677,
+        "confidence": 0.9006384611129761,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 230,
+        "det_index": 0,
+        "bbox": [
+          673.1050415039062,
+          464.2112731933594,
+          1406.34716796875,
+          989.3749389648438
+        ],
+        "visual_similarity": 0.9861335158348083,
+        "confidence": 0.9138214588165283,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 235,
+        "det_index": 0,
+        "bbox": [
+          672.79541015625,
+          464.6455993652344,
+          1407.2471923828125,
+          990.3715209960938
+        ],
+        "visual_similarity": 0.9911871552467346,
+        "confidence": 0.8923367857933044,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      },
+      {
+        "frame_num": 240,
+        "det_index": 0,
+        "bbox": [
+          673.3726806640625,
+          465.9949951171875,
+          1408.148193359375,
+          992.0985717773438
+        ],
+        "visual_similarity": 0.9933862686157227,
+        "confidence": 0.8553627133369446,
+        "fragment_track_id": 3,
+        "class_id": 63,
+        "class_name": "laptop"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 3,
+    "class_id": 63,
+    "class_name": "laptop",
+    "start_frame": 0,
+    "end_frame": 240,
+    "hits": 49,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 2,
+        "bbox": [
+          671.01416015625,
+          439.2142639160156,
+          1405.9150390625,
+          967.7305908203125
+        ],
+        "fragment_track_id": 3,
+        "canonical_track_id": 3,
+        "role": "start"
+      },
+      {
+        "frame_num": 120,
+        "det_index": 0,
+        "bbox": [
+          666.4855346679688,
+          457.97515869140625,
+          1401.186767578125,
+          985.4401245117188
+        ],
+        "fragment_track_id": 3,
+        "canonical_track_id": 3,
+        "role": "middle"
+      },
+      {
+        "frame_num": 240,
+        "det_index": 0,
+        "bbox": [
+          673.3726806640625,
+          465.9949951171875,
+          1408.148193359375,
+          992.0985717773438
+        ],
+        "fragment_track_id": 3,
+        "canonical_track_id": 3,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 3,
+    "span_frames": 241,
+    "fragment_track_ids": [
+      3
+    ],
+    "observed_classes": [
+      {
+        "class_id": 63,
+        "class_name": "laptop",
+        "detections": 49,
+        "confidence_sum": 33.198539435863495
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 3,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 120,
+        "fragment_track_id": 3,
+        "path": "frames/middle_f0120.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 240,
+        "fragment_track_id": 3,
+        "path": "frames/end_f0240.jpg"
+      }
+    ]
+  }
+}

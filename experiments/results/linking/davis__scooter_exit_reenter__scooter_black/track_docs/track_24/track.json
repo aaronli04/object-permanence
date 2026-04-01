@@ -1,0 +1,138 @@
+{
+  "scenario": "davis__scooter_exit_reenter__scooter_black",
+  "track": {
+    "track_id": 24,
+    "class_id": 2,
+    "class_name": "car",
+    "status": "closed",
+    "start_frame": 5,
+    "end_frame": 10,
+    "hits": 2,
+    "total_misses": 6,
+    "max_miss_streak": 6,
+    "avg_visual_similarity": 0.7217642068862915,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 5,
+        "type": "created"
+      },
+      {
+        "frame_num": 10,
+        "type": "activated"
+      },
+      {
+        "frame_num": 15,
+        "type": "lost"
+      },
+      {
+        "frame_num": 10,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 5,
+        "det_index": 8,
+        "bbox": [
+          647.0869750976562,
+          155.281005859375,
+          803.3897094726562,
+          209.55638122558594
+        ],
+        "visual_similarity": null,
+        "confidence": 0.541527271270752,
+        "fragment_track_id": 24,
+        "class_id": 2,
+        "class_name": "car"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 1,
+        "bbox": [
+          753.504150390625,
+          153.3107147216797,
+          853.534912109375,
+          207.2892303466797
+        ],
+        "visual_similarity": 0.7217642068862915,
+        "confidence": 0.8657715916633606,
+        "fragment_track_id": 24,
+        "class_id": 2,
+        "class_name": "car"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 24,
+    "class_id": 2,
+    "class_name": "car",
+    "start_frame": 5,
+    "end_frame": 10,
+    "hits": 2,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 5,
+        "det_index": 8,
+        "bbox": [
+          647.0869750976562,
+          155.281005859375,
+          803.3897094726562,
+          209.55638122558594
+        ],
+        "fragment_track_id": 24,
+        "canonical_track_id": 24,
+        "role": "start"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 1,
+        "bbox": [
+          753.504150390625,
+          153.3107147216797,
+          853.534912109375,
+          207.2892303466797
+        ],
+        "fragment_track_id": 24,
+        "canonical_track_id": 24,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 24,
+    "span_frames": 6,
+    "fragment_track_ids": [
+      24
+    ],
+    "observed_classes": [
+      {
+        "class_id": 2,
+        "class_name": "car",
+        "detections": 2,
+        "confidence_sum": 1.4072988629341125
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 5,
+        "fragment_track_id": 24,
+        "path": "frames/start_f0005.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 10,
+        "fragment_track_id": 24,
+        "path": "frames/end_f0010.jpg"
+      }
+    ]
+  }
+}

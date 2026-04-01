@@ -1,0 +1,539 @@
+{
+  "scenario": "Occlusion_ball_removed",
+  "track": {
+    "track_id": 5,
+    "class_id": 33,
+    "class_name": "kite",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 235,
+    "hits": 22,
+    "total_misses": 19,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": 0.9865509146138242,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "activated"
+      },
+      {
+        "frame_num": 5,
+        "type": "closed"
+      },
+      {
+        "frame_num": 10,
+        "type": "lost"
+      },
+      {
+        "frame_num": 45,
+        "type": "created"
+      },
+      {
+        "frame_num": 50,
+        "type": "activated"
+      },
+      {
+        "frame_num": 85,
+        "type": "closed"
+      },
+      {
+        "frame_num": 90,
+        "type": "lost"
+      },
+      {
+        "frame_num": 160,
+        "type": "created"
+      },
+      {
+        "frame_num": 165,
+        "type": "lost"
+      },
+      {
+        "frame_num": 170,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 180,
+        "type": "lost"
+      },
+      {
+        "frame_num": 185,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 215,
+        "type": "lost"
+      },
+      {
+        "frame_num": 230,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 235,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 4,
+        "bbox": [
+          561.991943359375,
+          457.6153564453125,
+          1290.7271728515625,
+          968.3009033203125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.2594318389892578,
+        "fragment_track_id": 5,
+        "class_id": 72,
+        "class_name": "refrigerator"
+      },
+      {
+        "frame_num": 5,
+        "det_index": 3,
+        "bbox": [
+          562.003662109375,
+          458.8006286621094,
+          1290.9515380859375,
+          967.974609375
+        ],
+        "visual_similarity": 0.9996632933616638,
+        "confidence": 0.297341912984848,
+        "fragment_track_id": 5,
+        "class_id": 72,
+        "class_name": "refrigerator"
+      },
+      {
+        "frame_num": 45,
+        "det_index": 2,
+        "bbox": [
+          884.39208984375,
+          657.77734375,
+          973.8847045898438,
+          768.0458984375
+        ],
+        "visual_similarity": null,
+        "confidence": 0.2561042308807373,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 50,
+        "det_index": 2,
+        "bbox": [
+          884.8065795898438,
+          658.630126953125,
+          974.0709228515625,
+          768.940185546875
+        ],
+        "visual_similarity": 0.9967800974845886,
+        "confidence": 0.2983579635620117,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 55,
+        "det_index": 1,
+        "bbox": [
+          885.1259155273438,
+          665.1351318359375,
+          972.1481323242188,
+          771.06298828125
+        ],
+        "visual_similarity": 0.9968713521957397,
+        "confidence": 0.27143222093582153,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 60,
+        "det_index": 1,
+        "bbox": [
+          885.3317260742188,
+          670.5509643554688,
+          970.5178833007812,
+          771.1271362304688
+        ],
+        "visual_similarity": 0.9968593120574951,
+        "confidence": 0.3559589982032776,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 65,
+        "det_index": 2,
+        "bbox": [
+          885.769287109375,
+          672.3455810546875,
+          970.8809204101562,
+          771.5330200195312
+        ],
+        "visual_similarity": 0.9954250454902649,
+        "confidence": 0.3124324679374695,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 1,
+        "bbox": [
+          886.2313842773438,
+          662.34765625,
+          972.6237182617188,
+          771.0438842773438
+        ],
+        "visual_similarity": 0.9964470863342285,
+        "confidence": 0.3574659526348114,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 1,
+        "bbox": [
+          886.2720336914062,
+          663.081787109375,
+          973.6959838867188,
+          772.89404296875
+        ],
+        "visual_similarity": 0.9964191317558289,
+        "confidence": 0.3422645330429077,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 80,
+        "det_index": 1,
+        "bbox": [
+          886.24951171875,
+          676.9778442382812,
+          971.56396484375,
+          773.4339599609375
+        ],
+        "visual_similarity": 0.9776837825775146,
+        "confidence": 0.25839534401893616,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 85,
+        "det_index": 2,
+        "bbox": [
+          886.6552734375,
+          664.173095703125,
+          972.3062744140625,
+          773.7225341796875
+        ],
+        "visual_similarity": 0.9848304390907288,
+        "confidence": 0.34646663069725037,
+        "fragment_track_id": 6,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 160,
+        "det_index": 2,
+        "bbox": [
+          892.43896484375,
+          677.884521484375,
+          972.2824096679688,
+          782.2393188476562
+        ],
+        "visual_similarity": null,
+        "confidence": 0.2692626714706421,
+        "fragment_track_id": 11,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 170,
+        "det_index": 2,
+        "bbox": [
+          890.895751953125,
+          670.7719116210938,
+          976.1846313476562,
+          783.575927734375
+        ],
+        "visual_similarity": 0.9715688824653625,
+        "confidence": 0.29385513067245483,
+        "fragment_track_id": 11,
+        "class_id": 33,
+        "class_name": "kite"
+      },
+      {
+        "frame_num": 175,
+        "det_index": 2,
+        "bbox": [
+          892.3106689453125,
+          671.605224609375,
+          976.6373291015625,
+          783.1246948242188
+        ],
+        "visual_similarity": 0.992682933807373,
+        "confidence": 0.38715291023254395,
+        "fragment_track_id": 11,
+        "class_id": 33,
+        "class_name": "kite"
+      },
+      {
+        "frame_num": 185,
+        "det_index": 2,
+        "bbox": [
+          892.4530639648438,
+          672.3931884765625,
+          978.5546264648438,
+          783.5557861328125
+        ],
+        "visual_similarity": 0.9895347356796265,
+        "confidence": 0.4544965326786041,
+        "fragment_track_id": 11,
+        "class_id": 33,
+        "class_name": "kite"
+      },
+      {
+        "frame_num": 190,
+        "det_index": 2,
+        "bbox": [
+          892.7113647460938,
+          673.2141723632812,
+          979.4706420898438,
+          784.6314697265625
+        ],
+        "visual_similarity": 0.9937475919723511,
+        "confidence": 0.4811873435974121,
+        "fragment_track_id": 11,
+        "class_id": 33,
+        "class_name": "kite"
+      },
+      {
+        "frame_num": 195,
+        "det_index": 1,
+        "bbox": [
+          892.1654663085938,
+          673.5296020507812,
+          979.9506225585938,
+          786.5571899414062
+        ],
+        "visual_similarity": 0.96335768699646,
+        "confidence": 0.6537379622459412,
+        "fragment_track_id": 11,
+        "class_id": 33,
+        "class_name": "kite"
+      },
+      {
+        "frame_num": 200,
+        "det_index": 0,
+        "bbox": [
+          892.8721923828125,
+          673.4060668945312,
+          980.961669921875,
+          786.0924072265625
+        ],
+        "visual_similarity": 0.9739793539047241,
+        "confidence": 0.5428078770637512,
+        "fragment_track_id": 11,
+        "class_id": 33,
+        "class_name": "kite"
+      },
+      {
+        "frame_num": 205,
+        "det_index": 0,
+        "bbox": [
+          892.7669067382812,
+          674.4202880859375,
+          980.6387329101562,
+          786.6126098632812
+        ],
+        "visual_similarity": 0.9786367416381836,
+        "confidence": 0.46898001432418823,
+        "fragment_track_id": 11,
+        "class_id": 33,
+        "class_name": "kite"
+      },
+      {
+        "frame_num": 210,
+        "det_index": 0,
+        "bbox": [
+          893.1715698242188,
+          674.6777954101562,
+          981.7240600585938,
+          786.5219116210938
+        ],
+        "visual_similarity": 0.968675971031189,
+        "confidence": 0.42173752188682556,
+        "fragment_track_id": 11,
+        "class_id": 33,
+        "class_name": "kite"
+      },
+      {
+        "frame_num": 230,
+        "det_index": 1,
+        "bbox": [
+          892.98486328125,
+          677.2938842773438,
+          982.2332153320312,
+          789.8868408203125
+        ],
+        "visual_similarity": 0.979383111000061,
+        "confidence": 0.2566804885864258,
+        "fragment_track_id": 11,
+        "class_id": 14,
+        "class_name": "bird"
+      },
+      {
+        "frame_num": 235,
+        "det_index": 1,
+        "bbox": [
+          893.84716796875,
+          677.687744140625,
+          981.7188110351562,
+          790.2295532226562
+        ],
+        "visual_similarity": 0.9919208288192749,
+        "confidence": 0.26237010955810547,
+        "fragment_track_id": 11,
+        "class_id": 14,
+        "class_name": "bird"
+      }
+    ],
+    "relinked_from": [
+      6,
+      11
+    ]
+  },
+  "trace_summary": {
+    "track_id": 5,
+    "class_id": 33,
+    "class_name": "kite",
+    "start_frame": 0,
+    "end_frame": 235,
+    "hits": 22,
+    "valid_track": true,
+    "relinked_from": [
+      6,
+      11
+    ],
+    "had_recovery": true,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 4,
+        "bbox": [
+          561.991943359375,
+          457.6153564453125,
+          1290.7271728515625,
+          968.3009033203125
+        ],
+        "fragment_track_id": 5,
+        "canonical_track_id": 5,
+        "role": "start"
+      },
+      {
+        "frame_num": 160,
+        "det_index": 2,
+        "bbox": [
+          892.43896484375,
+          677.884521484375,
+          972.2824096679688,
+          782.2393188476562
+        ],
+        "fragment_track_id": 11,
+        "canonical_track_id": 5,
+        "role": "middle"
+      },
+      {
+        "frame_num": 235,
+        "det_index": 1,
+        "bbox": [
+          893.84716796875,
+          677.687744140625,
+          981.7188110351562,
+          790.2295532226562
+        ],
+        "fragment_track_id": 11,
+        "canonical_track_id": 5,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 5,
+    "span_frames": 236,
+    "fragment_track_ids": [
+      5,
+      6,
+      11
+    ],
+    "observed_classes": [
+      {
+        "class_id": 33,
+        "class_name": "kite",
+        "detections": 8,
+        "confidence_sum": 3.703955292701721
+      },
+      {
+        "class_id": 14,
+        "class_name": "bird",
+        "detections": 12,
+        "confidence_sum": 3.5871916115283966
+      },
+      {
+        "class_id": 72,
+        "class_name": "refrigerator",
+        "detections": 2,
+        "confidence_sum": 0.5567737519741058
+      }
+    ],
+    "accepted_relink_edges": [
+      {
+        "predecessor_id": 5,
+        "successor_id": 6,
+        "score": 0.8928801360140877,
+        "method": "spatial"
+      },
+      {
+        "predecessor_id": 6,
+        "successor_id": 11,
+        "score": 0.865165376663208,
+        "method": "dino"
+      }
+    ]
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 5,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 160,
+        "fragment_track_id": 11,
+        "path": "frames/middle_f0160.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 235,
+        "fragment_track_id": 11,
+        "path": "frames/end_f0235.jpg"
+      }
+    ]
+  }
+}

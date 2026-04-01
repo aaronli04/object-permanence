@@ -1,0 +1,96 @@
+{
+  "scenario": "davis__person_rotation__breakdance",
+  "track": {
+    "track_id": 54,
+    "class_id": 36,
+    "class_name": "skateboard",
+    "status": "closed",
+    "start_frame": 80,
+    "end_frame": 80,
+    "hits": 1,
+    "total_misses": 0,
+    "max_miss_streak": 0,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 80,
+        "type": "created"
+      },
+      {
+        "frame_num": 80,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 80,
+        "det_index": 12,
+        "bbox": [
+          98.04582977294922,
+          302.5649108886719,
+          149.87081909179688,
+          431.577880859375
+        ],
+        "visual_similarity": null,
+        "confidence": 0.3368590772151947,
+        "fragment_track_id": 54,
+        "class_id": 36,
+        "class_name": "skateboard"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 54,
+    "class_id": 36,
+    "class_name": "skateboard",
+    "start_frame": 80,
+    "end_frame": 80,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 80,
+        "det_index": 12,
+        "bbox": [
+          98.04582977294922,
+          302.5649108886719,
+          149.87081909179688,
+          431.577880859375
+        ],
+        "fragment_track_id": 54,
+        "canonical_track_id": 54,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 54,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      54
+    ],
+    "observed_classes": [
+      {
+        "class_id": 36,
+        "class_name": "skateboard",
+        "detections": 1,
+        "confidence_sum": 0.3368590772151947
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 80,
+        "fragment_track_id": 54,
+        "path": "frames/start_f0080.jpg"
+      }
+    ]
+  }
+}

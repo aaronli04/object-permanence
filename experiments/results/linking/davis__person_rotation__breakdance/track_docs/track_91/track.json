@@ -1,0 +1,96 @@
+{
+  "scenario": "davis__person_rotation__breakdance",
+  "track": {
+    "track_id": 91,
+    "class_id": 0,
+    "class_name": "person",
+    "status": "closed",
+    "start_frame": 83,
+    "end_frame": 83,
+    "hits": 1,
+    "total_misses": 0,
+    "max_miss_streak": 0,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 83,
+        "type": "created"
+      },
+      {
+        "frame_num": 83,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 83,
+        "det_index": 12,
+        "bbox": [
+          369.55963134765625,
+          281.6690368652344,
+          428.6813659667969,
+          330.4020690917969
+        ],
+        "visual_similarity": null,
+        "confidence": 0.3220382034778595,
+        "fragment_track_id": 91,
+        "class_id": 0,
+        "class_name": "person"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 91,
+    "class_id": 0,
+    "class_name": "person",
+    "start_frame": 83,
+    "end_frame": 83,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 83,
+        "det_index": 12,
+        "bbox": [
+          369.55963134765625,
+          281.6690368652344,
+          428.6813659667969,
+          330.4020690917969
+        ],
+        "fragment_track_id": 91,
+        "canonical_track_id": 91,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 91,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      91
+    ],
+    "observed_classes": [
+      {
+        "class_id": 0,
+        "class_name": "person",
+        "detections": 1,
+        "confidence_sum": 0.3220382034778595
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 83,
+        "fragment_track_id": 91,
+        "path": "frames/start_f0083.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "scenario": "davis__scooter_exit_reenter__scooter_black",
+  "track": {
+    "track_id": 53,
+    "class_id": 3,
+    "class_name": "motorcycle",
+    "status": "closed",
+    "start_frame": 25,
+    "end_frame": 25,
+    "hits": 1,
+    "total_misses": 3,
+    "max_miss_streak": 3,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 25,
+        "type": "created"
+      },
+      {
+        "frame_num": 30,
+        "type": "lost"
+      },
+      {
+        "frame_num": 25,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 25,
+        "det_index": 11,
+        "bbox": [
+          813.6514892578125,
+          189.60337829589844,
+          853.79638671875,
+          259.64105224609375
+        ],
+        "visual_similarity": null,
+        "confidence": 0.3429105877876282,
+        "fragment_track_id": 53,
+        "class_id": 3,
+        "class_name": "motorcycle"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 53,
+    "class_id": 3,
+    "class_name": "motorcycle",
+    "start_frame": 25,
+    "end_frame": 25,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 25,
+        "det_index": 11,
+        "bbox": [
+          813.6514892578125,
+          189.60337829589844,
+          853.79638671875,
+          259.64105224609375
+        ],
+        "fragment_track_id": 53,
+        "canonical_track_id": 53,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 53,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      53
+    ],
+    "observed_classes": [
+      {
+        "class_id": 3,
+        "class_name": "motorcycle",
+        "detections": 1,
+        "confidence_sum": 0.3429105877876282
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 25,
+        "fragment_track_id": 53,
+        "path": "frames/start_f0025.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": "temporal_linking_relink_manifest_v1",
+  "config": {
+    "relink_threshold": 0.55,
+    "relink_max_gap_frames": -1,
+    "relink_min_track_hits": 2,
+    "relink_max_pixels_per_frame": 15.0,
+    "relink_fallback_threshold": 0.4,
+    "relink_use_dino": true,
+    "relink_dino_threshold": 0.55,
+    "relink_dino_min_detections": 2,
+    "relink_dino_gallery_size": 20,
+    "relink_dino_gallery_topk": 3,
+    "relink_class_mismatch_penalty": 0.1
+  },
+  "stats": {
+    "num_closed_tracks": 7,
+    "num_fragments": 5,
+    "num_candidates": 4,
+    "num_yolo_edges_above_threshold": 0,
+    "num_dino_edges_above_threshold": 2,
+    "num_fallback_edges_above_threshold": 2,
+    "num_accepted_edges": 1,
+    "num_accepted_yolo": 0,
+    "num_accepted_dino": 1,
+    "num_accepted_fallback": 0,
+    "num_absorbed_tracks": 1,
+    "relink_dino_coverage": 1.0,
+    "relink_dino_accepted": 1,
+    "relink_yolo_accepted": 0
+  },
+  "accepted_edges": [
+    {
+      "predecessor_id": 1,
+      "successor_id": 6,
+      "score": 0.8501723408699036,
+      "method": "dino"
+    }
+  ],
+  "merge_map": {
+    "6": 1
+  }
+}

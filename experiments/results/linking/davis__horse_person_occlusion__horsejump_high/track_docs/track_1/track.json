@@ -1,0 +1,206 @@
+{
+  "scenario": "davis__horse_person_occlusion__horsejump_high",
+  "track": {
+    "track_id": 1,
+    "class_id": 17,
+    "class_name": "horse",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 45,
+    "hits": 5,
+    "total_misses": 5,
+    "max_miss_streak": 5,
+    "avg_visual_similarity": 0.8258184939622879,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "activated"
+      },
+      {
+        "frame_num": 10,
+        "type": "lost"
+      },
+      {
+        "frame_num": 35,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 45,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 0,
+        "bbox": [
+          14.283275604248047,
+          148.06846618652344,
+          352.10577392578125,
+          355.5572204589844
+        ],
+        "visual_similarity": null,
+        "confidence": 0.9187406301498413,
+        "fragment_track_id": 1,
+        "class_id": 17,
+        "class_name": "horse"
+      },
+      {
+        "frame_num": 5,
+        "det_index": 0,
+        "bbox": [
+          66.12677764892578,
+          109.32931518554688,
+          402.400390625,
+          365.0690002441406
+        ],
+        "visual_similarity": 0.855822741985321,
+        "confidence": 0.9340944290161133,
+        "fragment_track_id": 1,
+        "class_id": 17,
+        "class_name": "horse"
+      },
+      {
+        "frame_num": 35,
+        "det_index": 0,
+        "bbox": [
+          251.90924072265625,
+          179.83602905273438,
+          467.3226623535156,
+          344.5156555175781
+        ],
+        "visual_similarity": 0.8462340831756592,
+        "confidence": 0.8711957335472107,
+        "fragment_track_id": 1,
+        "class_id": 17,
+        "class_name": "horse"
+      },
+      {
+        "frame_num": 40,
+        "det_index": 0,
+        "bbox": [
+          282.8437805175781,
+          185.9824676513672,
+          503.78204345703125,
+          333.9969177246094
+        ],
+        "visual_similarity": 0.8264009952545166,
+        "confidence": 0.8745307326316833,
+        "fragment_track_id": 1,
+        "class_id": 17,
+        "class_name": "horse"
+      },
+      {
+        "frame_num": 45,
+        "det_index": 0,
+        "bbox": [
+          307.83990478515625,
+          189.06983947753906,
+          503.1240539550781,
+          310.2643737792969
+        ],
+        "visual_similarity": 0.7748161554336548,
+        "confidence": 0.8952637314796448,
+        "fragment_track_id": 1,
+        "class_id": 17,
+        "class_name": "horse"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 1,
+    "class_id": 17,
+    "class_name": "horse",
+    "start_frame": 0,
+    "end_frame": 45,
+    "hits": 5,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": true,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 0,
+        "bbox": [
+          14.283275604248047,
+          148.06846618652344,
+          352.10577392578125,
+          355.5572204589844
+        ],
+        "fragment_track_id": 1,
+        "canonical_track_id": 1,
+        "role": "start"
+      },
+      {
+        "frame_num": 35,
+        "det_index": 0,
+        "bbox": [
+          251.90924072265625,
+          179.83602905273438,
+          467.3226623535156,
+          344.5156555175781
+        ],
+        "fragment_track_id": 1,
+        "canonical_track_id": 1,
+        "role": "middle"
+      },
+      {
+        "frame_num": 45,
+        "det_index": 0,
+        "bbox": [
+          307.83990478515625,
+          189.06983947753906,
+          503.1240539550781,
+          310.2643737792969
+        ],
+        "fragment_track_id": 1,
+        "canonical_track_id": 1,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 1,
+    "span_frames": 46,
+    "fragment_track_ids": [
+      1
+    ],
+    "observed_classes": [
+      {
+        "class_id": 17,
+        "class_name": "horse",
+        "detections": 5,
+        "confidence_sum": 4.493825256824493
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 1,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 35,
+        "fragment_track_id": 1,
+        "path": "frames/middle_f0035.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 45,
+        "fragment_track_id": 1,
+        "path": "frames/end_f0045.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "scenario": "davis__person_distractor__dance_twirl",
+  "track": {
+    "track_id": 118,
+    "class_id": 0,
+    "class_name": "person",
+    "status": "closed",
+    "start_frame": 89,
+    "end_frame": 89,
+    "hits": 1,
+    "total_misses": 0,
+    "max_miss_streak": 0,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 89,
+        "type": "created"
+      },
+      {
+        "frame_num": 89,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 89,
+        "det_index": 7,
+        "bbox": [
+          208.897705078125,
+          172.8442840576172,
+          302.4788818359375,
+          336.4150085449219
+        ],
+        "visual_similarity": null,
+        "confidence": 0.3635246455669403,
+        "fragment_track_id": 118,
+        "class_id": 0,
+        "class_name": "person"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 118,
+    "class_id": 0,
+    "class_name": "person",
+    "start_frame": 89,
+    "end_frame": 89,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 89,
+        "det_index": 7,
+        "bbox": [
+          208.897705078125,
+          172.8442840576172,
+          302.4788818359375,
+          336.4150085449219
+        ],
+        "fragment_track_id": 118,
+        "canonical_track_id": 118,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 118,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      118
+    ],
+    "observed_classes": [
+      {
+        "class_id": 0,
+        "class_name": "person",
+        "detections": 1,
+        "confidence_sum": 0.3635246455669403
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 89,
+        "fragment_track_id": 118,
+        "path": "frames/start_f0089.jpg"
+      }
+    ]
+  }
+}

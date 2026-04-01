@@ -1,0 +1,526 @@
+{
+  "scenario": "davis__person_fast_motion__bmx_bumps",
+  "track": {
+    "track_id": 15,
+    "class_id": 0,
+    "class_name": "person",
+    "status": "closed",
+    "start_frame": 56,
+    "end_frame": 84,
+    "hits": 25,
+    "total_misses": 9,
+    "max_miss_streak": 5,
+    "avg_visual_similarity": 0.9792515610655149,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 56,
+        "type": "created"
+      },
+      {
+        "frame_num": 57,
+        "type": "activated"
+      },
+      {
+        "frame_num": 62,
+        "type": "lost"
+      },
+      {
+        "frame_num": 63,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 66,
+        "type": "lost"
+      },
+      {
+        "frame_num": 67,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 80,
+        "type": "lost"
+      },
+      {
+        "frame_num": 82,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 85,
+        "type": "lost"
+      },
+      {
+        "frame_num": 84,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 56,
+        "det_index": 0,
+        "bbox": [
+          0.1765803098678589,
+          143.6118621826172,
+          98.45134735107422,
+          475.94451904296875
+        ],
+        "visual_similarity": null,
+        "confidence": 0.8246845602989197,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 57,
+        "det_index": 2,
+        "bbox": [
+          0.12188062816858292,
+          101.39547729492188,
+          169.17095947265625,
+          475.70233154296875
+        ],
+        "visual_similarity": 0.8980229496955872,
+        "confidence": 0.3066384792327881,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 58,
+        "det_index": 0,
+        "bbox": [
+          0.34456831216812134,
+          59.06258773803711,
+          232.81497192382812,
+          474.8363037109375
+        ],
+        "visual_similarity": 0.9689386487007141,
+        "confidence": 0.6401277780532837,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 59,
+        "det_index": 0,
+        "bbox": [
+          0.3418399393558502,
+          13.939674377441406,
+          284.7574768066406,
+          473.3155822753906
+        ],
+        "visual_similarity": 0.9827371835708618,
+        "confidence": 0.5372482538223267,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 60,
+        "det_index": 0,
+        "bbox": [
+          0.4557594358921051,
+          7.227566242218018,
+          337.00006103515625,
+          472.7248229980469
+        ],
+        "visual_similarity": 0.9794234037399292,
+        "confidence": 0.4646572470664978,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 61,
+        "det_index": 0,
+        "bbox": [
+          0.5783730745315552,
+          8.649330139160156,
+          389.81671142578125,
+          473.72869873046875
+        ],
+        "visual_similarity": 0.9909208416938782,
+        "confidence": 0.4051884412765503,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 63,
+        "det_index": 0,
+        "bbox": [
+          1.8143233060836792,
+          3.778421640396118,
+          503.82562255859375,
+          475.6950988769531
+        ],
+        "visual_similarity": 0.9929725527763367,
+        "confidence": 0.3117590546607971,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 64,
+        "det_index": 0,
+        "bbox": [
+          7.309254169464111,
+          6.632415771484375,
+          547.817626953125,
+          474.6734619140625
+        ],
+        "visual_similarity": 0.987123429775238,
+        "confidence": 0.3712048828601837,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 65,
+        "det_index": 0,
+        "bbox": [
+          3.3037266731262207,
+          0.43849337100982666,
+          612.55615234375,
+          473.2665100097656
+        ],
+        "visual_similarity": 0.9968839883804321,
+        "confidence": 0.37623387575149536,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 67,
+        "det_index": 0,
+        "bbox": [
+          357.6566467285156,
+          4.793699741363525,
+          716.0218505859375,
+          470.5152587890625
+        ],
+        "visual_similarity": 0.9580805897712708,
+        "confidence": 0.25191381573677063,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 68,
+        "det_index": 0,
+        "bbox": [
+          6.527068138122559,
+          1.619428277015686,
+          803.5696411132812,
+          470.8351745605469
+        ],
+        "visual_similarity": 0.9782621264457703,
+        "confidence": 0.3842609226703644,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 69,
+        "det_index": 0,
+        "bbox": [
+          16.196643829345703,
+          0.0,
+          822.9296875,
+          469.75872802734375
+        ],
+        "visual_similarity": 0.9964016079902649,
+        "confidence": 0.5686869025230408,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 0,
+        "bbox": [
+          82.13467407226562,
+          0.5548765063285828,
+          853.2858276367188,
+          470.8057861328125
+        ],
+        "visual_similarity": 0.996071994304657,
+        "confidence": 0.6569594144821167,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 71,
+        "det_index": 0,
+        "bbox": [
+          140.5238494873047,
+          2.673473834991455,
+          835.2723999023438,
+          468.9584655761719
+        ],
+        "visual_similarity": 0.9952270984649658,
+        "confidence": 0.653175413608551,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 72,
+        "det_index": 0,
+        "bbox": [
+          173.20877075195312,
+          0.6598168611526489,
+          852.7490234375,
+          472.96820068359375
+        ],
+        "visual_similarity": 0.9931316375732422,
+        "confidence": 0.6937161684036255,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 73,
+        "det_index": 0,
+        "bbox": [
+          264.2503967285156,
+          5.690029621124268,
+          853.2095336914062,
+          473.7127380371094
+        ],
+        "visual_similarity": 0.9971879124641418,
+        "confidence": 0.6686588525772095,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 74,
+        "det_index": 0,
+        "bbox": [
+          354.94091796875,
+          1.6220344305038452,
+          852.3901977539062,
+          472.55712890625
+        ],
+        "visual_similarity": 0.9961364269256592,
+        "confidence": 0.640474796295166,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 75,
+        "det_index": 0,
+        "bbox": [
+          408.3641357421875,
+          2.0780789852142334,
+          851.1942138671875,
+          471.9541320800781
+        ],
+        "visual_similarity": 0.9885434508323669,
+        "confidence": 0.5855241417884827,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 76,
+        "det_index": 0,
+        "bbox": [
+          457.54339599609375,
+          2.751537561416626,
+          851.138671875,
+          474.016845703125
+        ],
+        "visual_similarity": 0.9935683608055115,
+        "confidence": 0.7074604034423828,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 77,
+        "det_index": 0,
+        "bbox": [
+          492.26116943359375,
+          8.267929077148438,
+          851.985107421875,
+          472.7416076660156
+        ],
+        "visual_similarity": 0.9912903904914856,
+        "confidence": 0.40268203616142273,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 78,
+        "det_index": 1,
+        "bbox": [
+          574.879638671875,
+          4.527338027954102,
+          853.3372192382812,
+          472.3778381347656
+        ],
+        "visual_similarity": 0.9917848110198975,
+        "confidence": 0.3894140422344208,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 79,
+        "det_index": 2,
+        "bbox": [
+          615.8093872070312,
+          9.225544929504395,
+          853.4923095703125,
+          472.63037109375
+        ],
+        "visual_similarity": 0.9877777099609375,
+        "confidence": 0.3976380527019501,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 82,
+        "det_index": 2,
+        "bbox": [
+          719.8997192382812,
+          113.60186767578125,
+          853.3489379882812,
+          471.8872375488281
+        ],
+        "visual_similarity": 0.9469166398048401,
+        "confidence": 0.41066673398017883,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 83,
+        "det_index": 2,
+        "bbox": [
+          754.810791015625,
+          126.70128631591797,
+          853.3646240234375,
+          474.16998291015625
+        ],
+        "visual_similarity": 0.9689236283302307,
+        "confidence": 0.7522653937339783,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 84,
+        "det_index": 2,
+        "bbox": [
+          787.3590698242188,
+          130.0456085205078,
+          853.7466430664062,
+          474.6767883300781
+        ],
+        "visual_similarity": 0.9257100820541382,
+        "confidence": 0.6510575413703918,
+        "fragment_track_id": 15,
+        "class_id": 0,
+        "class_name": "person"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 15,
+    "class_id": 0,
+    "class_name": "person",
+    "start_frame": 56,
+    "end_frame": 84,
+    "hits": 25,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": true,
+    "frames": [
+      {
+        "frame_num": 56,
+        "det_index": 0,
+        "bbox": [
+          0.1765803098678589,
+          143.6118621826172,
+          98.45134735107422,
+          475.94451904296875
+        ],
+        "fragment_track_id": 15,
+        "canonical_track_id": 15,
+        "role": "start"
+      },
+      {
+        "frame_num": 70,
+        "det_index": 0,
+        "bbox": [
+          82.13467407226562,
+          0.5548765063285828,
+          853.2858276367188,
+          470.8057861328125
+        ],
+        "fragment_track_id": 15,
+        "canonical_track_id": 15,
+        "role": "middle"
+      },
+      {
+        "frame_num": 84,
+        "det_index": 2,
+        "bbox": [
+          787.3590698242188,
+          130.0456085205078,
+          853.7466430664062,
+          474.6767883300781
+        ],
+        "fragment_track_id": 15,
+        "canonical_track_id": 15,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 15,
+    "span_frames": 29,
+    "fragment_track_ids": [
+      15
+    ],
+    "observed_classes": [
+      {
+        "class_id": 0,
+        "class_name": "person",
+        "detections": 25,
+        "confidence_sum": 13.052297204732895
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 56,
+        "fragment_track_id": 15,
+        "path": "frames/start_f0056.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 70,
+        "fragment_track_id": 15,
+        "path": "frames/middle_f0070.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 84,
+        "fragment_track_id": 15,
+        "path": "frames/end_f0084.jpg"
+      }
+    ]
+  }
+}

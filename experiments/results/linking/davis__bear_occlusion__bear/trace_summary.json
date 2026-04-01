@@ -1,0 +1,219 @@
+{
+  "schema_version": "temporal_linking_trace_summary_v1",
+  "generated_at_utc": "2026-04-01T21:06:34.048387+00:00",
+  "config_hash_sha256": "dcc7cb3f3b5d28984457b8fc18c4f5de89a29bb42d14987a9094b54e9ae7fa11",
+  "input_enriched_json": "enriched_detections.json",
+  "items": [
+    {
+      "track_id": 1,
+      "class_id": 21,
+      "class_name": "bear",
+      "start_frame": 0,
+      "end_frame": 0,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 0,
+          "bbox": [
+            94.652587890625,
+            214.37100219726562,
+            466.92767333984375,
+            428.691162109375
+          ],
+          "fragment_track_id": 1,
+          "canonical_track_id": 1,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 2,
+      "class_id": 21,
+      "class_name": "bear",
+      "start_frame": 5,
+      "end_frame": 75,
+      "hits": 12,
+      "valid_track": true,
+      "relinked_from": [
+        5,
+        8
+      ],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 5,
+          "det_index": 0,
+          "bbox": [
+            95.14727783203125,
+            212.7039794921875,
+            434.5654602050781,
+            423.5433044433594
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "start"
+        },
+        {
+          "frame_num": 40,
+          "det_index": 0,
+          "bbox": [
+            108.17298889160156,
+            228.187255859375,
+            475.5430603027344,
+            472.9620056152344
+          ],
+          "fragment_track_id": 5,
+          "canonical_track_id": 2,
+          "role": "middle"
+        },
+        {
+          "frame_num": 75,
+          "det_index": 0,
+          "bbox": [
+            93.07522583007812,
+            161.67141723632812,
+            443.1244201660156,
+            393.0555419921875
+          ],
+          "fragment_track_id": 8,
+          "canonical_track_id": 2,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 3,
+      "class_id": 75,
+      "class_name": "vase",
+      "start_frame": 5,
+      "end_frame": 5,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 5,
+          "det_index": 1,
+          "bbox": [
+            806.0245971679688,
+            256.05950927734375,
+            853.6112060546875,
+            448.6931457519531
+          ],
+          "fragment_track_id": 3,
+          "canonical_track_id": 3,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 4,
+      "class_id": 21,
+      "class_name": "bear",
+      "start_frame": 30,
+      "end_frame": 30,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 30,
+          "det_index": 0,
+          "bbox": [
+            109.62720489501953,
+            222.1355438232422,
+            480.3963623046875,
+            463.1182861328125
+          ],
+          "fragment_track_id": 4,
+          "canonical_track_id": 4,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 6,
+      "class_id": 21,
+      "class_name": "bear",
+      "start_frame": 50,
+      "end_frame": 50,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 50,
+          "det_index": 0,
+          "bbox": [
+            109.24320220947266,
+            227.69677734375,
+            459.2216491699219,
+            468.13531494140625
+          ],
+          "fragment_track_id": 6,
+          "canonical_track_id": 6,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 7,
+      "class_id": 21,
+      "class_name": "bear",
+      "start_frame": 55,
+      "end_frame": 55,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 55,
+          "det_index": 0,
+          "bbox": [
+            108.07896423339844,
+            208.22657775878906,
+            449.4467468261719,
+            446.23712158203125
+          ],
+          "fragment_track_id": 7,
+          "canonical_track_id": 7,
+          "role": "start"
+        }
+      ]
+    },
+    {
+      "track_id": 9,
+      "class_id": 21,
+      "class_name": "bear",
+      "start_frame": 80,
+      "end_frame": 80,
+      "hits": 1,
+      "valid_track": false,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 80,
+          "det_index": 0,
+          "bbox": [
+            88.00225067138672,
+            154.59608459472656,
+            441.2584533691406,
+            391.4867248535156
+          ],
+          "fragment_track_id": 9,
+          "canonical_track_id": 9,
+          "role": "start"
+        }
+      ]
+    }
+  ]
+}

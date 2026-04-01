@@ -1,0 +1,231 @@
+{
+  "scenario": "davis__scooter_exit_reenter__scooter_black",
+  "track": {
+    "track_id": 12,
+    "class_id": 3,
+    "class_name": "motorcycle",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 20,
+    "hits": 5,
+    "total_misses": 10,
+    "max_miss_streak": 6,
+    "avg_visual_similarity": 0.7833890318870544,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "activated"
+      },
+      {
+        "frame_num": 10,
+        "type": "closed"
+      },
+      {
+        "frame_num": 15,
+        "type": "created"
+      },
+      {
+        "frame_num": 15,
+        "type": "lost"
+      },
+      {
+        "frame_num": 20,
+        "type": "activated"
+      },
+      {
+        "frame_num": 20,
+        "type": "closed"
+      },
+      {
+        "frame_num": 25,
+        "type": "lost"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 11,
+        "bbox": [
+          394.894775390625,
+          171.1692657470703,
+          457.72686767578125,
+          233.4619598388672
+        ],
+        "visual_similarity": null,
+        "confidence": 0.41436249017715454,
+        "fragment_track_id": 12,
+        "class_id": 3,
+        "class_name": "motorcycle"
+      },
+      {
+        "frame_num": 5,
+        "det_index": 10,
+        "bbox": [
+          403.312255859375,
+          165.07858276367188,
+          479.6770324707031,
+          235.1282196044922
+        ],
+        "visual_similarity": 0.8019484281539917,
+        "confidence": 0.49367159605026245,
+        "fragment_track_id": 12,
+        "class_id": 3,
+        "class_name": "motorcycle"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 15,
+        "bbox": [
+          445.3081970214844,
+          170.45101928710938,
+          504.19207763671875,
+          237.6374969482422
+        ],
+        "visual_similarity": 0.8434762358665466,
+        "confidence": 0.36469292640686035,
+        "fragment_track_id": 12,
+        "class_id": 3,
+        "class_name": "motorcycle"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 15,
+        "bbox": [
+          628.8400268554688,
+          181.66676330566406,
+          684.3633422851562,
+          226.22486877441406
+        ],
+        "visual_similarity": null,
+        "confidence": 0.29613634943962097,
+        "fragment_track_id": 38,
+        "class_id": 3,
+        "class_name": "motorcycle"
+      },
+      {
+        "frame_num": 20,
+        "det_index": 7,
+        "bbox": [
+          813.3685302734375,
+          193.91603088378906,
+          853.6322021484375,
+          237.84982299804688
+        ],
+        "visual_similarity": 0.704742431640625,
+        "confidence": 0.4073631763458252,
+        "fragment_track_id": 38,
+        "class_id": 3,
+        "class_name": "motorcycle"
+      }
+    ],
+    "relinked_from": [
+      38
+    ]
+  },
+  "trace_summary": {
+    "track_id": 12,
+    "class_id": 3,
+    "class_name": "motorcycle",
+    "start_frame": 0,
+    "end_frame": 20,
+    "hits": 5,
+    "valid_track": true,
+    "relinked_from": [
+      38
+    ],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 11,
+        "bbox": [
+          394.894775390625,
+          171.1692657470703,
+          457.72686767578125,
+          233.4619598388672
+        ],
+        "fragment_track_id": 12,
+        "canonical_track_id": 12,
+        "role": "start"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 15,
+        "bbox": [
+          445.3081970214844,
+          170.45101928710938,
+          504.19207763671875,
+          237.6374969482422
+        ],
+        "fragment_track_id": 12,
+        "canonical_track_id": 12,
+        "role": "middle"
+      },
+      {
+        "frame_num": 20,
+        "det_index": 7,
+        "bbox": [
+          813.3685302734375,
+          193.91603088378906,
+          853.6322021484375,
+          237.84982299804688
+        ],
+        "fragment_track_id": 38,
+        "canonical_track_id": 12,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 12,
+    "span_frames": 21,
+    "fragment_track_ids": [
+      12,
+      38
+    ],
+    "observed_classes": [
+      {
+        "class_id": 3,
+        "class_name": "motorcycle",
+        "detections": 5,
+        "confidence_sum": 1.9762265384197235
+      }
+    ],
+    "accepted_relink_edges": [
+      {
+        "predecessor_id": 12,
+        "successor_id": 38,
+        "score": 0.7917889952659607,
+        "method": "dino"
+      }
+    ]
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 12,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 10,
+        "fragment_track_id": 12,
+        "path": "frames/middle_f0010.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 20,
+        "fragment_track_id": 38,
+        "path": "frames/end_f0020.jpg"
+      }
+    ]
+  }
+}

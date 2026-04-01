@@ -1,0 +1,166 @@
+{
+  "schema_version": "temporal_linking_trace_summary_v1",
+  "generated_at_utc": "2026-04-01T21:06:20.874337+00:00",
+  "config_hash_sha256": "dcc7cb3f3b5d28984457b8fc18c4f5de89a29bb42d14987a9094b54e9ae7fa11",
+  "input_enriched_json": "enriched_detections.json",
+  "items": [
+    {
+      "track_id": 1,
+      "class_id": 32,
+      "class_name": "sports ball",
+      "start_frame": 0,
+      "end_frame": 100,
+      "hits": 11,
+      "valid_track": true,
+      "relinked_from": [
+        4
+      ],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 0,
+          "bbox": [
+            1653.9935302734375,
+            648.3600463867188,
+            1907.219970703125,
+            874.38671875
+          ],
+          "fragment_track_id": 1,
+          "canonical_track_id": 1,
+          "role": "start"
+        },
+        {
+          "frame_num": 75,
+          "det_index": 1,
+          "bbox": [
+            517.5743408203125,
+            636.7278442382812,
+            724.0032348632812,
+            876.8302001953125
+          ],
+          "fragment_track_id": 4,
+          "canonical_track_id": 1,
+          "role": "middle"
+        },
+        {
+          "frame_num": 100,
+          "det_index": 0,
+          "bbox": [
+            122.69163513183594,
+            638.6885375976562,
+            381.45904541015625,
+            875.0524291992188
+          ],
+          "fragment_track_id": 4,
+          "canonical_track_id": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 2,
+      "class_id": 0,
+      "class_name": "person",
+      "start_frame": 0,
+      "end_frame": 45,
+      "hits": 8,
+      "valid_track": true,
+      "relinked_from": [],
+      "had_recovery": true,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 1,
+          "bbox": [
+            1663.5296630859375,
+            504.47601318359375,
+            1919.4788818359375,
+            972.939697265625
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "start"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 1,
+          "bbox": [
+            1665.246826171875,
+            368.4407043457031,
+            1919.06689453125,
+            696.3543090820312
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "middle"
+        },
+        {
+          "frame_num": 45,
+          "det_index": 1,
+          "bbox": [
+            1788.3914794921875,
+            537.3023681640625,
+            1919.0233154296875,
+            781.2821655273438
+          ],
+          "fragment_track_id": 2,
+          "canonical_track_id": 2,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "track_id": 3,
+      "class_id": 63,
+      "class_name": "laptop",
+      "start_frame": 0,
+      "end_frame": 100,
+      "hits": 21,
+      "valid_track": true,
+      "relinked_from": [],
+      "had_recovery": false,
+      "frames": [
+        {
+          "frame_num": 0,
+          "det_index": 2,
+          "bbox": [
+            707.3599243164062,
+            493.3402404785156,
+            1447.5185546875,
+            1030.01953125
+          ],
+          "fragment_track_id": 3,
+          "canonical_track_id": 3,
+          "role": "start"
+        },
+        {
+          "frame_num": 50,
+          "det_index": 0,
+          "bbox": [
+            712.3909301757812,
+            494.4446716308594,
+            1453.1563720703125,
+            1030.628662109375
+          ],
+          "fragment_track_id": 3,
+          "canonical_track_id": 3,
+          "role": "middle"
+        },
+        {
+          "frame_num": 100,
+          "det_index": 1,
+          "bbox": [
+            714.6018676757812,
+            497.2185363769531,
+            1455.226318359375,
+            1031.8458251953125
+          ],
+          "fragment_track_id": 3,
+          "canonical_track_id": 3,
+          "role": "end"
+        }
+      ]
+    }
+  ]
+}

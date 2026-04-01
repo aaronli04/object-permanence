@@ -35,7 +35,6 @@ dist/
 .idea/
 
 # Project outputs
-experiments/results/
 topk_similarity_sweep*.csv
 experiments/*_ball_vectors*.json
 DAVIS/

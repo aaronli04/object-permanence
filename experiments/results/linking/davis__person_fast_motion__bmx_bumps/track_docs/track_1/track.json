@@ -1,0 +1,297 @@
+{
+  "scenario": "davis__person_fast_motion__bmx_bumps",
+  "track": {
+    "track_id": 1,
+    "class_id": 1,
+    "class_name": "bicycle",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 85,
+    "hits": 8,
+    "total_misses": 14,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": 0.8090618014335632,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "activated"
+      },
+      {
+        "frame_num": 15,
+        "type": "closed"
+      },
+      {
+        "frame_num": 20,
+        "type": "created"
+      },
+      {
+        "frame_num": 20,
+        "type": "lost"
+      },
+      {
+        "frame_num": 25,
+        "type": "activated"
+      },
+      {
+        "frame_num": 25,
+        "type": "closed"
+      },
+      {
+        "frame_num": 30,
+        "type": "lost"
+      },
+      {
+        "frame_num": 80,
+        "type": "created"
+      },
+      {
+        "frame_num": 85,
+        "type": "activated"
+      },
+      {
+        "frame_num": 85,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 0,
+        "bbox": [
+          515.3604125976562,
+          258.85003662109375,
+          737.3268432617188,
+          399.1134033203125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.8990377187728882,
+        "fragment_track_id": 1,
+        "class_id": 1,
+        "class_name": "bicycle"
+      },
+      {
+        "frame_num": 5,
+        "det_index": 0,
+        "bbox": [
+          480.9331359863281,
+          221.468505859375,
+          719.9906005859375,
+          362.8801574707031
+        ],
+        "visual_similarity": 0.7769250273704529,
+        "confidence": 0.8679786920547485,
+        "fragment_track_id": 1,
+        "class_id": 1,
+        "class_name": "bicycle"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 0,
+        "bbox": [
+          406.1326599121094,
+          246.7029266357422,
+          646.4046630859375,
+          396.9736328125
+        ],
+        "visual_similarity": 0.8880852460861206,
+        "confidence": 0.8891773223876953,
+        "fragment_track_id": 1,
+        "class_id": 1,
+        "class_name": "bicycle"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 0,
+        "bbox": [
+          347.4745178222656,
+          168.59732055664062,
+          578.090576171875,
+          368.9309997558594
+        ],
+        "visual_similarity": 0.8212357759475708,
+        "confidence": 0.9139350056648254,
+        "fragment_track_id": 1,
+        "class_id": 1,
+        "class_name": "bicycle"
+      },
+      {
+        "frame_num": 20,
+        "det_index": 0,
+        "bbox": [
+          281.08526611328125,
+          160.2900848388672,
+          523.89892578125,
+          331.74627685546875
+        ],
+        "visual_similarity": null,
+        "confidence": 0.9004616737365723,
+        "fragment_track_id": 4,
+        "class_id": 1,
+        "class_name": "bicycle"
+      },
+      {
+        "frame_num": 25,
+        "det_index": 1,
+        "bbox": [
+          151.81253051757812,
+          209.8517303466797,
+          399.0034484863281,
+          378.732421875
+        ],
+        "visual_similarity": 0.7438146471977234,
+        "confidence": 0.7704182863235474,
+        "fragment_track_id": 4,
+        "class_id": 1,
+        "class_name": "bicycle"
+      },
+      {
+        "frame_num": 80,
+        "det_index": 1,
+        "bbox": [
+          482.1623840332031,
+          277.9327392578125,
+          655.3275146484375,
+          402.216064453125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.8981223106384277,
+        "fragment_track_id": 15,
+        "class_id": 1,
+        "class_name": "bicycle"
+      },
+      {
+        "frame_num": 85,
+        "det_index": 0,
+        "bbox": [
+          496.6285095214844,
+          261.3226013183594,
+          666.94287109375,
+          394.0987548828125
+        ],
+        "visual_similarity": 0.8152483105659485,
+        "confidence": 0.9137144088745117,
+        "fragment_track_id": 15,
+        "class_id": 1,
+        "class_name": "bicycle"
+      }
+    ],
+    "relinked_from": [
+      4,
+      15
+    ]
+  },
+  "trace_summary": {
+    "track_id": 1,
+    "class_id": 1,
+    "class_name": "bicycle",
+    "start_frame": 0,
+    "end_frame": 85,
+    "hits": 8,
+    "valid_track": true,
+    "relinked_from": [
+      4,
+      15
+    ],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 0,
+        "bbox": [
+          515.3604125976562,
+          258.85003662109375,
+          737.3268432617188,
+          399.1134033203125
+        ],
+        "fragment_track_id": 1,
+        "canonical_track_id": 1,
+        "role": "start"
+      },
+      {
+        "frame_num": 20,
+        "det_index": 0,
+        "bbox": [
+          281.08526611328125,
+          160.2900848388672,
+          523.89892578125,
+          331.74627685546875
+        ],
+        "fragment_track_id": 4,
+        "canonical_track_id": 1,
+        "role": "middle"
+      },
+      {
+        "frame_num": 85,
+        "det_index": 0,
+        "bbox": [
+          496.6285095214844,
+          261.3226013183594,
+          666.94287109375,
+          394.0987548828125
+        ],
+        "fragment_track_id": 15,
+        "canonical_track_id": 1,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 1,
+    "span_frames": 86,
+    "fragment_track_ids": [
+      1,
+      4,
+      15
+    ],
+    "observed_classes": [
+      {
+        "class_id": 1,
+        "class_name": "bicycle",
+        "detections": 8,
+        "confidence_sum": 7.0528454184532166
+      }
+    ],
+    "accepted_relink_edges": [
+      {
+        "predecessor_id": 1,
+        "successor_id": 4,
+        "score": 0.8911818861961365,
+        "method": "dino"
+      },
+      {
+        "predecessor_id": 4,
+        "successor_id": 15,
+        "score": 0.7416256070137024,
+        "method": "dino"
+      }
+    ]
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 1,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 20,
+        "fragment_track_id": 4,
+        "path": "frames/middle_f0020.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 85,
+        "fragment_track_id": 15,
+        "path": "frames/end_f0085.jpg"
+      }
+    ]
+  }
+}

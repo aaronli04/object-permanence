@@ -1,0 +1,265 @@
+{
+  "scenario": "Occlusion_ball_removed",
+  "track": {
+    "track_id": 7,
+    "class_id": 59,
+    "class_name": "bed",
+    "status": "closed",
+    "start_frame": 85,
+    "end_frame": 210,
+    "hits": 7,
+    "total_misses": 13,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": 0.9970452666282654,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 85,
+        "type": "created"
+      },
+      {
+        "frame_num": 90,
+        "type": "lost"
+      },
+      {
+        "frame_num": 95,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 110,
+        "type": "closed"
+      },
+      {
+        "frame_num": 115,
+        "type": "lost"
+      },
+      {
+        "frame_num": 205,
+        "type": "created"
+      },
+      {
+        "frame_num": 210,
+        "type": "activated"
+      },
+      {
+        "frame_num": 210,
+        "type": "closed"
+      },
+      {
+        "frame_num": 215,
+        "type": "lost"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 85,
+        "det_index": 1,
+        "bbox": [
+          1290.0894775390625,
+          797.1091918945312,
+          1740.3370361328125,
+          968.9949951171875
+        ],
+        "visual_similarity": null,
+        "confidence": 0.34674862027168274,
+        "fragment_track_id": 7,
+        "class_id": 59,
+        "class_name": "bed"
+      },
+      {
+        "frame_num": 95,
+        "det_index": 1,
+        "bbox": [
+          1290.9542236328125,
+          798.3935546875,
+          1740.333740234375,
+          968.5489501953125
+        ],
+        "visual_similarity": 0.9990808963775635,
+        "confidence": 0.42918500304222107,
+        "fragment_track_id": 7,
+        "class_id": 59,
+        "class_name": "bed"
+      },
+      {
+        "frame_num": 100,
+        "det_index": 1,
+        "bbox": [
+          1291.2303466796875,
+          798.4088134765625,
+          1740.43408203125,
+          968.5758666992188
+        ],
+        "visual_similarity": 0.998883843421936,
+        "confidence": 0.5103004574775696,
+        "fragment_track_id": 7,
+        "class_id": 59,
+        "class_name": "bed"
+      },
+      {
+        "frame_num": 105,
+        "det_index": 1,
+        "bbox": [
+          1291.8121337890625,
+          798.6298828125,
+          1740.314453125,
+          968.6101684570312
+        ],
+        "visual_similarity": 0.9958435893058777,
+        "confidence": 0.45975950360298157,
+        "fragment_track_id": 7,
+        "class_id": 59,
+        "class_name": "bed"
+      },
+      {
+        "frame_num": 110,
+        "det_index": 0,
+        "bbox": [
+          1291.8720703125,
+          799.4777221679688,
+          1740.364013671875,
+          968.1160278320312
+        ],
+        "visual_similarity": 0.9950147867202759,
+        "confidence": 0.6199992895126343,
+        "fragment_track_id": 7,
+        "class_id": 59,
+        "class_name": "bed"
+      },
+      {
+        "frame_num": 205,
+        "det_index": 2,
+        "bbox": [
+          1297.0372314453125,
+          808.8779907226562,
+          1740.790283203125,
+          975.127685546875
+        ],
+        "visual_similarity": null,
+        "confidence": 0.4104359447956085,
+        "fragment_track_id": 12,
+        "class_id": 59,
+        "class_name": "bed"
+      },
+      {
+        "frame_num": 210,
+        "det_index": 2,
+        "bbox": [
+          1294.7869873046875,
+          810.9026489257812,
+          1742.0,
+          978.7923583984375
+        ],
+        "visual_similarity": 0.9964032173156738,
+        "confidence": 0.30859190225601196,
+        "fragment_track_id": 12,
+        "class_id": 59,
+        "class_name": "bed"
+      }
+    ],
+    "relinked_from": [
+      12
+    ]
+  },
+  "trace_summary": {
+    "track_id": 7,
+    "class_id": 59,
+    "class_name": "bed",
+    "start_frame": 85,
+    "end_frame": 210,
+    "hits": 7,
+    "valid_track": true,
+    "relinked_from": [
+      12
+    ],
+    "had_recovery": true,
+    "frames": [
+      {
+        "frame_num": 85,
+        "det_index": 1,
+        "bbox": [
+          1290.0894775390625,
+          797.1091918945312,
+          1740.3370361328125,
+          968.9949951171875
+        ],
+        "fragment_track_id": 7,
+        "canonical_track_id": 7,
+        "role": "start"
+      },
+      {
+        "frame_num": 105,
+        "det_index": 1,
+        "bbox": [
+          1291.8121337890625,
+          798.6298828125,
+          1740.314453125,
+          968.6101684570312
+        ],
+        "fragment_track_id": 7,
+        "canonical_track_id": 7,
+        "role": "middle"
+      },
+      {
+        "frame_num": 210,
+        "det_index": 2,
+        "bbox": [
+          1294.7869873046875,
+          810.9026489257812,
+          1742.0,
+          978.7923583984375
+        ],
+        "fragment_track_id": 12,
+        "canonical_track_id": 7,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 7,
+    "span_frames": 126,
+    "fragment_track_ids": [
+      7,
+      12
+    ],
+    "observed_classes": [
+      {
+        "class_id": 59,
+        "class_name": "bed",
+        "detections": 7,
+        "confidence_sum": 3.0850207209587097
+      }
+    ],
+    "accepted_relink_edges": [
+      {
+        "predecessor_id": 7,
+        "successor_id": 12,
+        "score": 0.9385613799095154,
+        "method": "dino"
+      }
+    ]
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 85,
+        "fragment_track_id": 7,
+        "path": "frames/start_f0085.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 105,
+        "fragment_track_id": 7,
+        "path": "frames/middle_f0105.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 210,
+        "fragment_track_id": 12,
+        "path": "frames/end_f0210.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "scenario": "davis__bear_occlusion__bear",
+  "track": {
+    "track_id": 1,
+    "class_id": 21,
+    "class_name": "bear",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 0,
+    "hits": 1,
+    "total_misses": 7,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "lost"
+      },
+      {
+        "frame_num": 0,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 0,
+        "bbox": [
+          94.652587890625,
+          214.37100219726562,
+          466.92767333984375,
+          428.691162109375
+        ],
+        "visual_similarity": null,
+        "confidence": 0.9391043782234192,
+        "fragment_track_id": 1,
+        "class_id": 21,
+        "class_name": "bear"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 1,
+    "class_id": 21,
+    "class_name": "bear",
+    "start_frame": 0,
+    "end_frame": 0,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 0,
+        "bbox": [
+          94.652587890625,
+          214.37100219726562,
+          466.92767333984375,
+          428.691162109375
+        ],
+        "fragment_track_id": 1,
+        "canonical_track_id": 1,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 1,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      1
+    ],
+    "observed_classes": [
+      {
+        "class_id": 21,
+        "class_name": "bear",
+        "detections": 1,
+        "confidence_sum": 0.9391043782234192
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 1,
+        "path": "frames/start_f0000.jpg"
+      }
+    ]
+  }
+}

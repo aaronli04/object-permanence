@@ -1,0 +1,148 @@
+{
+  "scenario": "davis__scooter_exit_reenter__scooter_black",
+  "track": {
+    "track_id": 20,
+    "class_id": 3,
+    "class_name": "motorcycle",
+    "status": "closed",
+    "start_frame": 0,
+    "end_frame": 15,
+    "hits": 2,
+    "total_misses": 7,
+    "max_miss_streak": 5,
+    "avg_visual_similarity": 0.711571216583252,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 0,
+        "type": "created"
+      },
+      {
+        "frame_num": 5,
+        "type": "lost"
+      },
+      {
+        "frame_num": 15,
+        "type": "recovered"
+      },
+      {
+        "frame_num": 20,
+        "type": "lost"
+      },
+      {
+        "frame_num": 15,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 0,
+        "det_index": 19,
+        "bbox": [
+          454.090087890625,
+          152.96588134765625,
+          496.17291259765625,
+          228.028076171875
+        ],
+        "visual_similarity": null,
+        "confidence": 0.25922295451164246,
+        "fragment_track_id": 20,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 12,
+        "bbox": [
+          599.3089599609375,
+          173.3235626220703,
+          682.7791748046875,
+          229.159912109375
+        ],
+        "visual_similarity": 0.711571216583252,
+        "confidence": 0.3826286494731903,
+        "fragment_track_id": 20,
+        "class_id": 3,
+        "class_name": "motorcycle"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 20,
+    "class_id": 3,
+    "class_name": "motorcycle",
+    "start_frame": 0,
+    "end_frame": 15,
+    "hits": 2,
+    "valid_track": true,
+    "relinked_from": [],
+    "had_recovery": true,
+    "frames": [
+      {
+        "frame_num": 0,
+        "det_index": 19,
+        "bbox": [
+          454.090087890625,
+          152.96588134765625,
+          496.17291259765625,
+          228.028076171875
+        ],
+        "fragment_track_id": 20,
+        "canonical_track_id": 20,
+        "role": "start"
+      },
+      {
+        "frame_num": 15,
+        "det_index": 12,
+        "bbox": [
+          599.3089599609375,
+          173.3235626220703,
+          682.7791748046875,
+          229.159912109375
+        ],
+        "fragment_track_id": 20,
+        "canonical_track_id": 20,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 20,
+    "span_frames": 16,
+    "fragment_track_ids": [
+      20
+    ],
+    "observed_classes": [
+      {
+        "class_id": 3,
+        "class_name": "motorcycle",
+        "detections": 1,
+        "confidence_sum": 0.3826286494731903
+      },
+      {
+        "class_id": 0,
+        "class_name": "person",
+        "detections": 1,
+        "confidence_sum": 0.25922295451164246
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 0,
+        "fragment_track_id": 20,
+        "path": "frames/start_f0000.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 15,
+        "fragment_track_id": 20,
+        "path": "frames/end_f0015.jpg"
+      }
+    ]
+  }
+}

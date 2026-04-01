@@ -1,0 +1,258 @@
+{
+  "scenario": "davis__car_speed__drift_chicane",
+  "track": {
+    "track_id": 6,
+    "class_id": 8,
+    "class_name": "boat",
+    "status": "closed",
+    "start_frame": 5,
+    "end_frame": 35,
+    "hits": 6,
+    "total_misses": 10,
+    "max_miss_streak": 7,
+    "avg_visual_similarity": 0.8713290840387344,
+    "valid_track": true,
+    "events": [
+      {
+        "frame_num": 5,
+        "type": "created"
+      },
+      {
+        "frame_num": 10,
+        "type": "activated"
+      },
+      {
+        "frame_num": 10,
+        "type": "closed"
+      },
+      {
+        "frame_num": 15,
+        "type": "lost"
+      },
+      {
+        "frame_num": 20,
+        "type": "created"
+      },
+      {
+        "frame_num": 25,
+        "type": "activated"
+      },
+      {
+        "frame_num": 35,
+        "type": "closed"
+      },
+      {
+        "frame_num": 40,
+        "type": "lost"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 5,
+        "det_index": 4,
+        "bbox": [
+          449.7171936035156,
+          195.23020935058594,
+          460.4203796386719,
+          231.2678680419922
+        ],
+        "visual_similarity": null,
+        "confidence": 0.255535364151001,
+        "fragment_track_id": 6,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 10,
+        "det_index": 2,
+        "bbox": [
+          448.6759338378906,
+          194.6187286376953,
+          460.44146728515625,
+          230.5469970703125
+        ],
+        "visual_similarity": 0.9624465703964233,
+        "confidence": 0.362469345331192,
+        "fragment_track_id": 6,
+        "class_id": 0,
+        "class_name": "person"
+      },
+      {
+        "frame_num": 20,
+        "det_index": 0,
+        "bbox": [
+          385.9582824707031,
+          217.17820739746094,
+          517.7157592773438,
+          267.87158203125
+        ],
+        "visual_similarity": null,
+        "confidence": 0.44273996353149414,
+        "fragment_track_id": 9,
+        "class_id": 8,
+        "class_name": "boat"
+      },
+      {
+        "frame_num": 25,
+        "det_index": 0,
+        "bbox": [
+          387.2884216308594,
+          217.7230224609375,
+          543.2333984375,
+          272.5579833984375
+        ],
+        "visual_similarity": 0.7552742958068848,
+        "confidence": 0.6703068017959595,
+        "fragment_track_id": 9,
+        "class_id": 2,
+        "class_name": "car"
+      },
+      {
+        "frame_num": 30,
+        "det_index": 0,
+        "bbox": [
+          364.7287292480469,
+          219.03469848632812,
+          544.0689697265625,
+          277.9891662597656
+        ],
+        "visual_similarity": 0.9019791483879089,
+        "confidence": 0.6048954129219055,
+        "fragment_track_id": 9,
+        "class_id": 8,
+        "class_name": "boat"
+      },
+      {
+        "frame_num": 35,
+        "det_index": 1,
+        "bbox": [
+          354.1029357910156,
+          220.28201293945312,
+          505.3098449707031,
+          285.7042236328125
+        ],
+        "visual_similarity": 0.8656163215637207,
+        "confidence": 0.4831932485103607,
+        "fragment_track_id": 9,
+        "class_id": 8,
+        "class_name": "boat"
+      }
+    ],
+    "relinked_from": [
+      9
+    ]
+  },
+  "trace_summary": {
+    "track_id": 6,
+    "class_id": 8,
+    "class_name": "boat",
+    "start_frame": 5,
+    "end_frame": 35,
+    "hits": 6,
+    "valid_track": true,
+    "relinked_from": [
+      9
+    ],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 5,
+        "det_index": 4,
+        "bbox": [
+          449.7171936035156,
+          195.23020935058594,
+          460.4203796386719,
+          231.2678680419922
+        ],
+        "fragment_track_id": 6,
+        "canonical_track_id": 6,
+        "role": "start"
+      },
+      {
+        "frame_num": 25,
+        "det_index": 0,
+        "bbox": [
+          387.2884216308594,
+          217.7230224609375,
+          543.2333984375,
+          272.5579833984375
+        ],
+        "fragment_track_id": 9,
+        "canonical_track_id": 6,
+        "role": "middle"
+      },
+      {
+        "frame_num": 35,
+        "det_index": 1,
+        "bbox": [
+          354.1029357910156,
+          220.28201293945312,
+          505.3098449707031,
+          285.7042236328125
+        ],
+        "fragment_track_id": 9,
+        "canonical_track_id": 6,
+        "role": "end"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 6,
+    "span_frames": 31,
+    "fragment_track_ids": [
+      6,
+      9
+    ],
+    "observed_classes": [
+      {
+        "class_id": 8,
+        "class_name": "boat",
+        "detections": 3,
+        "confidence_sum": 1.5308286249637604
+      },
+      {
+        "class_id": 2,
+        "class_name": "car",
+        "detections": 1,
+        "confidence_sum": 0.6703068017959595
+      },
+      {
+        "class_id": 0,
+        "class_name": "person",
+        "detections": 2,
+        "confidence_sum": 0.618004709482193
+      }
+    ],
+    "accepted_relink_edges": [
+      {
+        "predecessor_id": 6,
+        "successor_id": 9,
+        "score": 0.6911957648237027,
+        "method": "spatial"
+      }
+    ]
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 5,
+        "fragment_track_id": 6,
+        "path": "frames/start_f0005.jpg"
+      },
+      {
+        "role": "middle",
+        "frame_num": 25,
+        "fragment_track_id": 9,
+        "path": "frames/middle_f0025.jpg"
+      },
+      {
+        "role": "end",
+        "frame_num": 35,
+        "fragment_track_id": 9,
+        "path": "frames/end_f0035.jpg"
+      }
+    ]
+  }
+}

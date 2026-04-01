@@ -1,0 +1,518 @@
+{
+  "schema_version": "temporal_linking_v1",
+  "tracks": [
+    {
+      "track_id": 1,
+      "class_id": 21,
+      "class_name": "bear",
+      "status": "closed",
+      "start_frame": 0,
+      "end_frame": 0,
+      "hits": 1,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 0,
+          "type": "created"
+        },
+        {
+          "frame_num": 5,
+          "type": "lost"
+        },
+        {
+          "frame_num": 0,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 0,
+          "det_index": 0,
+          "bbox": [
+            94.652587890625,
+            214.37100219726562,
+            466.92767333984375,
+            428.691162109375
+          ],
+          "visual_similarity": null,
+          "confidence": 0.9391043782234192,
+          "fragment_track_id": 1,
+          "class_id": 21,
+          "class_name": "bear"
+        }
+      ]
+    },
+    {
+      "track_id": 2,
+      "class_id": 21,
+      "class_name": "bear",
+      "status": "closed",
+      "start_frame": 5,
+      "end_frame": 75,
+      "hits": 12,
+      "total_misses": 15,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": 0.8153863880369399,
+      "valid_track": true,
+      "events": [
+        {
+          "frame_num": 5,
+          "type": "created"
+        },
+        {
+          "frame_num": 10,
+          "type": "activated"
+        },
+        {
+          "frame_num": 25,
+          "type": "closed"
+        },
+        {
+          "frame_num": 30,
+          "type": "lost"
+        },
+        {
+          "frame_num": 35,
+          "type": "created"
+        },
+        {
+          "frame_num": 40,
+          "type": "activated"
+        },
+        {
+          "frame_num": 45,
+          "type": "closed"
+        },
+        {
+          "frame_num": 50,
+          "type": "lost"
+        },
+        {
+          "frame_num": 60,
+          "type": "created"
+        },
+        {
+          "frame_num": 65,
+          "type": "activated"
+        },
+        {
+          "frame_num": 75,
+          "type": "closed"
+        },
+        {
+          "frame_num": 80,
+          "type": "lost"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 5,
+          "det_index": 0,
+          "bbox": [
+            95.14727783203125,
+            212.7039794921875,
+            434.5654602050781,
+            423.5433044433594
+          ],
+          "visual_similarity": null,
+          "confidence": 0.9554774761199951,
+          "fragment_track_id": 2,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 10,
+          "det_index": 0,
+          "bbox": [
+            96.55360412597656,
+            208.82342529296875,
+            430.3869323730469,
+            423.7888488769531
+          ],
+          "visual_similarity": 0.8145114779472351,
+          "confidence": 0.9538447856903076,
+          "fragment_track_id": 2,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 15,
+          "det_index": 0,
+          "bbox": [
+            101.46511840820312,
+            209.91500854492188,
+            443.6029052734375,
+            421.32696533203125
+          ],
+          "visual_similarity": 0.7500094175338745,
+          "confidence": 0.9484006762504578,
+          "fragment_track_id": 2,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 20,
+          "det_index": 0,
+          "bbox": [
+            108.72843170166016,
+            213.66708374023438,
+            460.782470703125,
+            420.9818420410156
+          ],
+          "visual_similarity": 0.7382322549819946,
+          "confidence": 0.9476452469825745,
+          "fragment_track_id": 2,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 25,
+          "det_index": 0,
+          "bbox": [
+            110.2388916015625,
+            217.16700744628906,
+            474.2710876464844,
+            426.8072204589844
+          ],
+          "visual_similarity": 0.8057718873023987,
+          "confidence": 0.9461538791656494,
+          "fragment_track_id": 2,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 35,
+          "det_index": 0,
+          "bbox": [
+            109.59809112548828,
+            225.2229766845703,
+            483.65191650390625,
+            473.1107482910156
+          ],
+          "visual_similarity": null,
+          "confidence": 0.9440938234329224,
+          "fragment_track_id": 5,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 40,
+          "det_index": 0,
+          "bbox": [
+            108.17298889160156,
+            228.187255859375,
+            475.5430603027344,
+            472.9620056152344
+          ],
+          "visual_similarity": 0.881937563419342,
+          "confidence": 0.9420574307441711,
+          "fragment_track_id": 5,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 45,
+          "det_index": 0,
+          "bbox": [
+            108.90178680419922,
+            229.6393280029297,
+            464.3697204589844,
+            472.13592529296875
+          ],
+          "visual_similarity": 0.8852419257164001,
+          "confidence": 0.9331915378570557,
+          "fragment_track_id": 5,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 60,
+          "det_index": 0,
+          "bbox": [
+            108.11149597167969,
+            189.27162170410156,
+            445.228271484375,
+            423.52459716796875
+          ],
+          "visual_similarity": null,
+          "confidence": 0.9534032344818115,
+          "fragment_track_id": 8,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 65,
+          "det_index": 0,
+          "bbox": [
+            108.04132080078125,
+            176.61753845214844,
+            442.19061279296875,
+            414.18988037109375
+          ],
+          "visual_similarity": 0.8178914189338684,
+          "confidence": 0.9601490497589111,
+          "fragment_track_id": 8,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 70,
+          "det_index": 0,
+          "bbox": [
+            99.87574005126953,
+            166.01852416992188,
+            441.4297790527344,
+            401.3033447265625
+          ],
+          "visual_similarity": 0.8344255685806274,
+          "confidence": 0.9741595983505249,
+          "fragment_track_id": 8,
+          "class_id": 21,
+          "class_name": "bear"
+        },
+        {
+          "frame_num": 75,
+          "det_index": 0,
+          "bbox": [
+            93.07522583007812,
+            161.67141723632812,
+            443.1244201660156,
+            393.0555419921875
+          ],
+          "visual_similarity": 0.8104559779167175,
+          "confidence": 0.9600473642349243,
+          "fragment_track_id": 8,
+          "class_id": 21,
+          "class_name": "bear"
+        }
+      ],
+      "relinked_from": [
+        5,
+        8
+      ]
+    },
+    {
+      "track_id": 3,
+      "class_id": 75,
+      "class_name": "vase",
+      "status": "closed",
+      "start_frame": 5,
+      "end_frame": 5,
+      "hits": 1,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 5,
+          "type": "created"
+        },
+        {
+          "frame_num": 10,
+          "type": "lost"
+        },
+        {
+          "frame_num": 5,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 5,
+          "det_index": 1,
+          "bbox": [
+            806.0245971679688,
+            256.05950927734375,
+            853.6112060546875,
+            448.6931457519531
+          ],
+          "visual_similarity": null,
+          "confidence": 0.29253819584846497,
+          "fragment_track_id": 3,
+          "class_id": 75,
+          "class_name": "vase"
+        }
+      ]
+    },
+    {
+      "track_id": 4,
+      "class_id": 21,
+      "class_name": "bear",
+      "status": "closed",
+      "start_frame": 30,
+      "end_frame": 30,
+      "hits": 1,
+      "total_misses": 7,
+      "max_miss_streak": 7,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 30,
+          "type": "created"
+        },
+        {
+          "frame_num": 35,
+          "type": "lost"
+        },
+        {
+          "frame_num": 30,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 30,
+          "det_index": 0,
+          "bbox": [
+            109.62720489501953,
+            222.1355438232422,
+            480.3963623046875,
+            463.1182861328125
+          ],
+          "visual_similarity": null,
+          "confidence": 0.9486497640609741,
+          "fragment_track_id": 4,
+          "class_id": 21,
+          "class_name": "bear"
+        }
+      ]
+    },
+    {
+      "track_id": 6,
+      "class_id": 21,
+      "class_name": "bear",
+      "status": "closed",
+      "start_frame": 50,
+      "end_frame": 50,
+      "hits": 1,
+      "total_misses": 6,
+      "max_miss_streak": 6,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 50,
+          "type": "created"
+        },
+        {
+          "frame_num": 55,
+          "type": "lost"
+        },
+        {
+          "frame_num": 50,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 50,
+          "det_index": 0,
+          "bbox": [
+            109.24320220947266,
+            227.69677734375,
+            459.2216491699219,
+            468.13531494140625
+          ],
+          "visual_similarity": null,
+          "confidence": 0.9544057250022888,
+          "fragment_track_id": 6,
+          "class_id": 21,
+          "class_name": "bear"
+        }
+      ]
+    },
+    {
+      "track_id": 7,
+      "class_id": 21,
+      "class_name": "bear",
+      "status": "closed",
+      "start_frame": 55,
+      "end_frame": 55,
+      "hits": 1,
+      "total_misses": 5,
+      "max_miss_streak": 5,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 55,
+          "type": "created"
+        },
+        {
+          "frame_num": 60,
+          "type": "lost"
+        },
+        {
+          "frame_num": 55,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 55,
+          "det_index": 0,
+          "bbox": [
+            108.07896423339844,
+            208.22657775878906,
+            449.4467468261719,
+            446.23712158203125
+          ],
+          "visual_similarity": null,
+          "confidence": 0.9639847874641418,
+          "fragment_track_id": 7,
+          "class_id": 21,
+          "class_name": "bear"
+        }
+      ]
+    },
+    {
+      "track_id": 9,
+      "class_id": 21,
+      "class_name": "bear",
+      "status": "closed",
+      "start_frame": 80,
+      "end_frame": 80,
+      "hits": 1,
+      "total_misses": 0,
+      "max_miss_streak": 0,
+      "avg_visual_similarity": null,
+      "valid_track": false,
+      "events": [
+        {
+          "frame_num": 80,
+          "type": "created"
+        },
+        {
+          "frame_num": 80,
+          "type": "closed"
+        }
+      ],
+      "observations": [
+        {
+          "frame_num": 80,
+          "det_index": 0,
+          "bbox": [
+            88.00225067138672,
+            154.59608459472656,
+            441.2584533691406,
+            391.4867248535156
+          ],
+          "visual_similarity": null,
+          "confidence": 0.9651679992675781,
+          "fragment_track_id": 9,
+          "class_id": 21,
+          "class_name": "bear"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "num_tracks_total": 7,
+    "num_tracks_valid": 1
+  }
+}

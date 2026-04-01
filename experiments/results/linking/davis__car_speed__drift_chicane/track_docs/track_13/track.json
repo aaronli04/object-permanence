@@ -1,0 +1,100 @@
+{
+  "scenario": "davis__car_speed__drift_chicane",
+  "track": {
+    "track_id": 13,
+    "class_id": 7,
+    "class_name": "truck",
+    "status": "closed",
+    "start_frame": 45,
+    "end_frame": 45,
+    "hits": 1,
+    "total_misses": 1,
+    "max_miss_streak": 1,
+    "avg_visual_similarity": null,
+    "valid_track": false,
+    "events": [
+      {
+        "frame_num": 45,
+        "type": "created"
+      },
+      {
+        "frame_num": 50,
+        "type": "lost"
+      },
+      {
+        "frame_num": 45,
+        "type": "closed"
+      }
+    ],
+    "observations": [
+      {
+        "frame_num": 45,
+        "det_index": 4,
+        "bbox": [
+          161.9324493408203,
+          154.278564453125,
+          390.544677734375,
+          272.5478820800781
+        ],
+        "visual_similarity": null,
+        "confidence": 0.2580314576625824,
+        "fragment_track_id": 13,
+        "class_id": 7,
+        "class_name": "truck"
+      }
+    ]
+  },
+  "trace_summary": {
+    "track_id": 13,
+    "class_id": 7,
+    "class_name": "truck",
+    "start_frame": 45,
+    "end_frame": 45,
+    "hits": 1,
+    "valid_track": false,
+    "relinked_from": [],
+    "had_recovery": false,
+    "frames": [
+      {
+        "frame_num": 45,
+        "det_index": 4,
+        "bbox": [
+          161.9324493408203,
+          154.278564453125,
+          390.544677734375,
+          272.5478820800781
+        ],
+        "fragment_track_id": 13,
+        "canonical_track_id": 13,
+        "role": "start"
+      }
+    ]
+  },
+  "derived": {
+    "track_id": 13,
+    "span_frames": 1,
+    "fragment_track_ids": [
+      13
+    ],
+    "observed_classes": [
+      {
+        "class_id": 7,
+        "class_name": "truck",
+        "detections": 1,
+        "confidence_sum": 0.2580314576625824
+      }
+    ],
+    "accepted_relink_edges": []
+  },
+  "artifacts": {
+    "summary_image": "summary.jpg",
+    "frame_images": [
+      {
+        "role": "start",
+        "frame_num": 45,
+        "fragment_track_id": 13,
+        "path": "frames/start_f0045.jpg"
+      }
+    ]
+  }
+}
